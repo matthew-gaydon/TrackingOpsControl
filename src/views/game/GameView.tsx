@@ -1,8 +1,10 @@
+import { useEffect, useRef } from 'react';
 import { usePick, useUi } from '../../state/store';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
-import { GROUP, health, healthNote, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { ACS, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
+import type { Tone } from '../../data/model';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
 import { ZoomBox, wasDrag } from '../../components/ZoomBox';
 
@@ -162,13 +164,18 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   const tol = ds.thresholds.strikeZoneTolerance;
   const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, focusAlertId: null, pop: null } as never);
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
-  const quick = [
-    { k: 'conf', label: 'Confidence', value: `${p.confidence.toFixed(2)} ${pass ? 'PASS' : 'FAIL'}`, bad: !pass, sub: `track ${p.trackLength} · quality ${p.trackQuality}`,
+  const hitT = p.hit ? hitTone(p.hit.trackPct, ds) : null;
+  const quick: { k: string; label: string; value: string; tone: Tone | 'none'; sub: string; text?: string; go?: () => void }[] = [
+    { k: 'conf', label: 'Confidence', value: pass ? 'PASS' : 'FAIL', tone: pass ? 'ok' : 'crit', sub: `track ${p.trackLength} · quality ${p.trackQuality}`,
       text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => st.set({ pop: null, fieldView: 'pitchToPlate', imgMode: 'mosaic', bigCam: null }) },
-    { k: 'acs', label: 'ACS delivery', value: p.acsDelivered ? 'Delivered' : 'Not delivered', bad: !p.acsDelivered, sub: '' },
-    { k: 'hit', label: 'Hit', value: p.hit ? `${p.hit.distanceFt} ft · ${p.hit.trackPct}%` : 'No hit', bad: !!p.hit && p.hit.trackPct < ds.thresholds.hitTrackGoodPct, sub: p.hit ? (p.hit.trackPct >= ds.thresholds.hitTrackGoodPct ? 'Good hit track' : 'Poor hit track') : '',
+    { k: 'acs', label: 'ACS delivery', value: ACS[p.acs].label, tone: ACS[p.acs].tone, sub: '' },
+    { k: 'hit', label: 'Hit tracked', value: p.hit ? `${p.hit.trackPct}%` : 'No hit', tone: hitT ?? 'none', sub: hitT === 'ok' ? 'Good hit track' : hitT ? 'Poor hit track' : '',
       text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => st.set({ pop: null, fieldView: 'fullField', imgMode: 'hit', bigCam: null }) },
   ];
+  const TONE = {
+    ok: { bg: '#112219', edge: '#23503A', ink: 'var(--ok-ink)' }, warn: { bg: 'var(--warn-bg)', edge: 'var(--warn-edge)', ink: 'var(--warn-ink)' },
+    crit: { bg: 'var(--crit-bg)', edge: 'var(--crit-edge)', ink: 'var(--crit-ink)' }, none: { bg: 'var(--panel-2)', edge: 'var(--border)', ink: 'var(--text-3)' },
+  };
   const navBtn = { width: 32, height: 32 };
   return (
     <aside className="panel panel-pad col scroll" style={{ flex: '1 1 380px', maxWidth: 460, minWidth: 0, gap: 10 }}>
@@ -180,12 +187,15 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
         {quick.map((q) => {
-          const box = { display: 'flex', flexDirection: 'column' as const, gap: 4, padding: 10, borderRadius: 8, textAlign: 'left' as const, background: q.bad ? 'var(--warn-bg)' : 'var(--panel-2)', border: `1px solid ${q.bad ? (st.pop === q.k ? 'var(--warn-ink)' : 'var(--warn-edge)') : 'var(--border)'}` };
-          const inner = (<><span className="tiny" style={{ color: 'var(--text-2)' }}>{q.label}</span><span className="mono" style={{ fontSize: 14, fontWeight: 600, color: q.bad ? 'var(--warn-ink)' : 'var(--text-hi)' }}>{q.value}</span>{q.sub && <span className="tiny muted">{q.sub}</span>}</>);
-          return q.bad && q.go ? <button key={q.k} type="button" style={box} onClick={() => pop(q.k)} aria-label={`${q.label} problem, show details`}>{inner}</button> : <div key={q.k} style={box}>{inner}</div>;
+          const t = TONE[q.tone]; const bad = q.tone === 'warn' || q.tone === 'crit';
+          const box = { display: 'flex', flexDirection: 'column' as const, gap: 4, padding: 10, borderRadius: 8, textAlign: 'left' as const, background: t.bg, border: `1px solid ${bad && st.pop === q.k ? t.ink : t.edge}` };
+          const inner = (<><span className="tiny" style={{ color: 'var(--text-2)' }}>{q.label}</span>
+            <span className="row mono" style={{ gap: 6, fontSize: 14, fontWeight: 700, color: t.ink }}>{q.tone !== 'none' && <HealthDot h={q.tone} size={8} />}{q.value}</span>
+            {q.sub && <span className="tiny muted">{q.sub}</span>}</>);
+          return bad && q.go ? <button key={q.k} type="button" style={box} onClick={() => pop(q.k)} aria-label={`${q.label} ${q.value}, show details`}>{inner}</button> : <div key={q.k} style={box}>{inner}</div>;
         })}
       </div>
-      {quick.filter((q) => q.bad && q.go && st.pop === q.k).map((q) => <GoPopout key={q.k} text={q.text!} onGo={q.go!} onCancel={() => st.set({ pop: null })} />)}
+      {quick.filter((q) => (q.tone === 'warn' || q.tone === 'crit') && q.go && st.pop === q.k).map((q) => <GoPopout key={q.k} text={q.text!} onGo={q.go!} onCancel={() => st.set({ pop: null })} />)}
 
       <div className="col" style={{ gap: 10, padding: 12, borderRadius: 8, background: 'var(--panel-2)', border: `1px solid ${bad.length ? 'var(--warn-edge)' : 'var(--border)'}` }}>
         <div className="row wrap" style={{ justifyContent: 'space-between' }}>
@@ -249,8 +259,8 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
 function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
   if (p.confidence <= ds.thresholds.confidencePass) crit.push('confidence fail');
-  if (p.hit && p.hit.trackPct < ds.thresholds.hitTrackGoodPct) warn.push('poor hit track');
-  if (!p.acsDelivered) warn.push('ACS not delivered');
+  if (p.hit) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
+  if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });
   return { h: crit.length ? 'crit' : warn.length ? 'warn' : 'ok', problems: [...crit, ...warn] };
 }
@@ -258,21 +268,42 @@ function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnTyp
 function Timeline({ sel }: { sel: number }) {
   const ds = useDs(); const st = usePick('set'); const ops = usePpOps();
   const latest = ds.pitches.at(-1)!.num;
+  const strip = useRef<HTMLDivElement>(null);
   const C = { ok: { bg: '#13261C', fg: 'var(--ok-ink)', edge: '#23503A' }, warn: { bg: 'var(--warn-bg)', fg: 'var(--warn-ink)', edge: 'var(--warn-edge)' }, crit: { bg: 'var(--crit-bg)', fg: 'var(--crit-ink)', edge: 'var(--crit-edge)' } };
+  // keep the selected pitch in view (on load that's the latest, at the right-hand end)
+  useEffect(() => {
+    const box = strip.current;
+    const el = box?.querySelector<HTMLElement>(`[data-pitch="${sel}"]`);
+    if (!el || !box) return;
+    const l = el.offsetLeft - box.offsetLeft, r = l + el.offsetWidth;
+    if (l < box.scrollLeft) box.scrollLeft = l - 40;
+    else if (r > box.scrollLeft + box.clientWidth) box.scrollLeft = r - box.clientWidth + 40;
+  }, [sel, ds.pitches.length]);
+  // a mouse wheel scrolls the strip sideways
+  useEffect(() => {
+    const box = strip.current; if (!box) return;
+    const onWheel = (e: WheelEvent) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); box.scrollLeft += e.deltaY; } };
+    box.addEventListener('wheel', onWheel, { passive: false });
+    return () => box.removeEventListener('wheel', onWheel);
+  }, []);
+  const page = (d: number) => strip.current?.scrollBy({ left: d * strip.current.clientWidth * 0.8 });
+  const counts = { crit: 0, warn: 0 };
+  const lights = ds.pitches.map((p) => { const v = pitchVerdict(p, ds, ops); if (v.h !== 'ok') counts[v.h]++; return { p, v }; });
   return (
-    <section className="panel row" style={{ flex: '0 0 auto', padding: '8px 12px', gap: 12 }}>
+    <section className="panel row" style={{ flex: '0 0 auto', padding: '8px 12px', gap: 10, minWidth: 0 }}>
       <span className="col" style={{ gap: 2, flex: '0 0 auto' }}>
         <h2 style={{ fontSize: 13, fontWeight: 600 }}>Pitch timeline</h2>
-        <span className="tiny muted">Worst deliverable per pitch</span>
+        <span className="tiny muted">{ds.pitches.length} pitches · <span style={{ color: counts.crit ? 'var(--crit-ink)' : undefined }}>{counts.crit} red</span> · <span style={{ color: counts.warn ? 'var(--warn-ink)' : undefined }}>{counts.warn} amber</span></span>
       </span>
-      <div className="row" style={{ gap: 3, flex: '1 1 auto', minWidth: 0, overflowX: 'auto', padding: '2px 0' }}>
-        {ds.pitches.map((p) => {
-          const v = pitchVerdict(p, ds, ops); const c = C[v.h]; const on = p.num === sel;
+      <button type="button" className="icon-btn" aria-label="Scroll timeline to earlier pitches" onClick={() => page(-1)}><Chevron dir="left" /></button>
+      <div ref={strip} className="row hscroll" style={{ gap: 3, flex: '1 1 auto', minWidth: 0, padding: '3px 2px 6px' }}>
+        {lights.map(({ p, v }) => {
+          const c = C[v.h]; const on = p.num === sel;
+          const what = `Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`;
           return (
-            <button key={p.num} type="button" onClick={() => st.set({ gameSel: p.num === latest ? null : p.num, pop: null })}
-              title={`Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`}
-              aria-label={`Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`} aria-pressed={on}
-              className="mono" style={{ flex: '1 0 26px', height: 28, padding: 0, fontSize: 10, fontWeight: 700, background: c.bg, color: c.fg,
+            <button key={p.num} data-pitch={p.num} type="button" onClick={() => st.set({ gameSel: p.num === latest ? null : p.num, pop: null })}
+              title={what} aria-label={what} aria-pressed={on}
+              className="mono" style={{ flex: '0 0 auto', minWidth: 28, height: 28, padding: '0 4px', fontSize: 10, fontWeight: 700, background: c.bg, color: c.fg,
                 // status is never colour-only: rounded = good, square = problem
                 borderRadius: v.h === 'ok' ? 14 : 3, border: `1px solid ${c.edge}`, boxShadow: on ? '0 0 0 2px var(--accent)' : undefined }}>
               {p.num}
@@ -280,6 +311,7 @@ function Timeline({ sel }: { sel: number }) {
           );
         })}
       </div>
+      <button type="button" className="icon-btn" aria-label="Scroll timeline to later pitches" onClick={() => page(1)}><Chevron /></button>
     </section>
   );
 }

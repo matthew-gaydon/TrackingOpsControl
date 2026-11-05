@@ -23,7 +23,8 @@
     "spinFitErrorReview": 0.25,
     "tssOffsetMaxMs": 10,
     "latencyMaxMs": 400,
-    "hitTrackGoodPct": 85
+    "hitTrackGoodPct": 80,
+    "hitTrackPoorPct": 50
   },
   "defaultImages": {
     "live": "images/default/live.jpg",

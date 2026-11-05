@@ -45,7 +45,8 @@ export interface Thresholds {
   spinFitErrorReview: number;          // spin fit error review line (0.25)
   tssOffsetMaxMs: number;              // TSS offset above this raises a timing warning (10)
   latencyMaxMs: number;                // pitch latency above this raises a timing warning (400)
-  hitTrackGoodPct: number;             // hit track % at or above this is "good" (85)
+  hitTrackGoodPct: number;             // hit tracked % at or above this is green (80)
+  hitTrackPoorPct: number;             // hit tracked % below this is red; between the two is amber (50)
 }
 
 export interface CameraFile {
@@ -93,6 +94,7 @@ export interface CameraSettings {
 }
 
 export type PpResult = 'success' | 'failed';
+export type AcsStatus = 'success' | 'review' | 'fail';
 export type TrackpacResult = 'valid' | 'validation_failed' | 'failed';
 export type TrackpacCloud = 'queued' | 'processing' | 'successful' | 'needs_validation' | 'uploaded' | 'failed';
 export type CloudResult = 'queued' | 'processing' | 'success' | 'failed';
@@ -103,7 +105,10 @@ export interface PitchFile {
   confidence: number;
   trackLength: number;
   trackQuality: number;
-  acsDelivered: boolean;
+  /** ACS delivery: success (green), review (amber), fail (red). */
+  acs: AcsStatus;
+  /** Older datasets: true = success, false = fail. Read only when `acs` is missing. */
+  acsDelivered?: boolean;
   hit?: { trackPct: number; distanceFt: number } | null;
   /** Strike-zone Δ per tracking camera id (P1..P6, F1..F8). null = no data from that camera. */
   strikeZone: Record<string, number | null>;
@@ -148,7 +153,7 @@ export interface Dataset {
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
   targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, spinFitErrorReview: 0.25,
-  tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 85,
+  tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 80, hitTrackPoorPct: 50,
 };
 
 /** Defaults from the BMCA screenshots (Camera / Installation / Operations tabs). */

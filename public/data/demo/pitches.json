@@ -5,7 +5,7 @@
     "confidence": 7.6,
     "trackLength": 9.4,
     "trackQuality": 6,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -50,7 +50,7 @@
     "confidence": 8.9,
     "trackLength": 9.5,
     "trackQuality": 6.1,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -95,7 +95,7 @@
     "confidence": 8.8,
     "trackLength": 9.6,
     "trackQuality": 6.2,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 90,
       "distanceFt": 234
@@ -143,7 +143,7 @@
     "confidence": 8.7,
     "trackLength": 9.7,
     "trackQuality": 6.3,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -188,7 +188,7 @@
     "confidence": 8.6,
     "trackLength": 9.8,
     "trackQuality": 6.4,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -233,7 +233,7 @@
     "confidence": 8.5,
     "trackLength": 9.9,
     "trackQuality": 6.5,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -278,7 +278,7 @@
     "confidence": 8.4,
     "trackLength": 9.4,
     "trackQuality": 6.6,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -323,7 +323,7 @@
     "confidence": 8.3,
     "trackLength": 9.5,
     "trackQuality": 6.7,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 95,
       "distanceFt": 179
@@ -371,7 +371,7 @@
     "confidence": 8.2,
     "trackLength": 9.6,
     "trackQuality": 6.8,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -416,7 +416,7 @@
     "confidence": 6.8,
     "trackLength": 9.7,
     "trackQuality": 4,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -461,7 +461,7 @@
     "confidence": 8,
     "trackLength": 9.8,
     "trackQuality": 6.1,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -506,7 +506,7 @@
     "confidence": 7.9,
     "trackLength": 9.9,
     "trackQuality": 6.2,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 99,
       "distanceFt": 327
@@ -554,7 +554,7 @@
     "confidence": 7.8,
     "trackLength": 9.4,
     "trackQuality": 6.3,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -599,7 +599,7 @@
     "confidence": 7.7,
     "trackLength": 9.5,
     "trackQuality": 6.4,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -644,7 +644,7 @@
     "confidence": 7.6,
     "trackLength": 9.6,
     "trackQuality": 6.5,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -689,7 +689,7 @@
     "confidence": 8.9,
     "trackLength": 9.7,
     "trackQuality": 6.6,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -734,7 +734,7 @@
     "confidence": 8.8,
     "trackLength": 9.8,
     "trackQuality": 6.7,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 62,
       "distanceFt": 272
@@ -782,7 +782,7 @@
     "confidence": 8.7,
     "trackLength": 9.9,
     "trackQuality": 6.8,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -827,7 +827,7 @@
     "confidence": 6.2,
     "trackLength": 9.4,
     "trackQuality": 4,
-    "acsDelivered": false,
+    "acs": "fail",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -872,7 +872,7 @@
     "confidence": 8.5,
     "trackLength": 9.5,
     "trackQuality": 6.1,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -917,7 +917,7 @@
     "confidence": 8.4,
     "trackLength": 9.6,
     "trackQuality": 6.2,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 96,
       "distanceFt": 180
@@ -965,7 +965,7 @@
     "confidence": 8.3,
     "trackLength": 9.7,
     "trackQuality": 6.3,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -1010,7 +1010,7 @@
     "confidence": 8.2,
     "trackLength": 9.8,
     "trackQuality": 6.4,
-    "acsDelivered": false,
+    "acs": "review",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -1055,7 +1055,7 @@
     "confidence": 8.1,
     "trackLength": 9.9,
     "trackQuality": 6.5,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -1100,7 +1100,7 @@
     "confidence": 8,
     "trackLength": 9.4,
     "trackQuality": 6.6,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -1145,7 +1145,7 @@
     "confidence": 7.9,
     "trackLength": 9.5,
     "trackQuality": 6.7,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -1190,7 +1190,7 @@
     "confidence": 7.8,
     "trackLength": 9.6,
     "trackQuality": 6.8,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.002,
@@ -1235,7 +1235,7 @@
     "confidence": 7.7,
     "trackLength": 9.7,
     "trackQuality": 6,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 91,
       "distanceFt": 199
@@ -1283,7 +1283,7 @@
     "confidence": 7.6,
     "trackLength": 9.8,
     "trackQuality": 6.1,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0.001,
@@ -1328,9 +1328,9 @@
     "confidence": 8.9,
     "trackLength": 9.9,
     "trackQuality": 6.2,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
-      "trackPct": 93,
+      "trackPct": 41,
       "distanceFt": 273
     },
     "strikeZone": {
@@ -1376,7 +1376,7 @@
     "confidence": 8.8,
     "trackLength": 9.4,
     "trackQuality": 6.3,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": null,
     "strikeZone": {
       "P1": 0,
@@ -1421,7 +1421,7 @@
     "confidence": 8.57,
     "trackLength": 10,
     "trackQuality": 5.91,
-    "acsDelivered": true,
+    "acs": "success",
     "hit": {
       "trackPct": 100,
       "distanceFt": 120.5

@@ -8,7 +8,7 @@ A single-venue operator UI that sits on top of BMCC (Baseball Multi-Camera Combi
 ## Commands
 - `npm run dev` runs the Vite dev server on :5173. `npm run build` runs a type-check and production build. `npm run typecheck` checks types only.
 - `npm test` runs the Vitest unit tests (alert ledger, time parsing). Add tests next to the module (`*.test.ts`), especially for new engine rules.
-- `node scripts/make-demo-data.mjs` regenerates the `demo` and `healthy` datasets.
+- `node scripts/make-demo-data.mjs` regenerates the `demo`, `healthy` and `long` (320-pitch) datasets.
 - Verify UI changes in a browser (Playwright is fine). Check the `demo` dataset for problem states and `healthy` for the calm state.
 
 ## Architecture

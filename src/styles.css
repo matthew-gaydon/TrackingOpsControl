@@ -118,6 +118,7 @@ h1, h2, h3 { margin: 0; }
 .fit-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px; align-items: stretch; }
 .scroll { overflow: auto; max-height: 70vh; }
 .stage { position: relative; height: 50vh; min-height: 220px; }
+.hscroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--border-2) transparent; }
 .sticky-head { position: sticky; top: 0; z-index: 1; background: var(--panel); }
 /* Cameras › Control: image above controls on small windows; controls beside the image on desktop */
 .ctl-layout { display: flex; flex-direction: column; gap: 12px; }

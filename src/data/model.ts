@@ -1,4 +1,4 @@
-import type { CameraFile, CameraGroup, Dataset, PitchFile, TrackpacCloud, CloudResult } from './types';
+import type { AcsStatus, CameraFile, CameraGroup, Dataset, PitchFile, TrackpacCloud, CloudResult } from './types';
 
 export type Health = 'ok' | 'warn' | 'crit';
 export const GROUP: Record<CameraGroup, { name: string; tag: string; mark: string }> = {
@@ -111,6 +111,16 @@ export function cloudState(p: PitchFile, k: number, pp: PpOps, ops: CloudOps): C
   if (ops.done[key]) return 'success';
   return p.cloud[CLOUD_TASKS[k][0]];
 }
+
+// ---------------- pitch card ----------------
+export type Tone = 'ok' | 'warn' | 'crit';
+/** Hit tracked %: green at or above hitTrackGoodPct, red below hitTrackPoorPct, amber between. */
+export function hitTone(pct: number, ds: Dataset): Tone {
+  return pct >= ds.thresholds.hitTrackGoodPct ? 'ok' : pct < ds.thresholds.hitTrackPoorPct ? 'crit' : 'warn';
+}
+export const ACS: Record<AcsStatus, { label: string; tone: Tone }> = {
+  success: { label: 'SUCCESS', tone: 'ok' }, review: { label: 'REVIEW', tone: 'warn' }, fail: { label: 'FAIL', tone: 'crit' },
+};
 
 // ---------------- strike zone ----------------
 export function strikeZone(p: PitchFile, ds: Dataset) {

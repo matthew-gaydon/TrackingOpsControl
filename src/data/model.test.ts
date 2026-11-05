@@ -4,7 +4,7 @@ import { pitchWorst, reviewable, taskState, taskStatus, taskValue, type PpOps } 
 import { deriveConditions } from '../alerts/engine';
 
 const pitch = (num: number, spin: PitchFile['pp']['spin']): PitchFile => ({
-  num, time: '05:00:00', confidence: 9, trackLength: 10, trackQuality: 6, acsDelivered: true, strikeZone: {},
+  num, time: '05:00:00', confidence: 9, trackLength: 10, trackQuality: 6, acs: 'success', strikeZone: {},
   pp: { release: { status: 'success', mph: 95 }, spin, trackpac: { status: 'valid' } },
   cloud: { trackpac: 'uploaded', bat: 'success', pitcherBiomech: 'success', batterBiomech: 'success' },
 });

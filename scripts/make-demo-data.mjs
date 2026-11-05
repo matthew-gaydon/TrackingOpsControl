@@ -1,6 +1,7 @@
-// Generates the two built-in sample datasets:
+// Generates the built-in sample datasets:
 //   public/data/demo     – the full error scenario the alert flows are demonstrated with
-//   public/data/healthy  – everything at full health (the canvas's "All healthy" switch)
+//   public/data/healthy  – everything at full health
+//   public/data/long     – the demo scenario stretched to a full game (320 pitches), for testing long lists
 // Run: node scripts/make-demo-data.mjs
 // Real data: copy a dataset folder, then replace the JSON (see DATA.md). You don't need this script for that.
 import { mkdirSync, writeFileSync, existsSync, cpSync } from 'node:fs';
@@ -25,7 +26,7 @@ const pad = (n, w = 2) => String(n).padStart(w, '0');
 const bmccTime = (sec) => `${pad(Math.floor(sec / 3600) % 24)}-${pad(Math.floor(sec / 60) % 60)}-${pad(sec % 60)}.${pad(Math.floor((sec * 997) % 1000), 3)}`;
 const clock = (sec) => `${pad(Math.floor(sec / 3600) % 24)}:${pad(Math.floor(sec / 60) % 60)}:${pad(sec % 60)}`;
 
-function build(healthy) {
+function build(healthy, N = 32) {
   const H = healthy;
   const cameras = [];
   for (let k = 1; k <= 6; k++) cameras.push({
@@ -47,45 +48,49 @@ function build(healthy) {
     running: H || fps > 0, fps: H ? 600 : fps, calibration: CAL,
   }));
 
-  // 32 pitches, roughly 75 s apart, ending on six real BMCC results
+  // N pitches ending on six real BMCC results: 32 roughly 75 s apart, or a full game about 34 s apart
   const real = [[96.4, 2519.6, 0.13], [98.1, 2551.8, 0.14], [98.0, 2535.3, 0.13], [80.9, 2343.4, 0.12], [98.5, 2580.3, 0.13], [97.6, 2564.7, 0.20]];
-  const start = 4 * 3600 + 31 * 60 + 10; // 04:31:10
+  const last = N - 1, gap = N > 32 ? 34 : 75;
+  const start = 4 * 3600 + 31 * 60 + 10 - (N - 32) * gap; // the last pitch lands near 05:10 either way
   const flagged = H ? {} : { 3: 'spin', 9: 'release', 14: 'spin', 15: 'trackpac', 21: 'spin', 24: 'spin' };
-  const lowConf = H ? {} : { 18: 6.2, 9: 6.8 }; const noAcs = H ? {} : { 18: true, 22: true };
+  const lowConf = H ? {} : { 18: 6.2, 9: 6.8 }; const acsOf = H ? {} : { 18: 'fail', 22: 'review' };
   const hits = { 2: 1, 7: 1, 11: 1, 16: 1, 20: 1, 27: 1, 29: 1, 31: 1 };
   const cloudFail = H ? {} : { '20:bat': 1, '11:pitcherBiomech': 1, '27:batterBiomech': 0 };
   const trackIds = cameras.filter((c) => c.group !== 'biomechanics').map((c) => c.id);
   const pitches = [];
-  for (let i = 0; i < 32; i++) {
-    const t = start + i * 75 + ((i * 13) % 20);
-    const r = i >= 26 ? real[i - 26] : [88 + ((i * 7) % 11), 2280 + ((i * 53) % 320), +(0.09 + i * 0.0032 + ((i % 3) * 0.01)).toFixed(2)];
-    const err = !H && i === 24 ? 0.27 : r[2];
-    const f = flagged[i];
-    const conf = i === 31 ? 8.57 : (lowConf[i] || +(7.6 + ((i * 13) % 14) / 10).toFixed(2));
+  for (let i = 0; i < N; i++) {
+    const t = start + i * gap + ((i * 13) % 20);
+    // a long game repeats a sprinkling of the demo's problems so the timeline has colour throughout
+    const j = N > 32 && i < N - 32 ? i % 32 : i - (N - 32);
+    const r = i >= N - 6 ? real[i - (N - 6)] : [88 + ((i * 7) % 11), 2280 + ((i * 53) % 320), +(0.09 + (i % 32) * 0.0032 + ((i % 3) * 0.01)).toFixed(2)];
+    const err = !H && j === 24 ? 0.27 : r[2];
+    const f = flagged[j];
+    const conf = i === last ? 8.57 : (lowConf[j] || +(7.6 + ((i * 13) % 14) / 10).toFixed(2));
     const strikeZone = {};
     trackIds.forEach((id, k) => {
       let d = ((i * 7 + k * 3) % 3) / 1000;
       if (!H && id === 'P6') d = null;                       // not running
-      if (!H && id === 'F5' && (i === 13 || i === 14)) d = null; // missing while FullField 5 was down
-      if (!H && id === 'F2' && i === 31) d = 0.007;           // out of tolerance on the latest pitch
+      if (!H && id === 'F5' && i >= N - 32 && (j === 13 || j === 14)) d = null; // missing while FullField 5 was down
+      if (!H && id === 'F2' && i === last) d = 0.007;           // out of tolerance on the latest pitch
       strikeZone[id] = d;
     });
-    const tpStatus = f === 'trackpac' ? 'validation_failed' : (!H && i === 7) ? 'failed' : 'valid';
-    const age = 31 - i;
+    const tpStatus = f === 'trackpac' ? 'validation_failed' : (!H && j === 7) ? 'failed' : 'valid';
+    const age = last - i;
     const tpCloud = tpStatus === 'failed' ? 'failed' : tpStatus === 'validation_failed' ? 'needs_validation' : age <= 1 ? 'successful' : 'uploaded';
     const cloudOf = (key, k) => {
       if (tpCloud !== 'uploaded') return 'queued';
-      if (cloudFail[i + ':' + key] !== undefined) return 'failed';
+      if (i >= N - 32 && cloudFail[j + ':' + key] !== undefined) return 'failed';
       if (age === 2) return 'processing';
       if (age === 3) return k === 0 ? 'success' : 'processing';
       return 'success';
     };
-    const hitTrack = i === 31 ? 100 : i === 16 && !H ? 62 : 88 + (i % 12);
+    // hit tracked %: green at 80+, amber 50-80, red under 50
+    const hitTrack = i === last ? 100 : j === 16 && !H ? 62 : j === 29 && !H ? 41 : 88 + (i % 12);
     pitches.push({
       num: i + 1, time: bmccTime(t), confidence: conf,
-      trackLength: i === 31 ? 10.0 : +('9.' + (4 + (i % 6))), trackQuality: i === 31 ? 5.91 : +((conf > 7 ? '6.' : '4.') + (i % 9)),
-      acsDelivered: !noAcs[i],
-      hit: hits[i] ? { trackPct: hitTrack, distanceFt: i === 31 ? 120.5 : 160 + ((i * 37) % 240) } : null,
+      trackLength: i === last ? 10.0 : +('9.' + (4 + (i % 6))), trackQuality: i === last ? 5.91 : +((conf > 7 ? '6.' : '4.') + (i % 9)),
+      acs: acsOf[j] ?? 'success',
+      hit: hits[j] ? { trackPct: hitTrack, distanceFt: i === last ? 120.5 : 160 + ((i * 37) % 240) } : null,
       strikeZone,
       pp: {
         release: { status: f === 'release' ? 'failed' : 'success', mph: r[0] },
@@ -96,11 +101,12 @@ function build(healthy) {
     });
   }
   const tOf = (n) => { const p = pitches[n - 1].time.split(/[-:.]/).map(Number); return p[0] * 3600 + p[1] * 60 + p[2]; };
-  const now = tOf(32) + 16;
+  const now = tOf(N) + 16;
+  const at = (n) => tOf(N - 32 + n); // the demo's pitch n, counted within the last 32
 
   const status = H ? [] : [
     { at: clock(start - 3600), level: 'Warning', source: 'BMCC', text: 'Writing to disk disabled: true' },
-    { at: clock(tOf(14) - 20), clearedAt: clock(tOf(15) + 22), level: 'CRITICAL ERROR', source: 'BMCC', text: 'Cameras:: "11 Missing from multicam frames, ensure software is launched and running at full frame rate."' },
+    { at: clock(at(14) - 20), clearedAt: clock(at(15) + 22), level: 'CRITICAL ERROR', source: 'BMCC', text: 'Cameras:: "11 Missing from multicam frames, ensure software is launched and running at full frame rate."' },
     { at: clock(now - 40), level: 'CRITICAL ERROR', source: 'BMCC', text: 'Cameras:: "6 Missing from multicam frames, ensure software is launched and running at full frame rate."' },
     { at: clock(now - 300), level: 'ERROR', source: 'BMCC', text: 'Monitored Cameras: BMCA27 — status red (not connected)' },
     { at: clock(now - 5), level: 'Warning', source: 'BMCA1', text: 'Antiwobble Consensus: "Not enough successful patches to do requested pose type, doing Pose 2 (Pitch, Yaw) instead"' },
@@ -113,20 +119,20 @@ function build(healthy) {
     session: H ? 'in' : 'out', now: clock(now), date: '2026-11-04', // clock-only times: UTC date of `now`
     redundancy: { role: 'MAIN', btcConnected: true, bdsConnected: H, peers: 1 },
     timing: { latencyMs: 172, tssOffsetMs: H ? 4 : 18 },
-    thresholds: { targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, spinFitErrorReview: 0.25, tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 85 },
+    thresholds: { targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, spinFitErrorReview: 0.25, tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 80, hitTrackPoorPct: 50 },
     defaultImages: { live: 'images/default/live.jpg', tracking: 'images/default/tracking.png', mosaic: 'images/default/mosaic.jpg', still: 'images/default/still.jpg', spinStrip: 'images/default/spin-strip.png' },
   };
   return { game, cameras, pitches, status };
 }
 
-for (const [name, healthy] of [['demo', false], ['healthy', true]]) {
+for (const [name, healthy, n] of [['demo', false, 32], ['healthy', true, 32], ['long', false, 320]]) {
   const dir = join(root, name);
   mkdirSync(dir, { recursive: true });
-  const d = build(healthy);
+  const d = build(healthy, n);
   for (const [file, val] of Object.entries({ 'game.json': d.game, 'cameras.json': d.cameras, 'pitches.json': d.pitches, 'status.json': d.status })) {
     writeFileSync(join(dir, file), JSON.stringify(val, null, 2) + '\n');
   }
   if (name !== 'demo' && existsSync(join(root, 'demo', 'images')) && !existsSync(join(dir, 'images'))) cpSync(join(root, 'demo', 'images'), join(dir, 'images'), { recursive: true });
   console.log('wrote', dir);
 }
-writeFileSync(join(root, 'index.json'), JSON.stringify({ datasets: ['demo', 'healthy'], default: 'demo' }, null, 2) + '\n');
+writeFileSync(join(root, 'index.json'), JSON.stringify({ datasets: ['demo', 'healthy', 'long'], default: 'demo' }, null, 2) + '\n');

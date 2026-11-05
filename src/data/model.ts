@@ -1,0 +1,106 @@
+import type { CameraFile, CameraGroup, Dataset, PitchFile, TrackpacCloud, CloudResult } from './types';
+
+export type Health = 'ok' | 'warn' | 'crit';
+export const GROUP: Record<CameraGroup, { name: string; tag: string; mark: string }> = {
+  pitchToPlate: { name: 'PitchToPlate', tag: 'P2P', mark: 'P' },
+  fullField: { name: 'FullField', tag: 'FF', mark: 'F' },
+  biomechanics: { name: 'Biomechanics', tag: 'BIO', mark: 'B' },
+};
+export const label = (c: CameraFile) => `${GROUP[c.group].name} ${c.number}`;
+export const mark = (c: CameraFile) => `${GROUP[c.group].mark}${c.number}`;
+export const isTracking = (c: CameraFile) => c.group !== 'biomechanics';
+export const targetFps = (c: CameraFile, ds: Dataset) => c.targetFps ?? ds.thresholds.targetFps;
+
+export function health(c: CameraFile, ds: Dataset): Health {
+  if (!c.running) return 'crit';
+  if (c.fps < targetFps(c, ds)) return 'warn';
+  if (c.tracking && (!c.tracking.multicamPresent || !c.tracking.playerTracking)) return 'warn';
+  return 'ok';
+}
+export function healthNote(c: CameraFile, ds: Dataset): string {
+  if (!c.running) return 'Not running';
+  if (c.fps < targetFps(c, ds)) return `${c.fps}/${targetFps(c, ds)}`;
+  if (c.tracking && !c.tracking.playerTracking) return 'Player tracking skipped';
+  if (c.tracking && !c.tracking.multicamPresent) return 'Missing from multicam';
+  return `${c.fps}/${targetFps(c, ds)}`;
+}
+
+export const COLOR = {
+  ground: '#0B0E13', panel: '#12161D', border: '#252B36', text: '#E7ECF2', muted: '#95A1B2',
+  ok: '#3DD68C', warn: '#F5B841', crit: '#FF5F57', issue: '#C2413B', accent: '#5AB8FF', dev: '#5E6B7D',
+};
+
+// ---------------- post-processing task state (data + operator actions) ----------------
+export const TASKS = ['Release', 'Spin', 'Trackpac'] as const;
+export type TaskState = 'ok' | 'warn' | 'crit' | 'reviewed' | 'queued' | 'processing';
+export interface PpOps { reviewed: Record<string, true>; queue: string[]; done: Record<string, true> }
+export const tkey = (num: number, k: number) => `${num}:${k}`;
+
+/** Raw state from data: Release/Spin failed -> warn (amber "Failed"), Trackpac validation failed -> warn, Trackpac failed -> crit. */
+export function rawTaskState(p: PitchFile, k: number): 'ok' | 'warn' | 'crit' {
+  if (k === 0) return p.pp.release.status === 'success' ? 'ok' : 'warn';
+  if (k === 1) return p.pp.spin.status === 'success' ? 'ok' : 'warn';
+  const t = p.pp.trackpac.status;
+  return t === 'valid' ? 'ok' : t === 'failed' ? 'crit' : 'warn';
+}
+export function taskState(p: PitchFile, k: number, ops: PpOps): TaskState {
+  const key = tkey(p.num, k);
+  const qi = ops.queue.indexOf(key);
+  if (qi === 0) return 'processing';
+  if (qi > 0) return 'queued';
+  if (ops.done[key]) return 'ok';
+  if (ops.reviewed[key]) return 'reviewed';
+  return rawTaskState(p, k);
+}
+export const isBad = (t: TaskState) => t === 'warn' || t === 'crit';
+export function taskStatus(p: PitchFile, k: number, ops: PpOps): string {
+  const t = taskState(p, k, ops);
+  if (t === 'processing') return 'Processing…';
+  if (t === 'queued') return `Queued · ${ops.queue.indexOf(tkey(p.num, k)) + 1}`;
+  if (t === 'ok') return 'Success';
+  if (t === 'reviewed') return 'Reviewed';
+  return k === 2 && t === 'warn' ? 'Needs review' : 'Failed';
+}
+export function taskValue(p: PitchFile, k: number, ops: PpOps): string {
+  const t = taskState(p, k, ops);
+  if (t === 'queued' || t === 'processing') return taskStatus(p, k, ops);
+  if (k === 2) return t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
+  if (t === 'reviewed') return 'Reviewed by operator';
+  if (t !== 'ok') return 'Needs reprocess';
+  return k === 0 ? `${p.pp.release.mph ?? '—'} mph` : `RPM ${p.pp.spin.rpm ?? '—'} · err ${p.pp.spin.fitError ?? '—'}`;
+}
+export function pitchWorst(p: PitchFile, ops: PpOps): 'ok' | 'warn' | 'crit' {
+  const s = [0, 1, 2].map((k) => taskState(p, k, ops));
+  return s.includes('crit') ? 'crit' : s.includes('warn') ? 'warn' : 'ok';
+}
+
+// ---------------- cloud state (data + repushes) ----------------
+export const CLOUD_TASKS = [['bat', 'Bat'], ['pitcherBiomech', 'Pitcher biomech'], ['batterBiomech', 'Batter biomech']] as const;
+export type CloudKey = (typeof CLOUD_TASKS)[number][0];
+export interface CloudOps { retried: Record<string, number>; done: Record<string, true> }
+
+export function trackpacCloud(p: PitchFile, pp: PpOps): TrackpacCloud {
+  const t = taskState(p, 2, pp);
+  if (t === 'crit') return 'failed';
+  if (t === 'warn') return 'needs_validation';
+  if (t === 'reviewed' && p.cloud.trackpac === 'needs_validation') return 'successful';
+  if (t === 'ok' && (p.cloud.trackpac === 'needs_validation' || p.cloud.trackpac === 'failed')) return 'successful';
+  return p.cloud.trackpac;
+}
+export function cloudState(p: PitchFile, k: number, pp: PpOps, ops: CloudOps): CloudResult {
+  if (trackpacCloud(p, pp) !== 'uploaded') return 'queued';
+  const key = tkey(p.num, k);
+  if (ops.retried[key]) return 'processing';
+  if (ops.done[key]) return 'success';
+  return p.cloud[CLOUD_TASKS[k][0]];
+}
+
+// ---------------- strike zone ----------------
+export function strikeZone(p: PitchFile, ds: Dataset) {
+  const tol = ds.thresholds.strikeZoneTolerance;
+  return ds.cameras.filter(isTracking).map((c) => {
+    const d = p.strikeZone[c.id];
+    const state: 'ok' | 'warn' | 'crit' = d === null || d === undefined ? 'crit' : Math.abs(d) > tol ? 'warn' : 'ok';
+    return { cam: c, d: d ?? null, state };
+  });
+}

@@ -1,0 +1,2210 @@
+[
+  {
+    "id": "P1",
+    "group": "pitchToPlate",
+    "number": 1,
+    "bmccTrackingNumber": 1,
+    "host": "BMCA1",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "P2",
+    "group": "pitchToPlate",
+    "number": 2,
+    "bmccTrackingNumber": 2,
+    "host": "BMCA2",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "P3",
+    "group": "pitchToPlate",
+    "number": 3,
+    "bmccTrackingNumber": 3,
+    "host": "BMCA3",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "P4",
+    "group": "pitchToPlate",
+    "number": 4,
+    "bmccTrackingNumber": 4,
+    "host": "BMCA4",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "P5",
+    "group": "pitchToPlate",
+    "number": 5,
+    "bmccTrackingNumber": 5,
+    "host": "BMCA5",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "P6",
+    "group": "pitchToPlate",
+    "number": 6,
+    "bmccTrackingNumber": 6,
+    "host": "BMCA6",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F1",
+    "group": "fullField",
+    "number": 1,
+    "bmccTrackingNumber": 7,
+    "host": "BMCA7",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F2",
+    "group": "fullField",
+    "number": 2,
+    "bmccTrackingNumber": 8,
+    "host": "BMCA8",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F3",
+    "group": "fullField",
+    "number": 3,
+    "bmccTrackingNumber": 9,
+    "host": "BMCA9",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F4",
+    "group": "fullField",
+    "number": 4,
+    "bmccTrackingNumber": 10,
+    "host": "BMCA10",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F5",
+    "group": "fullField",
+    "number": 5,
+    "bmccTrackingNumber": 11,
+    "host": "BMCA11",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F6",
+    "group": "fullField",
+    "number": 6,
+    "bmccTrackingNumber": 12,
+    "host": "BMCA12",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F7",
+    "group": "fullField",
+    "number": 7,
+    "bmccTrackingNumber": 13,
+    "host": "BMCA13",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "F8",
+    "group": "fullField",
+    "number": 8,
+    "bmccTrackingNumber": 14,
+    "host": "BMCA14",
+    "running": true,
+    "fps": 600,
+    "tracking": {
+      "multicamPresent": true,
+      "playerTracking": true
+    },
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    },
+    "lastBall": {
+      "strength": 7,
+      "perimeter": 62.4,
+      "area": 288,
+      "boxes": [
+        {
+          "x": 48,
+          "y": 280,
+          "size": 34
+        },
+        {
+          "x": 368,
+          "y": 186,
+          "size": 34
+        }
+      ]
+    },
+    "antiwobble": {
+      "linesMatched": 14,
+      "linesTotal": 14,
+      "patchesMatched": 8,
+      "patchesTotal": 8
+    }
+  },
+  {
+    "id": "B1",
+    "group": "biomechanics",
+    "number": 1,
+    "host": "BMCA15",
+    "bmccName": "Camera 15",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B2",
+    "group": "biomechanics",
+    "number": 2,
+    "host": "BMCA15",
+    "bmccName": "Camera 23",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B3",
+    "group": "biomechanics",
+    "number": 3,
+    "host": "BMCA16",
+    "bmccName": "Camera 16",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B4",
+    "group": "biomechanics",
+    "number": 4,
+    "host": "BMCA16",
+    "bmccName": "Camera 24",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B5",
+    "group": "biomechanics",
+    "number": 5,
+    "host": "BMCA17",
+    "bmccName": "Camera 17",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B6",
+    "group": "biomechanics",
+    "number": 6,
+    "host": "BMCA17",
+    "bmccName": "Camera 21",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B7",
+    "group": "biomechanics",
+    "number": 7,
+    "host": "BMCA18",
+    "bmccName": "Camera 18",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B8",
+    "group": "biomechanics",
+    "number": 8,
+    "host": "BMCA18",
+    "bmccName": "Camera 22",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B9",
+    "group": "biomechanics",
+    "number": 9,
+    "host": "BMCA19",
+    "bmccName": "Camera 19",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B10",
+    "group": "biomechanics",
+    "number": 10,
+    "host": "BMCA19",
+    "bmccName": "Camera 29",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B11",
+    "group": "biomechanics",
+    "number": 11,
+    "host": "BMCA20",
+    "bmccName": "Camera 20",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B12",
+    "group": "biomechanics",
+    "number": 12,
+    "host": "BMCA20",
+    "bmccName": "Camera 30",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B13",
+    "group": "biomechanics",
+    "number": 13,
+    "host": "BMCA25",
+    "bmccName": "BMCA25",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B14",
+    "group": "biomechanics",
+    "number": 14,
+    "host": "BMCA26",
+    "bmccName": "BMCA26",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B15",
+    "group": "biomechanics",
+    "number": 15,
+    "host": "BMCA27",
+    "bmccName": "BMCA27",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  },
+  {
+    "id": "B16",
+    "group": "biomechanics",
+    "number": 16,
+    "host": "BMCA28",
+    "bmccName": "BMCA28",
+    "running": true,
+    "fps": 600,
+    "calibration": {
+      "imageSize": [
+        1044,
+        425
+      ],
+      "lines": [
+        [
+          160,
+          373,
+          1043,
+          74
+        ],
+        [
+          160,
+          373,
+          1043,
+          323
+        ],
+        [
+          907,
+          118,
+          1043,
+          100
+        ]
+      ],
+      "keyPoints": [
+        {
+          "id": "hp",
+          "label": "Home plate",
+          "x": 160,
+          "y": 373
+        },
+        {
+          "id": "ul",
+          "label": "Upper foul line",
+          "x": 600,
+          "y": 224
+        },
+        {
+          "id": "ll",
+          "label": "Lower foul line",
+          "x": 600,
+          "y": 348
+        },
+        {
+          "id": "md",
+          "label": "Mound line",
+          "x": 907,
+          "y": 118
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,131 @@
+import { create } from 'zustand';
+import type { CameraSettings, Dataset, SessionMode } from '../data/types';
+import type { Condition, Route } from '../alerts/engine';
+import { acknowledge, reconcile, type Alert, type Occurrence } from '../alerts/ledger';
+
+export type View = 'game' | 'cameras' | 'pp' | 'cloud';
+export interface Zoom { s: number; x: number; y: number }
+export interface MenuPos { x: number; y: number; task: number | null }
+
+export interface UiState {
+  ds: Dataset | null;
+  loadError: string | null;
+  loadedAt: number;
+  elapsedSec: number;
+
+  // shell + alerts
+  view: View;
+  prevView: View | null;
+  focusAlertId: string | null;
+  crumbPitch: number | null;          // "Back to Game · Pitch N" after a pitch-card jump
+  drawer: boolean;
+  drawerTab: 'open' | 'done';
+  dev: boolean;
+  /** Every alert occurrence seen this session, with its lifecycle. See src/alerts/ledger.ts. */
+  ledger: Occurrence[];
+  ledgerReady: boolean;
+  dismissed: Record<string, true>;    // toasts hidden (does not acknowledge), by occurrence id
+  session: SessionMode | null;        // operator override of game.session
+  idsOpen: boolean;
+
+  // game
+  gameSel: number | null;             // pitch number; null = live (latest)
+  fieldView: 'combined' | 'pitchToPlate' | 'fullField' | 'biomechanics';
+  imgMode: 'mosaic' | 'hit';
+  bigCam: string | null;
+  lastHitOverlay: boolean;
+  szAll: boolean;
+  pop: string | null;
+
+  // cameras
+  cam: string;
+  camTab: 'tracking' | 'mosaic' | 'still';
+  camFilter: 'all' | 'problems' | 'pitchToPlate' | 'fullField' | 'biomechanics';
+  camSub: 'monitor' | 'control';
+  ctrlTab: 'image' | 'ball' | 'calib';
+  ctlSaved: Record<string, Partial<CameraSettings>>;
+  ctlLive: Record<string, Partial<CameraSettings>>;
+  nudgeOn: Record<string, boolean>;
+  nudgeStep: 'fine' | 'normal' | 'coarse';
+  overlays: { cal: boolean; ball: boolean };
+  clickPts: boolean;
+  pickPt: string | null;
+  moveMsg: { cam: string; text: string } | null;
+  resetOpen: boolean;
+  bmcaNote: boolean;
+  lensRestart: string | null;
+
+  // post-processing
+  ppFilter: 'all' | 'flag' | 'affected';
+  ppAffected: number[];
+  ppSel: number | null;
+  ppPicks: Record<number, true>;
+  ppTask: number | null;
+  ppMenu: MenuPos | null;
+  reviewed: Record<string, true>;
+  ppQueue: string[];
+  ppDone: Record<string, true>;
+
+  // cloud
+  cloudFilter: 'all' | 'failed' | 'open';
+  cloudPicks: Record<number, true>;
+  cloudAnchor: number | null;
+  clMenu: MenuPos | null;
+  cloudRetried: Record<string, number>;
+  cloudDone: Record<string, true>;
+
+  zoom: Record<string, Zoom>;
+
+  set: (p: Partial<UiState> | ((s: UiState) => Partial<UiState>)) => void;
+  goTo: (a: Alert) => void;
+  /** Acknowledge one alert occurrence. */
+  ack: (id: string) => void;
+  /** Acknowledge every open occurrence whose condition key matches (used by one-click fixes). */
+  ackKeys: (match: (key: string) => boolean) => void;
+  /** Feed the engine's current conditions into the ledger. */
+  syncAlerts: (conds: Condition[]) => void;
+}
+
+/** The dataset clock right now: game.now plus the time since the dataset loaded. */
+export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
+  return s.ds ? s.ds.nowMs + (Date.now() - s.loadedAt) : Date.now();
+}
+
+export const useUi = create<UiState>((set, get) => ({
+  ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
+  view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, drawer: false, drawerTab: 'open', dev: false,
+  ledger: [], ledgerReady: false, dismissed: {}, session: null, idsOpen: false,
+  gameSel: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
+  cam: 'P1', camTab: 'tracking', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
+  ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,
+  resetOpen: false, bmcaNote: false, lensRestart: null,
+  ppFilter: 'all', ppAffected: [], ppSel: null, ppPicks: {}, ppTask: null, ppMenu: null, reviewed: {}, ppQueue: [], ppDone: {},
+  cloudFilter: 'all', cloudPicks: {}, cloudAnchor: null, clMenu: null, cloudRetried: {}, cloudDone: {},
+  zoom: {},
+
+  set: (p) => set(typeof p === 'function' ? p(get()) : p),
+
+  /** "Take me there": switch view, select the target, remember where we came from. */
+  goTo: (a) => {
+    const s = get();
+    const r: Route = a.route;
+    const ch: Partial<UiState> = { view: r.view, focusAlertId: a.id, drawer: false, prevView: r.view === s.view ? s.prevView : s.view, crumbPitch: null, dismissed: { ...s.dismissed, [a.id]: true } };
+    if (r.cam) Object.assign(ch, { cam: r.cam, camTab: r.camTab ?? 'tracking', camFilter: r.camFilter ?? 'all', camSub: r.camSub ?? 'monitor', resetOpen: false, pickPt: null });
+    if (r.ctrl) ch.ctrlTab = r.ctrl;
+    if (r.ppFilter) Object.assign(ch, { ppFilter: r.ppFilter, ppAffected: r.affected ?? [], ppSel: r.ppSel ?? null, ppPicks: {}, ppMenu: null, ppTask: r.ppFilter === 'flag' ? 1 : null });
+    if (r.cloudFilter) Object.assign(ch, { cloudFilter: r.cloudFilter, cloudPicks: {}, clMenu: null });
+    set(ch);
+  },
+  ack: (id) => set((s) => ({ ledger: acknowledge(s.ledger, id, clockMs(s)), dismissed: { ...s.dismissed, [id]: true } })),
+  ackKeys: (match) => set((s) => {
+    const ids = s.ledger.filter((o) => o.ackedAt === undefined && match(o.key)).map((o) => o.id);
+    let ledger = s.ledger; const dismissed = { ...s.dismissed };
+    ids.forEach((id) => { ledger = acknowledge(ledger, id, clockMs(s)); dismissed[id] = true; });
+    return { ledger, dismissed };
+  }),
+  syncAlerts: (conds) => {
+    const s = get();
+    const ledger = reconcile(s.ledger, conds, clockMs(s), !s.ledgerReady);
+    if (ledger !== s.ledger || !s.ledgerReady) set({ ledger, ledgerReady: true });
+  },
+}));

@@ -1,0 +1,1466 @@
+[
+  {
+    "num": 1,
+    "time": "04-31-10.190",
+    "confidence": 7.6,
+    "trackLength": 9.4,
+    "trackQuality": 6,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 88
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2280,
+        "fitError": 0.09
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 2,
+    "time": "04-32-38.926",
+    "confidence": 8.9,
+    "trackLength": 9.5,
+    "trackQuality": 6.1,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 95
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2333,
+        "fitError": 0.1
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 3,
+    "time": "04-33-46.722",
+    "confidence": 8.8,
+    "trackLength": 9.6,
+    "trackQuality": 6.2,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 90,
+      "distanceFt": 234
+    },
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 91
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2386,
+        "fitError": 0.12
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 4,
+    "time": "04-35-14.458",
+    "confidence": 8.7,
+    "trackLength": 9.7,
+    "trackQuality": 6.3,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98
+      },
+      "spin": {
+        "status": "failed",
+        "rpm": 2439,
+        "fitError": 0.1
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 5,
+    "time": "04-36-22.254",
+    "confidence": 8.6,
+    "trackLength": 9.8,
+    "trackQuality": 6.4,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 94
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2492,
+        "fitError": 0.11
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 6,
+    "time": "04-37-30.050",
+    "confidence": 8.5,
+    "trackLength": 9.9,
+    "trackQuality": 6.5,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 90
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2545,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 7,
+    "time": "04-38-58.786",
+    "confidence": 8.4,
+    "trackLength": 9.4,
+    "trackQuality": 6.6,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 97
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2598,
+        "fitError": 0.11
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 8,
+    "time": "04-40-06.582",
+    "confidence": 8.3,
+    "trackLength": 9.5,
+    "trackQuality": 6.7,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 95,
+      "distanceFt": 179
+    },
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 93
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2331,
+        "fitError": 0.12
+      },
+      "trackpac": {
+        "status": "failed"
+      }
+    },
+    "cloud": {
+      "trackpac": "failed",
+      "bat": "queued",
+      "pitcherBiomech": "queued",
+      "batterBiomech": "queued"
+    }
+  },
+  {
+    "num": 9,
+    "time": "04-41-14.378",
+    "confidence": 8.2,
+    "trackLength": 9.6,
+    "trackQuality": 6.8,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 89
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2384,
+        "fitError": 0.14
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 10,
+    "time": "04-42-42.114",
+    "confidence": 6.8,
+    "trackLength": 9.7,
+    "trackQuality": 4,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "failed",
+        "mph": 96
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2437,
+        "fitError": 0.12
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 11,
+    "time": "04-43-50.910",
+    "confidence": 8,
+    "trackLength": 9.8,
+    "trackQuality": 6.1,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 92
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2490,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 12,
+    "time": "04-44-58.706",
+    "confidence": 7.9,
+    "trackLength": 9.9,
+    "trackQuality": 6.2,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 99,
+      "distanceFt": 327
+    },
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 88
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2543,
+        "fitError": 0.15
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "failed",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 13,
+    "time": "04-46-26.442",
+    "confidence": 7.8,
+    "trackLength": 9.4,
+    "trackQuality": 6.3,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 95
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2596,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 14,
+    "time": "04-47-34.238",
+    "confidence": 7.7,
+    "trackLength": 9.5,
+    "trackQuality": 6.4,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": null,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 91
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2329,
+        "fitError": 0.14
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 15,
+    "time": "04-48-42.034",
+    "confidence": 7.6,
+    "trackLength": 9.6,
+    "trackQuality": 6.5,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": null,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98
+      },
+      "spin": {
+        "status": "failed",
+        "rpm": 2382,
+        "fitError": 0.15
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 16,
+    "time": "04-50-10.770",
+    "confidence": 8.9,
+    "trackLength": 9.7,
+    "trackQuality": 6.6,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 94
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2435,
+        "fitError": 0.14
+      },
+      "trackpac": {
+        "status": "validation_failed"
+      }
+    },
+    "cloud": {
+      "trackpac": "needs_validation",
+      "bat": "queued",
+      "pitcherBiomech": "queued",
+      "batterBiomech": "queued"
+    }
+  },
+  {
+    "num": 17,
+    "time": "04-51-18.566",
+    "confidence": 8.8,
+    "trackLength": 9.8,
+    "trackQuality": 6.7,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 62,
+      "distanceFt": 272
+    },
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 90
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2488,
+        "fitError": 0.15
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 18,
+    "time": "04-52-26.362",
+    "confidence": 8.7,
+    "trackLength": 9.9,
+    "trackQuality": 6.8,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 97
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2541,
+        "fitError": 0.16
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 19,
+    "time": "04-53-54.098",
+    "confidence": 6.2,
+    "trackLength": 9.4,
+    "trackQuality": 4,
+    "acsDelivered": false,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 93
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2594,
+        "fitError": 0.15
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 20,
+    "time": "04-55-02.894",
+    "confidence": 8.5,
+    "trackLength": 9.5,
+    "trackQuality": 6.1,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 89
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2327,
+        "fitError": 0.16
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 21,
+    "time": "04-56-10.690",
+    "confidence": 8.4,
+    "trackLength": 9.6,
+    "trackQuality": 6.2,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 96,
+      "distanceFt": 180
+    },
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 96
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2380,
+        "fitError": 0.17
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "failed",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 22,
+    "time": "04-57-38.426",
+    "confidence": 8.3,
+    "trackLength": 9.7,
+    "trackQuality": 6.3,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 92
+      },
+      "spin": {
+        "status": "failed",
+        "rpm": 2433,
+        "fitError": 0.16
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 23,
+    "time": "04-58-46.222",
+    "confidence": 8.2,
+    "trackLength": 9.8,
+    "trackQuality": 6.4,
+    "acsDelivered": false,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 88
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2486,
+        "fitError": 0.17
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 24,
+    "time": "05-00-14.958",
+    "confidence": 8.1,
+    "trackLength": 9.9,
+    "trackQuality": 6.5,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 95
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2539,
+        "fitError": 0.18
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 25,
+    "time": "05-01-22.754",
+    "confidence": 8,
+    "trackLength": 9.4,
+    "trackQuality": 6.6,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 91
+      },
+      "spin": {
+        "status": "failed",
+        "rpm": 2592,
+        "fitError": 0.27
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 26,
+    "time": "05-02-30.550",
+    "confidence": 7.9,
+    "trackLength": 9.5,
+    "trackQuality": 6.7,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2325,
+        "fitError": 0.18
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 27,
+    "time": "05-03-58.286",
+    "confidence": 7.8,
+    "trackLength": 9.6,
+    "trackQuality": 6.8,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 96.4
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2519.6,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "success"
+    }
+  },
+  {
+    "num": 28,
+    "time": "05-05-06.082",
+    "confidence": 7.7,
+    "trackLength": 9.7,
+    "trackQuality": 6,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 91,
+      "distanceFt": 199
+    },
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98.1
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2551.8,
+        "fitError": 0.14
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "success",
+      "batterBiomech": "failed"
+    }
+  },
+  {
+    "num": 29,
+    "time": "05-06-14.878",
+    "confidence": 7.6,
+    "trackLength": 9.8,
+    "trackQuality": 6.1,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.001,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2535.3,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "success",
+      "pitcherBiomech": "processing",
+      "batterBiomech": "processing"
+    }
+  },
+  {
+    "num": 30,
+    "time": "05-07-42.614",
+    "confidence": 8.9,
+    "trackLength": 9.9,
+    "trackQuality": 6.2,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 93,
+      "distanceFt": 273
+    },
+    "strikeZone": {
+      "P1": 0.002,
+      "P2": 0.002,
+      "P3": 0.002,
+      "P4": 0.002,
+      "P5": 0.002,
+      "P6": null,
+      "F1": 0.002,
+      "F2": 0.002,
+      "F3": 0.002,
+      "F4": 0.002,
+      "F5": 0.002,
+      "F6": 0.002,
+      "F7": 0.002,
+      "F8": 0.002
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 80.9
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2343.4,
+        "fitError": 0.12
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "uploaded",
+      "bat": "processing",
+      "pitcherBiomech": "processing",
+      "batterBiomech": "processing"
+    }
+  },
+  {
+    "num": 31,
+    "time": "05-08-50.410",
+    "confidence": 8.8,
+    "trackLength": 9.4,
+    "trackQuality": 6.3,
+    "acsDelivered": true,
+    "hit": null,
+    "strikeZone": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0,
+      "P5": 0,
+      "P6": null,
+      "F1": 0,
+      "F2": 0,
+      "F3": 0,
+      "F4": 0,
+      "F5": 0,
+      "F6": 0,
+      "F7": 0,
+      "F8": 0
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 98.5
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2580.3,
+        "fitError": 0.13
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "successful",
+      "bat": "queued",
+      "pitcherBiomech": "queued",
+      "batterBiomech": "queued"
+    }
+  },
+  {
+    "num": 32,
+    "time": "05-09-58.206",
+    "confidence": 8.57,
+    "trackLength": 10,
+    "trackQuality": 5.91,
+    "acsDelivered": true,
+    "hit": {
+      "trackPct": 100,
+      "distanceFt": 120.5
+    },
+    "strikeZone": {
+      "P1": 0.001,
+      "P2": 0.001,
+      "P3": 0.001,
+      "P4": 0.001,
+      "P5": 0.001,
+      "P6": null,
+      "F1": 0.001,
+      "F2": 0.007,
+      "F3": 0.001,
+      "F4": 0.001,
+      "F5": 0.001,
+      "F6": 0.001,
+      "F7": 0.001,
+      "F8": 0.001
+    },
+    "pp": {
+      "release": {
+        "status": "success",
+        "mph": 97.6
+      },
+      "spin": {
+        "status": "success",
+        "rpm": 2564.7,
+        "fitError": 0.2
+      },
+      "trackpac": {
+        "status": "valid"
+      }
+    },
+    "cloud": {
+      "trackpac": "successful",
+      "bat": "queued",
+      "pitcherBiomech": "queued",
+      "batterBiomech": "queued"
+    }
+  }
+]

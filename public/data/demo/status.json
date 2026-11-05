@@ -1,0 +1,46 @@
+[
+  {
+    "at": "03:31:10",
+    "level": "Warning",
+    "source": "BMCC",
+    "text": "Writing to disk disabled: true"
+  },
+  {
+    "at": "04:47:14",
+    "clearedAt": "04:49:04",
+    "level": "CRITICAL ERROR",
+    "source": "BMCC",
+    "text": "Cameras:: \"11 Missing from multicam frames, ensure software is launched and running at full frame rate.\""
+  },
+  {
+    "at": "05:09:34",
+    "level": "CRITICAL ERROR",
+    "source": "BMCC",
+    "text": "Cameras:: \"6 Missing from multicam frames, ensure software is launched and running at full frame rate.\""
+  },
+  {
+    "at": "05:05:14",
+    "level": "ERROR",
+    "source": "BMCC",
+    "text": "Monitored Cameras: BMCA27 — status red (not connected)"
+  },
+  {
+    "at": "05:10:09",
+    "level": "Warning",
+    "source": "BMCA1",
+    "text": "Antiwobble Consensus: \"Not enough successful patches to do requested pose type, doing Pose 2 (Pitch, Yaw) instead\""
+  },
+  {
+    "at": "05:10:12",
+    "level": "ERROR",
+    "source": "BMCA1",
+    "text": "FullImage: \"No threshold values could be found for baseball bat in model called model_objects_as_points_mudskipper_resnet34_baseball_bat_hwk6_75_trt7_dynamic. A default value of 0.15 is used.\""
+  },
+  {
+    "at": "05:10:14",
+    "level": "Warning",
+    "source": "BMCC",
+    "text": "Player tracking frame selection: \"Not all cameras did player tracking on frame. Done on: 1 10 11 12 13 14 2 3 4 7 8 9 Not done on: 5 \"",
+    "appearsAfterSec": 8
+  }
+]

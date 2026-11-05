@@ -1,0 +1,61 @@
+import { useEffect } from 'react';
+import { useUi } from './state/store';
+import { useAlerts, useAlertSync } from './state/hooks';
+import { loadDataset, datasetName } from './data/load';
+import { AlertDrawer, Crumb, FocusBanner, Header, Toasts } from './components/Shell';
+import { GameView } from './views/game/GameView';
+import { CamerasView } from './views/cameras/CamerasView';
+import { PostProcessingView } from './views/pp/PostProcessingView';
+import { CloudView } from './views/cloud/CloudView';
+
+/** Mock processing: one reprocess task finishes every 2 s; a repushed cloud task succeeds after 4 s. */
+function useMockProcessing() {
+  useEffect(() => {
+    const t = setInterval(() => {
+      const s = useUi.getState();
+      const ch: Partial<typeof s> = { elapsedSec: Math.floor((Date.now() - s.loadedAt) / 1000) };
+      const r = s.cloudRetried; const due = Object.keys(r).filter((k) => Date.now() - r[k] > 4000);
+      if (due.length) { const v = { ...r }, d = { ...s.cloudDone }; due.forEach((k) => { delete v[k]; d[k] = true; }); ch.cloudRetried = v; ch.cloudDone = d; }
+      s.set(ch);
+    }, 1000);
+    const q = setInterval(() => {
+      const s = useUi.getState();
+      if (!s.ppQueue.length) return;
+      s.set({ ppQueue: s.ppQueue.slice(1), ppDone: { ...s.ppDone, [s.ppQueue[0]]: true } });
+    }, 2000);
+    return () => { clearInterval(t); clearInterval(q); };
+  }, []);
+}
+
+function Main() {
+  const view = useUi((s) => s.view);
+  useAlertSync();
+  const al = useAlerts();
+  return (
+    <div className="app">
+      {al.liveCrit && <div className="ambient" aria-hidden="true" />}
+      <Header />
+      <FocusBanner />
+      <Crumb />
+      {view === 'game' && <GameView />}
+      {view === 'cameras' && <CamerasView />}
+      {view === 'pp' && <PostProcessingView />}
+      {view === 'cloud' && <CloudView />}
+      <AlertDrawer />
+      <Toasts />
+    </div>
+  );
+}
+
+export default function App() {
+  const ds = useUi((s) => s.ds), err = useUi((s) => s.loadError);
+  useMockProcessing();
+  useEffect(() => {
+    loadDataset()
+      .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', ppSel: d.pitches.at(-1)?.num ?? null, loadedAt: Date.now() }))
+      .catch((e: Error) => useUi.getState().set({ loadError: e.message }));
+  }, []);
+  if (err) return <div style={{ padding: 40 }}><h1 style={{ fontSize: 18 }}>Couldn’t load dataset “{datasetName()}”</h1><p className="muted">{err}</p><p className="muted">Check public/data/{datasetName()}/ has game.json, cameras.json and pitches.json (see DATA.md).</p></div>;
+  if (!ds) return <div style={{ padding: 40 }} className="muted">Loading {datasetName()}…</div>;
+  return <Main />;
+}

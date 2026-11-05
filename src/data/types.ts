@@ -1,0 +1,163 @@
+/**
+ * TrackingOpsControl — sample-data contract.
+ *
+ * A dataset is a folder under public/data/<name>/ with these files:
+ *   game.json      -> GameFile
+ *   cameras.json   -> CameraFile[]
+ *   pitches.json   -> PitchFile[]   (oldest first)
+ *   status.json    -> StatusMessage[] (raw BMCC/BMCA status-box lines)
+ *   images/...     -> any images referenced by relative path
+ *
+ * Load a dataset with ?data=<name> (default "demo"). See DATA.md for the full guide.
+ * Alerts are NOT authored here: src/alerts/engine.ts derives them from these files.
+ */
+
+export type CameraGroup = 'pitchToPlate' | 'fullField' | 'biomechanics';
+export type SessionMode = 'none' | 'out' | 'in';
+
+/** Image paths are relative to the dataset folder, e.g. "images/cameras/P1/live.jpg". */
+export type ImagePath = string;
+
+export interface GameFile {
+  venue: string;                       // shown under the app name
+  gamePk: number | null;               // MLB GamePK (from BDS). null -> Session ID is shown
+  sessionId: string;                   // Hawk-Eye session ID (from GroundControl)
+  gameMode: 'LIVE' | 'PRACTICE' | 'TEST' | string;
+  session: SessionMode;
+  /**
+   * Dataset clock. Either a full timestamp ("2026-11-04T05:10:14Z", preferred) or a clock time
+   * ("05:10:14") read together with `date`. See "Times" in DATA.md.
+   */
+  now: string;
+  /** UTC date ("YYYY-MM-DD") that a clock-only `now` falls on. Ignored when `now` is a full timestamp. */
+  date?: string;
+  redundancy: { role: 'MAIN' | 'BACKUP'; btcConnected: boolean; bdsConnected: boolean; peers: number };
+  timing: { latencyMs: number; tssOffsetMs: number };
+  thresholds?: Partial<Thresholds>;
+  /** Defaults used when a camera or pitch has no image of its own. */
+  defaultImages?: Partial<Record<'live' | 'tracking' | 'mosaic' | 'still' | 'hit' | 'spinStrip', ImagePath>>;
+}
+
+export interface Thresholds {
+  targetFps: number;                   // full frame rate (600)
+  confidencePass: number;              // pitch confidence pass line (7)
+  strikeZoneTolerance: number;         // |Δ| above this is out of tolerance (0.005)
+  spinFitErrorReview: number;          // spin fit error review line (0.25)
+  tssOffsetMaxMs: number;              // TSS offset above this raises a timing warning (10)
+  latencyMaxMs: number;                // pitch latency above this raises a timing warning (400)
+  hitTrackGoodPct: number;             // hit track % at or above this is "good" (85)
+}
+
+export interface CameraFile {
+  /** Stable id used everywhere, e.g. "P1".."P6", "F1".."F8", "B1".."B16". */
+  id: string;
+  group: CameraGroup;
+  number: number;                      // 1-based within its group
+  /** BMCC numbering: tracking camera 1-14 (P2P 1-6, FF 7-14). Omit for biomechanics. */
+  bmccTrackingNumber?: number;
+  /** BMCA capture host, e.g. "BMCA27". Used to match status messages and for "Open in BMCA". */
+  host?: string;
+  /** Name BMCC uses in the monitored-camera list, e.g. "Camera 15". */
+  bmccName?: string;
+  running: boolean;
+  fps: number;
+  targetFps?: number;                  // defaults to thresholds.targetFps
+  tracking?: { multicamPresent: boolean; playerTracking: boolean };
+  images?: Partial<Record<'live' | 'tracking' | 'mosaic' | 'still', ImagePath>>;
+  /** Calibration overlay for the Control live image, in the live image's pixel space. */
+  calibration?: CalibrationFile;
+  /** Current BMCA control values. Omitted keys fall back to DEFAULT_SETTINGS. */
+  settings?: Partial<CameraSettings>;
+  /** Latest ball candidate (BMCA "Selected" column) for the Ball tuning check. */
+  lastBall?: { strength: number; perimeter: number; area: number; boxes?: BallBox[] };
+  /** Antiwobble match counts, e.g. { linesMatched: 11, linesTotal: 14, ... } */
+  antiwobble?: { linesMatched: number; linesTotal: number; patchesMatched: number; patchesTotal: number };
+}
+
+export interface CalibrationFile {
+  imageSize: [number, number];         // [width, height] of the live image the coordinates refer to
+  lines: [number, number, number, number][];
+  keyPoints: { id: string; label: string; x: number; y: number }[];
+}
+
+export interface BallBox { x: number; y: number; size: number }
+
+export interface CameraSettings {
+  autoExp: boolean; expTarget: number; exposure: number; maxExp: number;
+  autoGain: boolean; aGain: number; autoDGain: boolean; dGain: number;
+  lens: boolean; iris: number; focus: number;
+  lmr: boolean; size: number; thresh: number; scale: number;
+  strMin: number; perMin: number; perMax: number; areaMin: number; areaMax: number;
+  nx: number; ny: number; rx: number; ry: number;
+  awLines: boolean; awTpl: boolean; awScore: number;
+}
+
+export type PpResult = 'success' | 'failed';
+export type TrackpacResult = 'valid' | 'validation_failed' | 'failed';
+export type TrackpacCloud = 'queued' | 'processing' | 'successful' | 'needs_validation' | 'uploaded' | 'failed';
+export type CloudResult = 'queued' | 'processing' | 'success' | 'failed';
+
+export interface PitchFile {
+  num: number;                         // 1-based pitch number in the game
+  time: string;                        // full timestamp, or clock "HH:MM:SS" / BMCC style "05-09-23.565"
+  confidence: number;
+  trackLength: number;
+  trackQuality: number;
+  acsDelivered: boolean;
+  hit?: { trackPct: number; distanceFt: number } | null;
+  /** Strike-zone Δ per tracking camera id (P1..P6, F1..F8). null = no data from that camera. */
+  strikeZone: Record<string, number | null>;
+  pp: {
+    release: { status: PpResult; mph?: number };
+    spin: { status: PpResult; rpm?: number; fitError?: number };
+    trackpac: { status: TrackpacResult };
+  };
+  cloud: { trackpac: TrackpacCloud; bat: CloudResult; pitcherBiomech: CloudResult; batterBiomech: CloudResult };
+  /** Per-camera images for this pitch, keyed by camera id. */
+  images?: Record<string, Partial<Record<'mosaic' | 'hit', ImagePath>>>;
+  spinStrip?: ImagePath;
+}
+
+export interface StatusMessage {
+  id?: string;
+  at: string;                          // when it started: full timestamp or clock time
+  clearedAt?: string;                  // when it stopped (still shown until acknowledged)
+  level: 'CRITICAL ERROR' | 'ERROR' | 'Warning' | 'Info' | 'Debug' | string;
+  source: string;                      // "BMCC", "BMCA1", "BMCA27", ...
+  text: string;                        // the exact status-box text
+  /** Demo only: hide this message until N seconds after load (simulates an alert arriving mid-session). */
+  appearsAfterSec?: number;
+}
+
+/** A pitch after loading: `atMs` is its absolute time and `time` is a display clock ("HH:MM:SS.mmm"). */
+export interface Pitch extends PitchFile { atMs: number }
+/** A status message after loading, with absolute times. */
+export interface Status extends StatusMessage { id: string; atMs: number; clearedAtMs?: number }
+
+export interface Dataset {
+  name: string;
+  base: string;                        // URL prefix for relative image paths
+  game: GameFile;
+  /** Absolute time of `game.now` (ms since epoch, UTC). */
+  nowMs: number;
+  cameras: CameraFile[];
+  pitches: Pitch[];
+  status: Status[];
+  thresholds: Thresholds;
+}
+
+export const DEFAULT_THRESHOLDS: Thresholds = {
+  targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, spinFitErrorReview: 0.25,
+  tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 85,
+};
+
+/** Defaults from the BMCA screenshots (Camera / Installation / Operations tabs). */
+export const DEFAULT_SETTINGS: CameraSettings = {
+  autoExp: true, expTarget: 80, exposure: 252.37, maxExp: 1400,
+  autoGain: false, aGain: 30, autoDGain: false, dGain: 0,
+  lens: true, iris: 3.0, focus: 14028,
+  lmr: true, size: 18, thresh: 14, scale: 1.0,
+  strMin: 4, perMin: 25, perMax: 500, areaMin: 25, areaMax: 1500,
+  nx: 0, ny: 0, rx: 0, ry: 0,
+  awLines: true, awTpl: true, awScore: 0.5,
+};

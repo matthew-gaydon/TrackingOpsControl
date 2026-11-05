@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUi } from './state/store';
 import { useAlerts, useAlertSync } from './state/hooks';
 import { loadDataset, datasetName } from './data/load';
+import { getOperator, signIn, toSessions } from './state/launch';
+import { LoginView, SessionsView } from './views/launch/LaunchViews';
 import { AlertDrawer, Crumb, FocusBanner, Header, Toasts } from './components/Shell';
 import { GameView } from './views/game/GameView';
 import { CamerasView } from './views/cameras/CamerasView';
@@ -47,15 +49,32 @@ function Main() {
   );
 }
 
-export default function App() {
+/** The main view for one session (dataset). */
+function SessionApp({ name }: { name: string }) {
   const ds = useUi((s) => s.ds), err = useUi((s) => s.loadError);
   useMockProcessing();
   useEffect(() => {
-    loadDataset()
+    loadDataset(name)
       .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', ppSel: d.pitches.at(-1)?.num ?? null, loadedAt: Date.now() }))
       .catch((e: Error) => useUi.getState().set({ loadError: e.message }));
-  }, []);
-  if (err) return <div style={{ padding: 40 }}><h1 style={{ fontSize: 18 }}>Couldn’t load dataset “{datasetName()}”</h1><p className="muted">{err}</p><p className="muted">Check public/data/{datasetName()}/ has game.json, cameras.json and pitches.json (see DATA.md).</p></div>;
-  if (!ds) return <div style={{ padding: 40 }} className="muted">Loading {datasetName()}…</div>;
+  }, [name]);
+  if (err) return (
+    <div style={{ padding: 40 }} className="col">
+      <h1 style={{ fontSize: 18 }}>Couldn’t load dataset “{name}”</h1>
+      <p className="muted">{err}</p>
+      <p className="muted">Check public/data/{name}/ has game.json, cameras.json and pitches.json (see DATA.md).</p>
+      <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} onClick={toSessions}>Back to sessions</button>
+    </div>
+  );
+  if (!ds) return <div style={{ padding: 40 }} className="muted">Loading {name}…</div>;
   return <Main />;
+}
+
+/** Launch flow: sign in, then pick a session, then the main view (see src/state/launch.ts). */
+export default function App() {
+  const [operator, setOperator] = useState(getOperator);
+  const name = datasetName();
+  if (!operator) return <LoginView onSignedIn={(n) => { signIn(n); setOperator(n); }} />;
+  if (!name) return <SessionsView operator={operator} />;
+  return <SessionApp name={name} />;
 }

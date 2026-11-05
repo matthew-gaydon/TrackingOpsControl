@@ -4,6 +4,7 @@
 //   public/data/long     – the demo scenario stretched to a full game (320 pitches), for testing long lists
 // Run: node scripts/make-demo-data.mjs
 // Real data: copy a dataset folder, then replace the JSON (see DATA.md). You don't need this script for that.
+// The launch page lists sessions from public/data/sessions.json, which is maintained by hand.
 import { mkdirSync, writeFileSync, existsSync, cpSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -136,4 +137,3 @@ for (const [name, healthy, n] of [['demo', false, 32], ['healthy', true, 32], ['
   if (name !== 'demo' && existsSync(join(root, 'demo', 'images')) && !existsSync(join(dir, 'images'))) cpSync(join(root, 'demo', 'images'), join(dir, 'images'), { recursive: true });
   console.log('wrote', dir);
 }
-writeFileSync(join(root, 'index.json'), JSON.stringify({ datasets: ['demo', 'healthy', 'long'], default: 'demo' }, null, 2) + '\n');

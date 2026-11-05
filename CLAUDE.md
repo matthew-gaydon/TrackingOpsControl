@@ -19,6 +19,8 @@ src/data/time.ts         Time parsing: full timestamps or clock times resolved a
 src/data/model.ts        Pure domain logic: camera labels/health, PP task state, cloud state, strike zone.
 src/alerts/engine.ts     Raw status messages + data → routed Condition[] (what is wrong now). Add rules here for new BMCC/BMCA messages.
 src/alerts/ledger.ts     Conditions → alert occurrences with a lifecycle (raised → cleared → acknowledged).
+src/state/launch.ts      Launch flow: placeholder sign-in (operator name in sessionStorage), open / switch session (?data=).
+src/views/launch/        Sign-in page and session list (public/data/sessions.json).
 src/state/store.ts       One zustand store for UI state, the alert ledger and some operator actions (acks, saves, queues, zoom).
 src/state/hooks.ts       useDs / useAlertSync (runs the engine once, in App) / useAlerts / usePpOps / useCloudOps / useSession.
 src/components/          Shell (header, banner, drawer, toasts), ui primitives, ZoomBox.

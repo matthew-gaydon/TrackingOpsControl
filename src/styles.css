@@ -33,6 +33,10 @@ h1, h2, h3 { margin: 0; }
 @keyframes rise { from { transform: translateY(12px); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }
 
+/* launch pages (sign-in) */
+.launch { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: radial-gradient(1200px 600px at 50% 30%, #13202E 0%, var(--ground) 60%); }
+
 /* shell */
 .app { height: 100vh; min-height: 560px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
 .ambient { height: 3px; background: var(--crit); flex: 0 0 auto; }

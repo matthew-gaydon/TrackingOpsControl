@@ -1,0 +1,52 @@
+{
+  "sessions": [
+    {
+      "sessionId": "fu0uhriq_2026-11-03",
+      "gamePk": 823476,
+      "title": "Away @ Home",
+      "venue": "MSA_2027_KTXDiamond",
+      "start": "2026-11-04T04:30:00Z",
+      "gameMode": "LIVE",
+      "status": "live",
+      "dataset": "demo"
+    },
+    {
+      "sessionId": "k27dpq1m_2026-11-03",
+      "gamePk": 823477,
+      "title": "Visitors @ Hosts",
+      "venue": "MSA_2027_KTXDiamond",
+      "start": "2026-11-04T04:30:00Z",
+      "gameMode": "LIVE",
+      "status": "live",
+      "dataset": "healthy"
+    },
+    {
+      "sessionId": "x8b31nre_2026-11-03",
+      "gamePk": 823470,
+      "title": "Full game (320 pitches)",
+      "venue": "MSA_2027_KTXDiamond",
+      "start": "2026-11-04T01:40:00Z",
+      "gameMode": "LIVE",
+      "status": "final",
+      "dataset": "long"
+    },
+    {
+      "sessionId": "p02hgt7c_2026-11-04",
+      "gamePk": 823491,
+      "title": "Next game",
+      "venue": "MSA_2027_KTXDiamond",
+      "start": "2026-11-05T00:05:00Z",
+      "gameMode": "PRACTICE",
+      "status": "scheduled"
+    },
+    {
+      "sessionId": "tst9a4c1_2026-11-04",
+      "gamePk": null,
+      "title": "Camera test session",
+      "venue": "MSA_2027_KTXDiamond",
+      "start": "2026-11-04T18:00:00Z",
+      "gameMode": "TEST",
+      "status": "scheduled"
+    }
+  ]
+}

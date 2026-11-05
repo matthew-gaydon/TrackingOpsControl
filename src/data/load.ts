@@ -1,10 +1,10 @@
-import { DEFAULT_THRESHOLDS, type CameraFile, type Dataset, type GameFile, type PitchFile, type StatusMessage } from './types';
+import { DEFAULT_THRESHOLDS, type CameraFile, type Dataset, type GameFile, type PitchFile, type SessionEntry, type StatusMessage } from './types';
 import { fmtClock, hasDate, resolveNow, resolveTime } from './time';
 
-/** Dataset name from ?data=<name>, default "demo". */
-export function datasetName(): string {
+/** The open session's dataset, from ?data=<name>. null = no session open (show the launch page). */
+export function datasetName(): string | null {
   const p = new URLSearchParams(window.location.search).get('data');
-  return p && /^[\w.-]+$/.test(p) ? p : 'demo';
+  return p && /^[\w.-]+$/.test(p) ? p : null;
 }
 
 async function getJson<T>(url: string, fallback?: T): Promise<T> {
@@ -16,7 +16,7 @@ async function getJson<T>(url: string, fallback?: T): Promise<T> {
   return (await r.json()) as T;
 }
 
-export async function loadDataset(name = datasetName()): Promise<Dataset> {
+export async function loadDataset(name: string): Promise<Dataset> {
   const base = `${import.meta.env.BASE_URL}data/${name}/`;
   const [game, cameras, pitches, status] = await Promise.all([
     getJson<GameFile>(base + 'game.json'),
@@ -46,13 +46,10 @@ export async function loadDataset(name = datasetName()): Promise<Dataset> {
   };
 }
 
-export async function listDatasets(): Promise<string[]> {
-  try {
-    const idx = await getJson<{ datasets: string[] }>(`${import.meta.env.BASE_URL}data/index.json`);
-    return idx.datasets;
-  } catch {
-    return ['demo'];
-  }
+/** Sessions for the launch page (public/data/sessions.json). */
+export async function loadSessions(): Promise<SessionEntry[]> {
+  const f = await getJson<{ sessions: SessionEntry[] }>(`${import.meta.env.BASE_URL}data/sessions.json`);
+  return f.sessions ?? [];
 }
 
 /** Light checks so a malformed export fails loudly in the console instead of silently. */

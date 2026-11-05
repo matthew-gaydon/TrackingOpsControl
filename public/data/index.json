@@ -1,8 +1,0 @@
-{
-  "datasets": [
-    "demo",
-    "healthy",
-    "long"
-  ],
-  "default": "demo"
-}

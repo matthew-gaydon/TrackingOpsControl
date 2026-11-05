@@ -138,6 +138,23 @@ export interface StatusMessage {
   appearsAfterSec?: number;
 }
 
+/**
+ * public/data/sessions.json: the sessions an operator can open from the launch page.
+ * Placeholder format until real session data arrives; `dataset` names the folder under
+ * public/data/ that holds the session's data (no dataset = listed but can't be opened yet).
+ */
+export interface SessionEntry {
+  sessionId: string;                   // Hawk-Eye session ID (GroundControl)
+  gamePk: number | null;               // MLB GamePK, if it's a game
+  title: string;                       // e.g. "Away @ Home"
+  venue: string;
+  start: string;                       // full timestamp (UTC)
+  gameMode: 'LIVE' | 'PRACTICE' | 'TEST' | string;
+  status: 'live' | 'scheduled' | 'final' | string;
+  dataset?: string;
+}
+export interface SessionsFile { sessions: SessionEntry[] }
+
 /** A pitch after loading: `atMs` is its absolute time and `time` is a display clock ("HH:MM:SS.mmm"). */
 export interface Pitch extends PitchFile { atMs: number }
 /** A status message after loading, with absolute times. */

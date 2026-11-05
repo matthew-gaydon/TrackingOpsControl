@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
 import { usePick, useUi, type View } from '../state/store';
 import { useAlerts, useDs, useNow, useSession } from '../state/hooks';
 import { fmtClock } from '../data/time';
-import { listDatasets } from '../data/load';
+import { getOperator, signOut, toSessions } from '../state/launch';
 import { Arrow, Chevron, SevBadge } from './ui';
 import { alertWhen, type Alert } from '../alerts/ledger';
 import type { SessionMode } from '../data/types';
@@ -37,8 +36,7 @@ export function Header() {
   const al = useAlerts();
   const session = useSession();
   const goIn = useGoInSession();
-  const [datasets, setDatasets] = useState<string[]>([ds.name]);
-  useEffect(() => { listDatasets().then(setDatasets); }, []);
+  const operator = getOperator();
   const realOpen = al.open.filter((a) => a.sev !== 'dev').length;
   const btnBg = realOpen === 0 ? { border: '1px solid #23503A', background: 'var(--ok-bg)', color: 'var(--ok-ink)' }
     : al.worst === 'crit' || al.worst === 'issue' ? { border: 0, background: 'var(--crit)', color: '#2A0B09', animation: al.liveCrit ? 'pulse 1.8s infinite' : undefined }
@@ -59,12 +57,9 @@ export function Header() {
           </div>
         </div>
         <span className="grow" />
-        <label className="row tiny muted" title="Sample dataset (public/data/<name>)">Data
-          <select value={ds.name} onChange={(e) => { const u = new URL(window.location.href); u.searchParams.set('data', e.target.value); window.location.href = u.toString(); }}
-            style={{ padding: '4px 6px', borderRadius: 6, border: '1px solid var(--border-2)', background: 'var(--ground)', color: 'var(--text)', fontSize: 12 }}>
-            {datasets.map((d) => <option key={d}>{d}</option>)}
-          </select>
-        </label>
+        <span className="row small" style={{ gap: 6 }}><span className="muted">Operator</span><span style={{ fontWeight: 600 }}>{operator ?? '—'}</span></span>
+        <button type="button" className="btn" title={`Dataset: ${ds.name}`} onClick={toSessions}>Switch session</button>
+        <button type="button" className="btn" onClick={signOut}>Sign out</button>
         <Clock />
         <button type="button" aria-expanded={st.drawer} onClick={() => st.set({ drawer: !st.drawer })}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 8, fontWeight: 700, fontSize: 13, minHeight: 40, ...btnBg }}>

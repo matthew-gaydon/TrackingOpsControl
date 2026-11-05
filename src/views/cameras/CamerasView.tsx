@@ -1,7 +1,7 @@
 import { usePick } from '../../state/store';
 import { useAlerts, useDs } from '../../state/hooks';
 import { img } from '../../data/load';
-import { GROUP, health, healthNote, isTracking, label } from '../../data/model';
+import { GROUP, health, healthNote, isTracking, label, szParts, szTone } from '../../data/model';
 import { HealthDot, Seg, SevBadge } from '../../components/ui';
 import { ZoomBox } from '../../components/ZoomBox';
 import { ControlPanel, useAnyDirty } from './Control';
@@ -24,7 +24,7 @@ function CameraList() {
           const on = st.cam === c.id;
           return (
             <li key={c.id}>
-              <button type="button" aria-pressed={on} onClick={() => st.set({ cam: c.id, camTab: isTracking(c) ? 'tracking' : 'mosaic', resetOpen: false, bmcaNote: false, pickPt: null })}
+              <button type="button" aria-pressed={on} onClick={() => st.set({ cam: c.id, camTab: 'mosaic', resetOpen: false, bmcaNote: false, pickPt: null })}
                 className="row" style={{ width: '100%', gap: 8, padding: '8px 10px', borderRadius: 7, textAlign: 'left', minHeight: 38, background: on ? 'var(--sel)' : 'transparent', border: `1px solid ${on ? 'var(--accent-edge)' : 'transparent'}` }}>
                 <HealthDot h={h} />
                 <span className="col grow" style={{ gap: 1 }}>
@@ -47,19 +47,27 @@ function Monitoring() {
   const ds = useDs(); const st = usePick('ack', 'cam', 'camTab', 'set'); const al = useAlerts();
   const c = ds.cameras.find((x) => x.id === st.cam) ?? ds.cameras[0];
   const h = health(c, ds);
-  const tabs: [typeof st.camTab, string][] = isTracking(c) ? [['tracking', 'Tracking window'], ['mosaic', 'Ball mosaic']] : [['mosaic', 'Ball mosaic'], ['still', 'Monitored image']];
+  const tabs: [typeof st.camTab, string][] = isTracking(c) ? [['mosaic', 'Ball mosaic'], ['hit', 'Hit image'], ['tracking', 'Tracking window']] : [['mosaic', 'Ball mosaic'], ['still', 'Monitored image']];
   const tab = tabs.some(([k]) => k === st.camTab) ? st.camTab : tabs[0][0];
   const latest = ds.pitches.at(-1);
+  const lastHit = [...ds.pitches].reverse().find((p) => p.hit);
+  // which pitch the image belongs to (mosaic: the latest pitch; hit: the latest pitch with a hit)
+  const shown = tab === 'mosaic' ? latest : tab === 'hit' ? lastHit : undefined;
   const src = tab === 'tracking' ? img(ds, c.images?.tracking ?? ds.game.defaultImages?.tracking)
     : tab === 'still' ? img(ds, c.images?.still ?? ds.game.defaultImages?.still)
+    : tab === 'hit' ? (lastHit ? img(ds, lastHit.images?.[c.id]?.hit ?? ds.game.defaultImages?.hit) : undefined)
     : img(ds, latest?.images?.[c.id]?.mosaic ?? c.images?.mosaic ?? ds.game.defaultImages?.mosaic);
-  const alerts = al.all.filter((a) => a.cameraId === c.id && a.sev !== 'dev');
+  const empty = !c.running ? 'No feed: this camera isn’t running' : tab === 'hit' ? (lastHit ? `No hit image for pitch ${lastHit.num} in this dataset` : 'No hits yet this game') : 'No image in this dataset';
+  // its own alerts, plus grouped alerts it belongs to (e.g. cameras below full frame rate)
+  const alerts = al.all.filter((a) => a.sev !== 'dev' && !a.replaced && (a.cameraId === c.id || a.members?.includes(c.id)));
   const focused = al.focus?.cameraId === c.id && !al.focus.acked;
+  // multicam and player tracking show up as alerts when they go wrong, so they aren't repeated here
+  const sz = latest && isTracking(c) ? szParts(latest.strikeZone[c.id]) : null;
+  const szFact = (axis: 'X' | 'Z', v: number | null): [string, string, string] => [`Strike zone ${axis} Δ · pitch ${latest!.num}`, v === null ? 'no data' : (v >= 0 ? '+' : '') + v.toFixed(3), szTone(v, ds) === 'ok' ? '' : szTone(v, ds)];
   const facts: [string, string, string?][] = [
-    ['Frame rate', c.running ? `${c.fps}/${c.targetFps ?? ds.thresholds.targetFps}` : '—', !c.running ? 'crit' : c.fps < ds.thresholds.targetFps ? 'warn' : ''],
-    ['Running', c.running ? 'Yes' : 'No', c.running ? '' : 'crit'],
-    ...(c.tracking ? [['Multicam frames', c.tracking.multicamPresent ? 'Present' : 'Missing', c.tracking.multicamPresent ? '' : 'crit'], ['Player tracking', c.tracking.playerTracking ? 'Running' : 'Skipped', c.tracking.playerTracking ? '' : 'warn']] as [string, string, string][] : []),
-    ...(latest && isTracking(c) ? [['Strike zone Δ (last)', latest.strikeZone[c.id] == null ? 'no data' : latest.strikeZone[c.id]!.toFixed(3), latest.strikeZone[c.id] == null ? 'crit' : '']] as [string, string, string][] : []),
+    ['Connection', c.running ? 'Connected' : 'Not connected', c.running ? '' : 'crit'],
+    ['Frame rate', c.running ? `${c.fps}/${c.targetFps ?? ds.thresholds.targetFps}` : '—', !c.running ? 'crit' : c.fps < (c.targetFps ?? ds.thresholds.targetFps) ? 'warn' : ''],
+    ...(sz ? [szFact('X', sz.x ?? sz.worst), szFact('Z', sz.z ?? sz.worst)] : []),
     ['Capture host', c.host ?? '—'],
   ];
   return (
@@ -75,9 +83,10 @@ function Monitoring() {
         <div className="stage fill" style={{ background: 'var(--deep)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {c.running && src ? (
             <ZoomBox zoomKey={`m:${c.id}:${tab}`} style={{ position: 'absolute', inset: 12, borderRadius: 6 }}>
-              <img src={src} alt={`${label(c)} ${tab === 'tracking' ? 'tracking window' : tab === 'still' ? 'monitored image' : 'ball mosaic'}`} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+              <img src={src} alt={`${label(c)} ${tab === 'tracking' ? 'tracking window' : tab === 'still' ? 'monitored image' : tab === 'hit' ? 'hit image' : 'ball mosaic'}`} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </ZoomBox>
-          ) : <span className="muted">{c.running ? 'No image in this dataset' : 'No feed: this camera isn’t running'}</span>}
+          ) : <span className="muted">{empty}</span>}
+          {c.running && src && shown && <span className="tag-over" style={{ left: 18, top: 18 }}>Pitch {shown.num}</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 1, background: 'var(--border)', borderTop: '1px solid var(--border)', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
           {facts.map(([k, v, s]) => <div key={k} className="col" style={{ background: 'var(--panel)', padding: '10px 14px', gap: 2 }}><span className="lbl">{k}</span><span className="mono" style={{ fontSize: 16, fontWeight: 600, color: s === 'crit' ? 'var(--crit-ink)' : s === 'warn' ? 'var(--warn-ink)' : 'var(--text-hi)' }}>{v}</span></div>)}
@@ -86,7 +95,7 @@ function Monitoring() {
       </section>
       <section className="panel scroll" style={{ flex: '0 1 auto', maxHeight: 200, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h2 style={{ fontSize: 14, fontWeight: 600 }}>Alerts on {label(c)}</h2>
-        {alerts.length === 0 && <span className="small muted">None. This camera is healthy.</span>}
+        {alerts.length === 0 && <span className="small muted">{h === 'ok' ? 'None. This camera is healthy.' : `No alert of its own: ${healthNote(c, ds)}.`}</span>}
         {alerts.map((a) => (
           <div key={a.id} className="row card" style={{ alignItems: 'flex-start', gap: 10, padding: 10 }}>
             <SevBadge sev={a.sev} />

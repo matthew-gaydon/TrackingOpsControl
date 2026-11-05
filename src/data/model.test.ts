@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS, type Dataset, type PitchFile } from './types';
-import { pitchWorst, reviewable, taskState, taskStatus, taskValue, type PpOps } from './model';
+import { pitchWorst, reviewable, szParts, taskState, taskStatus, taskValue, type PpOps } from './model';
 import { deriveConditions } from '../alerts/engine';
 
 const pitch = (num: number, spin: PitchFile['pp']['spin']): PitchFile => ({
@@ -54,5 +54,19 @@ describe('spin review', () => {
     expect(spin(ops())?.members).toEqual(['25', '26']);
     expect(spin(ops({ reviewed: { '25:1': true } }))?.members).toEqual(['26']);
     expect(spin(ops({ reviewed: { '25:1': true }, done: { '26:1': true } }))).toBeUndefined();
+  });
+});
+
+describe('strike zone', () => {
+  it('splits X and Z and picks the axis furthest from zero', () => {
+    expect(szParts({ x: 0.007, z: -0.002 })).toEqual({ x: 0.007, z: -0.002, worst: 0.007 });
+    expect(szParts({ x: 0.001, z: -0.006 }).worst).toBe(-0.006);
+  });
+  it('reads an older single-number delta as the worse axis', () => {
+    expect(szParts(0.004)).toEqual({ x: null, z: null, worst: 0.004 });
+  });
+  it('treats missing data as no data', () => {
+    expect(szParts(null).worst).toBeNull();
+    expect(szParts(undefined).worst).toBeNull();
   });
 });

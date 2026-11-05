@@ -45,7 +45,7 @@ All image paths in the JSON are **relative to the dataset folder**, for example 
 | Cameras › Monitoring › Tracking window | `cameras[].images.tracking` | `defaultImages.tracking` |
 | Cameras › Monitoring › Monitored image (bio) | `cameras[].images.still` | `defaultImages.still` |
 | Ball mosaic (Game grids, Monitoring) | `pitches[].images[camId].mosaic` | `cameras[].images.mosaic`, then `defaultImages.mosaic` |
-| Hit image (Game grids) | `pitches[].images[camId].hit` | `defaultImages.hit`, else a placeholder |
+| Hit image (Game grids, Cameras › Monitoring › Hit image) | `pitches[].images[camId].hit` | `defaultImages.hit`, else a placeholder |
 | Post-processing spin strip | `pitches[].spinStrip` | `defaultImages.spinStrip` |
 
 Calibration overlays are drawn **on top** of the live image from `cameras[].calibration` (`imageSize`, `lines`, `keyPoints`, all in the live image's pixel space). Use images **without** BMCA's baked-in overlay if you can, so the overlay toggles and nudging look right.
@@ -91,7 +91,7 @@ Health comes from these fields alone: **not running → crit**, **fps below targ
   "confidence": 8.57, "trackLength": 10.0, "trackQuality": 5.91,
   "acs": "success",                                                    // success | review | fail (older files: "acsDelivered": true/false)
   "hit": { "trackPct": 100, "distanceFt": 120.5 },                    // or null; the pitch card shows trackPct only
-  "strikeZone": { "P1": 0.000, "P6": null, "F2": 0.007 },             // Δ per tracking camera; null = no data
+  "strikeZone": { "P1": { "x": 0.001, "z": -0.003 }, "P6": null, "F2": { "x": 0.007, "z": -0.002 } },  // Δ in X and Z per tracking camera; null = no data (a plain number still loads, as the worse axis)
   "pp": {
     "release":  { "status": "success", "mph": 97.6 },                 // success | failed
     "spin":     { "status": "success", "rpm": 2564.7, "fitError": 0.20 },

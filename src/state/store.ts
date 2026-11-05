@@ -44,7 +44,7 @@ export interface UiState {
 
   // cameras
   cam: string;
-  camTab: 'tracking' | 'mosaic' | 'still';
+  camTab: 'mosaic' | 'hit' | 'tracking' | 'still';
   camFilter: 'all' | 'problems' | 'pitchToPlate' | 'fullField' | 'biomechanics';
   camSub: 'monitor' | 'control';
   ctrlTab: 'image' | 'ball' | 'calib';
@@ -105,7 +105,7 @@ export const useUi = create<UiState>((set, get) => ({
   view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, drawer: false, drawerTab: 'open', dev: false,
   ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false,
   gameSel: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
-  cam: 'P1', camTab: 'tracking', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
+  cam: 'P1', camTab: 'mosaic', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
   ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,
   resetOpen: false, bmcaNote: false, lensRestart: null,
   ppFilter: 'all', ppAffected: [], ppSel: null, ppPicks: {}, ppTask: null, ppMenu: null, reviewed: {}, ppQueue: [], ppDone: {},
@@ -119,7 +119,7 @@ export const useUi = create<UiState>((set, get) => ({
     const s = get();
     const r: Route = a.route;
     const ch: Partial<UiState> = { view: r.view, focusAlertId: a.id, drawer: false, prevView: r.view === s.view ? s.prevView : s.view, crumbPitch: null, dismissed: { ...s.dismissed, [a.id]: true } };
-    if (r.cam) Object.assign(ch, { cam: r.cam, camTab: r.camTab ?? 'tracking', camFilter: r.camFilter ?? 'all', camSub: r.camSub ?? 'monitor', resetOpen: false, pickPt: null });
+    if (r.cam) Object.assign(ch, { cam: r.cam, camTab: r.camTab ?? 'mosaic', camFilter: r.camFilter ?? 'all', camSub: r.camSub ?? 'monitor', resetOpen: false, pickPt: null });
     if (r.ctrl) ch.ctrlTab = r.ctrl;
     if (r.ppFilter) Object.assign(ch, { ppFilter: r.ppFilter, ppAffected: r.affected ?? [], ppSel: r.ppSel ?? null, ppPicks: {}, ppMenu: null, ppTask: r.ppFilter === 'flag' ? 1 : null });
     if (r.cloudFilter) Object.assign(ch, { cloudFilter: r.cloudFilter, cloudPicks: {}, clMenu: null });

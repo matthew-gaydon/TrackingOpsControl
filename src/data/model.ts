@@ -1,4 +1,4 @@
-import type { AcsStatus, CameraFile, CameraGroup, Dataset, PitchFile, TrackpacCloud, CloudResult } from './types';
+import type { AcsStatus, SzDelta, CameraFile, CameraGroup, Dataset, PitchFile, TrackpacCloud, CloudResult } from './types';
 
 export type Health = 'ok' | 'warn' | 'crit';
 export const GROUP: Record<CameraGroup, { name: string; tag: string; mark: string }> = {
@@ -123,11 +123,18 @@ export const ACS: Record<AcsStatus, { label: string; tone: Tone }> = {
 };
 
 // ---------------- strike zone ----------------
+/** One camera's strike-zone Δ split into X and Z. `worst` is the axis furthest from zero (signed). */
+export function szParts(v: SzDelta | number | null | undefined): { x: number | null; z: number | null; worst: number | null } {
+  if (v === null || v === undefined) return { x: null, z: null, worst: null };
+  if (typeof v === 'number') return { x: null, z: null, worst: v };
+  return { x: v.x, z: v.z, worst: Math.abs(v.x) >= Math.abs(v.z) ? v.x : v.z };
+}
+/** no data -> crit, outside tolerance -> warn. */
+export const szTone = (d: number | null, ds: Dataset): Tone => (d === null ? 'crit' : Math.abs(d) > ds.thresholds.strikeZoneTolerance ? 'warn' : 'ok');
+
 export function strikeZone(p: PitchFile, ds: Dataset) {
-  const tol = ds.thresholds.strikeZoneTolerance;
   return ds.cameras.filter(isTracking).map((c) => {
-    const d = p.strikeZone[c.id];
-    const state: 'ok' | 'warn' | 'crit' = d === null || d === undefined ? 'crit' : Math.abs(d) > tol ? 'warn' : 'ok';
-    return { cam: c, d: d ?? null, state };
+    const { x, z, worst } = szParts(p.strikeZone[c.id]);
+    return { cam: c, d: worst, x, z, state: szTone(worst, ds) };
   });
 }

@@ -113,7 +113,7 @@ export function ControlPanel() {
   const ballTable: [string, number, number, keyof CameraSettings, keyof CameraSettings | null, number][] = lb ? [
     ['Strength', lb.strength, 0, 'strMin', null, 1], ['Perimeter', lb.perimeter, 2, 'perMin', 'perMax', 5], ['Area', lb.area, 2, 'areaMin', 'areaMax', 5]] : [];
   const tableCols = { display: 'grid', gridTemplateColumns: 'minmax(72px, 1fr) 148px minmax(76px, 1fr) 148px', columnGap: 8, alignItems: 'center', justifyItems: 'center', minHeight: 36 } as const;
-  const camAlerts = al.open.filter((a) => a.cameraId === c.id && a.sev !== 'dev');
+  const camAlerts = al.open.filter((a) => a.sev !== 'dev' && !a.replaced && (a.cameraId === c.id || a.members?.includes(c.id)));
 
   return (
     <div className="ctl-layout fill">

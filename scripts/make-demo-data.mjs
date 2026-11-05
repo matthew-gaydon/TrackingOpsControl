@@ -68,10 +68,11 @@ function build(healthy, N = 32) {
     const conf = i === last ? 8.57 : (lowConf[j] || +(7.6 + ((i * 13) % 14) / 10).toFixed(2));
     const strikeZone = {};
     trackIds.forEach((id, k) => {
-      let d = ((i * 7 + k * 3) % 3) / 1000;
+      // Δ in the plate's X and Z
+      let d = { x: ((i * 7 + k * 3) % 3) / 1000, z: -((i * 5 + k * 7) % 4) / 1000 };
       if (!H && id === 'P6') d = null;                       // not running
       if (!H && id === 'F5' && i >= N - 32 && (j === 13 || j === 14)) d = null; // missing while FullField 5 was down
-      if (!H && id === 'F2' && i === last) d = 0.007;           // out of tolerance on the latest pitch
+      if (!H && id === 'F2' && i === last) d = { x: 0.007, z: -0.002 }; // X out of tolerance on the latest pitch
       strikeZone[id] = d;
     });
     const tpStatus = f === 'trackpac' ? 'validation_failed' : (!H && j === 7) ? 'failed' : 'valid';

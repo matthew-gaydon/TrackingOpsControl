@@ -20,7 +20,7 @@ import { CLOUD_TASKS, cloudState, label, isTracking, targetFps, tkey, type Cloud
 export type Severity = 'crit' | 'issue' | 'warn' | 'dev';
 export interface Route {
   view: 'game' | 'cameras' | 'pp' | 'cloud';
-  cam?: string; camTab?: 'tracking' | 'mosaic' | 'still'; camFilter?: 'all' | 'problems'; camSub?: 'monitor' | 'control'; ctrl?: 'image' | 'ball' | 'calib';
+  cam?: string; camTab?: 'mosaic' | 'hit' | 'tracking' | 'still'; camFilter?: 'all' | 'problems'; camSub?: 'monitor' | 'control'; ctrl?: 'image' | 'ball' | 'calib';
   ppFilter?: 'all' | 'flag' | 'affected'; ppSel?: number; affected?: number[];
   cloudFilter?: 'all' | 'failed' | 'open';
   target?: 'session' | 'red' | 'timing';
@@ -48,7 +48,7 @@ export interface EngineInput { ds: Dataset; session: string; elapsedSec: number;
 
 const byTracking = (ds: Dataset, n: number) => ds.cameras.find((c) => c.bmccTrackingNumber === n);
 const byHost = (ds: Dataset, host: string) => ds.cameras.filter((c) => c.host === host);
-const camRoute = (c: CameraFile): Route => ({ view: 'cameras', cam: c.id, camTab: isTracking(c) ? 'tracking' : 'still', camSub: 'monitor' });
+const camRoute = (c: CameraFile): Route => ({ view: 'cameras', cam: c.id, camTab: 'mosaic', camSub: 'monitor' });
 const raw = (m: Status) => `${m.at} - ${m.level}: ${m.source === 'BMCC' ? '' : m.source + ' · '}${m.text}`;
 /** Message-based conditions are one occurrence per message: key on what it's about plus when it started. */
 const msgKey = (kind: string, m: Status, about = '') => `${kind}:${about}@${m.atMs}`;
@@ -148,7 +148,7 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
       summary: slow.map((c) => `${label(c)} ${c.fps}/${targetFps(c, ds)}`).join(' · ') + '. The same check applies to every camera.',
       checks: ['Frame drops steady, not getting worse', 'Host CPU and disk load normal'], raw: slow.map((c) => `${c.host ?? ''} ${c.bmccName ?? label(c)} [${c.fps}/${targetFps(c, ds)}]`).join(' · '),
       notify: false, members: slow.map((c) => c.id),
-      route: { view: 'cameras', cam: slow[0].id, camTab: isTracking(slow[0]) ? 'tracking' : 'mosaic', camFilter: 'problems', camSub: 'monitor' }, line: slow.map(label).join(', ') + '.' });
+      route: { view: 'cameras', cam: slow[0].id, camTab: 'mosaic', camFilter: 'problems', camSub: 'monitor' }, line: slow.map(label).join(', ') + '.' });
   }
   // session
   if (ds.game.gameMode === 'LIVE' && session !== 'in') {

@@ -93,6 +93,7 @@ export interface CameraSettings {
   awLines: boolean; awTpl: boolean; awScore: number;
 }
 
+export interface SzDelta { x: number; z: number }
 export type PpResult = 'success' | 'failed';
 export type AcsStatus = 'success' | 'review' | 'fail';
 export type TrackpacResult = 'valid' | 'validation_failed' | 'failed';
@@ -110,8 +111,11 @@ export interface PitchFile {
   /** Older datasets: true = success, false = fail. Read only when `acs` is missing. */
   acsDelivered?: boolean;
   hit?: { trackPct: number; distanceFt: number } | null;
-  /** Strike-zone Δ per tracking camera id (P1..P6, F1..F8). null = no data from that camera. */
-  strikeZone: Record<string, number | null>;
+  /**
+   * Strike-zone Δ per tracking camera id (P1..P6, F1..F8): { x, z } in the plate's X and Z.
+   * null = no data from that camera. Older datasets give a single number (the worse axis).
+   */
+  strikeZone: Record<string, SzDelta | number | null>;
   pp: {
     release: { status: PpResult; mph?: number };
     spin: { status: PpResult; rpm?: number; fitError?: number };

@@ -30,13 +30,13 @@ function HealthTiles() {
       go: () => { const a = [al.byKey.bds, al.byKey.timing].find((x) => x && !x.cleared); if (a) st.goTo(a); } },
   ];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+    <div className="col" style={{ flex: '0 0 250px', gap: 10, minWidth: 0 }}>
       {tiles.map((x) => (
-        <button key={x.label} type="button" onClick={x.go} className="row" style={{ gap: 12, padding: '12px 14px', borderRadius: 10, textAlign: 'left', minHeight: 64, background: 'var(--panel)', border: `1px solid ${x.h === 'ok' ? 'var(--border)' : x.h === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
+        <button key={x.label} type="button" onClick={x.go} className="row" style={{ gap: 12, padding: '12px 14px', borderRadius: 10, textAlign: 'left', minHeight: 64, width: '100%', background: 'var(--panel)', border: `1px solid ${x.h === 'ok' ? 'var(--border)' : x.h === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
           <HealthDot h={x.h} size={12} />
           <span className="col grow" style={{ gap: 2, alignItems: 'flex-start' }}>
             <span className="small" style={{ color: 'var(--text-3)' }}>{x.label}</span>
-            <span className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-hi)' }}>{x.value}</span>
+            <span className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-hi)', lineHeight: 1.3 }}>{x.value}</span>
             <span className="tiny" style={{ color: x.h === 'ok' ? 'var(--muted)' : x.h === 'warn' ? 'var(--warn-ink)' : 'var(--crit-ink)' }}>{x.note}</span>
           </span>
           <Chevron />
@@ -245,35 +245,40 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   );
 }
 
+/** One verdict per pitch: the worst of its deliverables. Red if any is red, amber if any is amber, else green. */
+function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
+  const crit: string[] = [], warn: string[] = [];
+  if (p.confidence <= ds.thresholds.confidencePass) crit.push('confidence fail');
+  if (p.hit && p.hit.trackPct < ds.thresholds.hitTrackGoodPct) warn.push('poor hit track');
+  if (!p.acsDelivered) warn.push('ACS not delivered');
+  TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });
+  return { h: crit.length ? 'crit' : warn.length ? 'warn' : 'ok', problems: [...crit, ...warn] };
+}
+
 function Timeline({ sel }: { sel: number }) {
   const ds = useDs(); const st = usePick('set'); const ops = usePpOps();
   const latest = ds.pitches.at(-1)!.num;
-  const C = { ok: 'var(--ok)', warn: 'var(--warn)', crit: 'var(--crit)', none: '#2A313C', hit: '#B48CFF' };
-  const lane = (c: string) => ({ display: 'block', height: 6, margin: '4px 0', borderRadius: 2, background: c });
+  const C = { ok: { bg: '#13261C', fg: 'var(--ok-ink)', edge: '#23503A' }, warn: { bg: 'var(--warn-bg)', fg: 'var(--warn-ink)', edge: 'var(--warn-edge)' }, crit: { bg: 'var(--crit-bg)', fg: 'var(--crit-ink)', edge: 'var(--crit-edge)' } };
   return (
-    <section className="panel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div className="row wrap" style={{ gap: 12 }}><h2 style={{ fontSize: 14, fontWeight: 600 }}>Pitch timeline</h2><span className="small muted">Click any pitch to jump to it. Red and amber mark errors; purple marks hits.</span></div>
-      <div className="row" style={{ alignItems: 'stretch', gap: 10 }}>
-        <div className="col tiny muted" style={{ gap: 3, paddingTop: 3, lineHeight: '14px', flex: '0 0 auto', width: 60 }}>
-          <span style={{ height: 30, display: 'flex', alignItems: 'center' }}>Verdict</span>
-          {['Hit', 'ACS', 'Release', 'Spin', 'Trackpac'].map((x) => <span key={x} style={{ height: 14 }}>{x}</span>)}
-        </div>
-        <div className="row" style={{ gap: 3, flex: '1 1 auto', minWidth: 0, overflowX: 'auto', alignItems: 'stretch' }}>
-          {ds.pitches.map((p) => {
-            const pass = p.confidence > ds.thresholds.confidencePass;
-            const ts = [0, 1, 2].map((k) => taskState(p, k, ops));
-            const on = p.num === sel;
-            return (
-              <button key={p.num} type="button" aria-label={`Pitch ${p.num}${pass ? '' : ', confidence fail'}`} onClick={() => st.set({ gameSel: p.num === latest ? null : p.num, pop: null })}
-                style={{ flex: '1 0 22px', display: 'flex', flexDirection: 'column', gap: 3, padding: '3px 2px', borderRadius: 5, border: `1px solid ${on ? 'var(--accent)' : 'transparent'}`, background: on ? 'var(--sel)' : 'transparent' }}>
-                <span className="mono" style={{ height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, fontSize: 10, fontWeight: 700, background: pass ? '#13261C' : 'var(--crit-bg)', color: pass ? 'var(--ok-ink)' : 'var(--crit-ink)' }}>{p.num}</span>
-                <span style={lane(p.hit ? (p.hit.trackPct >= ds.thresholds.hitTrackGoodPct ? C.hit : C.warn) : C.none)} />
-                <span style={lane(p.acsDelivered ? C.ok : C.warn)} />
-                {ts.map((t, k) => <span key={k} style={lane(t === 'ok' || t === 'reviewed' ? C.ok : t === 'crit' ? C.crit : t === 'warn' ? C.warn : 'var(--accent)')} />)}
-              </button>
-            );
-          })}
-        </div>
+    <section className="panel row" style={{ flex: '0 0 auto', padding: '8px 12px', gap: 12 }}>
+      <span className="col" style={{ gap: 2, flex: '0 0 auto' }}>
+        <h2 style={{ fontSize: 13, fontWeight: 600 }}>Pitch timeline</h2>
+        <span className="tiny muted">Worst deliverable per pitch</span>
+      </span>
+      <div className="row" style={{ gap: 3, flex: '1 1 auto', minWidth: 0, overflowX: 'auto', padding: '2px 0' }}>
+        {ds.pitches.map((p) => {
+          const v = pitchVerdict(p, ds, ops); const c = C[v.h]; const on = p.num === sel;
+          return (
+            <button key={p.num} type="button" onClick={() => st.set({ gameSel: p.num === latest ? null : p.num, pop: null })}
+              title={`Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`}
+              aria-label={`Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`} aria-pressed={on}
+              className="mono" style={{ flex: '1 0 26px', height: 28, padding: 0, fontSize: 10, fontWeight: 700, background: c.bg, color: c.fg,
+                // status is never colour-only: rounded = good, square = problem
+                borderRadius: v.h === 'ok' ? 14 : 3, border: `1px solid ${c.edge}`, boxShadow: on ? '0 0 0 2px var(--accent)' : undefined }}>
+              {p.num}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
@@ -300,8 +305,8 @@ export function GameView() {
           <button type="button" className="btn go" onClick={() => st.set({ gameSel: null })}><span className="dot" style={{ background: '#06210F' }} />Return to live</button>
         </div>
       )}
-      <HealthTiles />
       <div className="fit-row fill">
+        <HealthTiles />
         <FieldPanel p={p} reviewing={reviewing} />
         <PitchCard p={p} reviewing={reviewing} latestNum={latest.num} />
       </div>

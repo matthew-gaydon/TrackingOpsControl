@@ -124,6 +124,22 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
             <span className="grow" />
             {big && <button type="button" className="btn" onClick={() => st.set({ bigCam: null })}>All {cams.length} cameras</button>}
           </div>
+          {big && (
+            // jump straight to any camera in the group while one is enlarged; ← → keys step through them
+            <div role="tablist" aria-label={`${GROUP[big.group].name} cameras`} className="seg hscroll" style={{ alignSelf: 'flex-start', maxWidth: '100%', flex: '0 0 auto' }}
+              onKeyDown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); step(e.key === 'ArrowLeft' ? -1 : 1); } }}>
+              {cams.map((c) => {
+                const h = health(c, ds); const on = c.id === big.id;
+                return (
+                  <button key={c.id} type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} title={`${label(c)}${h === 'ok' ? '' : ` · ${healthNote(c, ds)}`}`}
+                    ref={(el) => { if (on && el && el.parentElement?.contains(document.activeElement)) el.focus(); }}
+                    onClick={() => st.set({ bigCam: c.id })} className="mono" style={{ flex: '0 0 auto', minWidth: 44, padding: '5px 10px', fontWeight: 700 }}>
+                    {h !== 'ok' && <HealthDot h={h} size={7} />}{mark(c)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {!big ? (
             <div className="fill scroll" style={{ display: 'grid', alignContent: 'start', gap: 8, gridTemplateColumns: `repeat(${fv === 'biomechanics' ? 4 : fv === 'fullField' ? 4 : 3}, minmax(0, 1fr))` }}>
               {cams.map((c) => (
@@ -149,7 +165,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
             </div>
           )}
           {big && <span className="mono small">{label(big)} · {GROUP[big.group].tag}</span>}
-          <span className="tiny muted">Click a camera to enlarge it, then step through cameras. Scroll on any image to zoom, drag to pan.</span>
+          <span className="tiny muted">{big ? 'Pick any camera from the tabs, or step with the arrows (← → keys work too).' : 'Click a camera to enlarge it.'} Scroll on any image to zoom, drag to pan.</span>
         </div>
       )}
     </section>

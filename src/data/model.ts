@@ -33,13 +33,23 @@ export const COLOR = {
 // ---------------- post-processing task state (data + operator actions) ----------------
 export const TASKS = ['Release', 'Spin', 'Trackpac'] as const;
 export type TaskState = 'ok' | 'warn' | 'crit' | 'reviewed' | 'queued' | 'processing';
-export interface PpOps { reviewed: Record<string, true>; queue: string[]; done: Record<string, true> }
+export interface PpOps {
+  reviewed: Record<string, true>; queue: string[]; done: Record<string, true>;
+  /** thresholds.spinFitErrorReview: a spin fit error at or above this needs an operator's review. */
+  spinReview: number;
+}
 export const tkey = (num: number, k: number) => `${num}:${k}`;
 
-/** Raw state from data: Release/Spin failed -> warn (amber "Failed"), Trackpac validation failed -> warn, Trackpac failed -> crit. */
-export function rawTaskState(p: PitchFile, k: number): 'ok' | 'warn' | 'crit' {
+/** Spin has a result (rpm) but its fit error is at or over the review line. The operator can accept it (Mark reviewed) or reprocess. */
+export const spinOverLine = (p: PitchFile, spinReview: number) => p.pp.spin.rpm !== undefined && (p.pp.spin.fitError ?? 0) >= spinReview;
+
+/**
+ * Raw state from data: Release/Spin failed -> warn (amber "Failed"), Trackpac validation failed -> warn, Trackpac failed -> crit.
+ * A spin over the fit-error review line is warn ("Needs review") even if BMCC reported it a success.
+ */
+export function rawTaskState(p: PitchFile, k: number, spinReview = Infinity): 'ok' | 'warn' | 'crit' {
   if (k === 0) return p.pp.release.status === 'success' ? 'ok' : 'warn';
-  if (k === 1) return p.pp.spin.status === 'success' ? 'ok' : 'warn';
+  if (k === 1) return p.pp.spin.status === 'success' && !spinOverLine(p, spinReview) ? 'ok' : 'warn';
   const t = p.pp.trackpac.status;
   return t === 'valid' ? 'ok' : t === 'failed' ? 'crit' : 'warn';
 }
@@ -50,7 +60,12 @@ export function taskState(p: PitchFile, k: number, ops: PpOps): TaskState {
   if (qi > 0) return 'queued';
   if (ops.done[key]) return 'ok';
   if (ops.reviewed[key]) return 'reviewed';
-  return rawTaskState(p, k);
+  return rawTaskState(p, k, ops.spinReview);
+}
+/** A problem the operator can review and accept instead of reprocessing: Trackpac validation failed, or a spin over the review line. */
+export function reviewable(p: PitchFile, k: number, ops: Pick<PpOps, 'spinReview'>): boolean {
+  if (k === 2) return p.pp.trackpac.status === 'validation_failed';
+  return k === 1 && spinOverLine(p, ops.spinReview);
 }
 export const isBad = (t: TaskState) => t === 'warn' || t === 'crit';
 export function taskStatus(p: PitchFile, k: number, ops: PpOps): string {
@@ -59,15 +74,17 @@ export function taskStatus(p: PitchFile, k: number, ops: PpOps): string {
   if (t === 'queued') return `Queued · ${ops.queue.indexOf(tkey(p.num, k)) + 1}`;
   if (t === 'ok') return 'Success';
   if (t === 'reviewed') return 'Reviewed';
-  return k === 2 && t === 'warn' ? 'Needs review' : 'Failed';
+  return t === 'warn' && reviewable(p, k, ops) ? 'Needs review' : 'Failed';
 }
 export function taskValue(p: PitchFile, k: number, ops: PpOps): string {
   const t = taskState(p, k, ops);
   if (t === 'queued' || t === 'processing') return taskStatus(p, k, ops);
   if (k === 2) return t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
+  const spin = `RPM ${p.pp.spin.rpm ?? '—'} · err ${p.pp.spin.fitError ?? '—'}`;
+  if (k === 1 && reviewable(p, k, ops) && (t === 'warn' || t === 'reviewed')) return t === 'reviewed' ? `${spin} · reviewed` : spin;
   if (t === 'reviewed') return 'Reviewed by operator';
   if (t !== 'ok') return 'Needs reprocess';
-  return k === 0 ? `${p.pp.release.mph ?? '—'} mph` : `RPM ${p.pp.spin.rpm ?? '—'} · err ${p.pp.spin.fitError ?? '—'}`;
+  return k === 0 ? `${p.pp.release.mph ?? '—'} mph` : spin;
 }
 export function pitchWorst(p: PitchFile, ops: PpOps): 'ok' | 'warn' | 'crit' {
   const s = [0, 1, 2].map((k) => taskState(p, k, ops));

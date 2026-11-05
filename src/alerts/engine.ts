@@ -167,11 +167,11 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
   if (failed.length) {
     out.push({ key: 'cloud', sev: 'warn', title: `${failed.length} cloud task${failed.length > 1 ? 's' : ''} failed`, where: 'Cloud processing › Needs attention', summary: `${failed.map((f) => f.text).join(', ')} failed in the cloud. Repush them from Cloud processing.`, checks: [], notify: false, members: failed.map((f) => f.key), route: { view: 'cloud', cloudFilter: 'failed' }, line: 'Repush them in the cloud.' });
   }
-  // spin fit error over the review line (unless already reprocessed; a newly flagged pitch raises it again)
-  const spinBad = ds.pitches.filter((p) => (p.pp.spin.fitError ?? 0) >= ds.thresholds.spinFitErrorReview && !pp.done[tkey(p.num, 1)]);
+  // spin fit error over the review line, until each pitch is reprocessed or marked reviewed (a newly flagged pitch raises it again)
+  const spinBad = ds.pitches.filter((p) => (p.pp.spin.fitError ?? 0) >= ds.thresholds.spinFitErrorReview && !pp.done[tkey(p.num, 1)] && !pp.reviewed[tkey(p.num, 1)]);
   if (spinBad.length) {
     const last = spinBad[spinBad.length - 1];
-    out.push({ key: 'spin', sev: 'warn', title: `Spin fit error above ${ds.thresholds.spinFitErrorReview}`, where: 'Post-processing › Spin', summary: `Spin fit error crossed the review line on pitch${spinBad.length > 1 ? 'es' : ''} ${spinBad.map((p) => p.num).join(', ')}. The spin model may be drifting.`, checks: ['Compare spin strips on the flagged pitches', 'Consider bulk reprocess with the current model'], notify: true, members: spinBad.map((p) => String(p.num)), route: { view: 'pp', ppFilter: 'flag', ppSel: last.num }, line: 'Spin model may be drifting.' });
+    out.push({ key: 'spin', sev: 'warn', title: `Spin fit error above ${ds.thresholds.spinFitErrorReview}`, where: 'Post-processing › Spin', summary: `Spin fit error crossed the review line on pitch${spinBad.length > 1 ? 'es' : ''} ${spinBad.map((p) => p.num).join(', ')}. The spin model may be drifting.`, checks: ['Compare spin strips on the flagged pitches', 'Mark each reviewed if the fit looks right, or reprocess it'], notify: true, members: spinBad.map((p) => String(p.num)), route: { view: 'pp', ppFilter: 'flag', ppSel: last.num }, line: 'Spin model may be drifting.' });
   }
   return out;
 }

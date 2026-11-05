@@ -12,7 +12,8 @@ export function useDs(): Dataset {
 }
 export function usePpOps(): PpOps {
   const reviewed = useUi((s) => s.reviewed), queue = useUi((s) => s.ppQueue), done = useUi((s) => s.ppDone);
-  return useMemo(() => ({ reviewed, queue, done }), [reviewed, queue, done]);
+  const spinReview = useUi((s) => s.ds?.thresholds.spinFitErrorReview ?? Infinity);
+  return useMemo(() => ({ reviewed, queue, done, spinReview }), [reviewed, queue, done, spinReview]);
 }
 export function useCloudOps(): CloudOps {
   const retried = useUi((s) => s.cloudRetried), done = useUi((s) => s.cloudDone);

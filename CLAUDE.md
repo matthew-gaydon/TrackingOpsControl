@@ -38,6 +38,7 @@ src/views/{game,cameras,pp,cloud}/   One folder per view.
 - Any jump to another view from the pitch card goes through a "Take me there" popout first, then shows "Back to Game · Pitch N".
 - Camera control changes apply live (as in BMCA). **Save** keeps them, **Revert** drops them. Each camera is tuned on its own (no copying between cameras). Nudging is off by default.
 - Post-processing and Cloud use row selection (click / Ctrl / Shift), a right-click menu, and a bar with the action button and **Clear selection**. No checkboxes.
+- A spin with a result whose fit error is at or over `spinFitErrorReview` shows **Needs review** (amber) and can be accepted with **Mark reviewed** or reprocessed; either removes it from the spin alert. A spin with no result is **Failed**, reprocess only.
 - Trackpac result wording: **Valid** (green) / **Validation failed** (amber) / **Failed** (red, no result).
 - Every camera image is zoomable (`ZoomBox`: wheel zoom, drag to pan, −/%/+).
 - Colours and fonts are in `src/styles.css` `:root` (IBM Plex Sans / Mono). Every numeric control uses `Stepper` (− [value] +).

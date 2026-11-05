@@ -1,7 +1,7 @@
 import { usePick, useUi } from '../../state/store';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
-import { GROUP, health, healthNote, isBad, label, mark, rawTaskState, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { GROUP, health, healthNote, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
 import { ZoomBox, wasDrag } from '../../components/ZoomBox';
@@ -221,9 +221,10 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
         {TASKS.map((n, k) => {
           const t = taskState(p, k, ops); const ok = t === 'ok' || t === 'reviewed'; const red = rawTaskState(p, k) === 'crit' && t === 'crit';
           const value = k === 0 ? `${p.pp.release.mph ?? '—'} mph` : k === 1 ? `${p.pp.spin.rpm ?? '—'} rpm · err ${p.pp.spin.fitError ?? '—'}` : t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
-          const status = t === 'reviewed' ? 'Reviewed' : t === 'ok' ? 'Success' : t === 'queued' || t === 'processing' ? 'Queued' : k === 2 && !red ? 'Needs review' : 'Failed';
+          const review = reviewable(p, k, ops);
+          const status = t === 'reviewed' ? 'Reviewed' : t === 'ok' ? 'Success' : t === 'queued' || t === 'processing' ? 'Queued' : review && !red ? 'Needs review' : 'Failed';
           const box = { width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, textAlign: 'left' as const, background: ok ? 'var(--panel-2)' : red ? 'var(--crit-bg)' : 'var(--warn-bg)', border: `1px solid ${ok ? 'var(--border)' : red ? 'var(--crit-edge)' : 'var(--warn-edge)'}` };
-          const inner = (<><HealthDot h={ok ? 'ok' : red ? 'crit' : 'warn'} size={10} /><span className="col grow" style={{ gap: 0 }}><span className="small" style={{ color: 'var(--text-3)' }}>{n}</span>{(ok || k === 2) && <span className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-hi)' }}>{value}</span>}</span><span className={`pill ${ok ? (t === 'reviewed' ? 'info' : 'ok') : red ? 'crit' : 'warn'}`}>{status}</span></>);
+          const inner = (<><HealthDot h={ok ? 'ok' : red ? 'crit' : 'warn'} size={10} /><span className="col grow" style={{ gap: 0 }}><span className="small" style={{ color: 'var(--text-3)' }}>{n}</span>{(ok || k === 2 || review) && <span className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-hi)' }}>{value}</span>}</span><span className={`pill ${ok ? (t === 'reviewed' ? 'info' : 'ok') : red ? 'crit' : 'warn'}`}>{status}</span></>);
           return (
             <div key={n} className="col" style={{ gap: 6 }}>
               {ok ? <div style={box}>{inner}</div> : <button type="button" style={box} onClick={() => pop('pp' + k)} aria-label={`${n} ${status}, show details`}>{inner}<Chevron /></button>}

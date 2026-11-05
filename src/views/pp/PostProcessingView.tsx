@@ -1,7 +1,7 @@
 import { usePick } from '../../state/store';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
-import { isBad, pitchWorst, taskState, taskStatus, taskValue, tkey, TASKS, type TaskState } from '../../data/model';
+import { isBad, pitchWorst, reviewable, taskState, taskStatus, taskValue, tkey, TASKS, type TaskState } from '../../data/model';
 import type { PitchFile } from '../../data/types';
 import { ContextMenu, HealthDot, menuPos, type MenuItem } from '../../components/ui';
 import { ZoomBox } from '../../components/ZoomBox';
@@ -61,7 +61,7 @@ export function PostProcessingView() {
   ];
 
   const single = sel.length === 1 ? sel[0] : null;
-  const LIGHT = (t: TaskState, k: number) => t === 'crit' || (t === 'warn' && k !== 2) ? ['var(--crit)', 2] : t === 'warn' ? ['var(--warn)', 2] : t === 'ok' ? ['var(--ok)', 6] : ['var(--accent)', t === 'reviewed' ? 2 : 6];
+  const LIGHT = (t: TaskState, p: PitchFile, k: number) => t === 'crit' || (t === 'warn' && !reviewable(p, k, ops)) ? ['var(--crit)', 2] : t === 'warn' ? ['var(--warn)', 2] : t === 'ok' ? ['var(--ok)', 6] : ['var(--accent)', t === 'reviewed' ? 2 : 6];
 
   return (
     <div className="view">
@@ -155,7 +155,7 @@ export function PostProcessingView() {
                         aria-label={`Pitch ${p.num}: ${TASKS.map((n, k) => `${n} ${taskStatus(p, k, ops)}`).join(', ')}. Open details.`}
                         style={{ width: '100%', display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', padding: '7px 12px', minHeight: 34, border: 0, borderBottom: '1px solid var(--line)', background: 'transparent', textAlign: 'left' }}>
                         <span className="mono small" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Pitch {p.num} · {p.time}</span>
-                        {[0, 1, 2].map((k) => { const [c, r] = LIGHT(taskState(p, k, ops), k); return <span key={k} style={{ display: 'flex', justifyContent: 'center' }}><span className="light" title={`${TASKS[k]}: ${taskStatus(p, k, ops)}`} style={{ background: c as string, borderRadius: r as number }} /></span>; })}
+                        {[0, 1, 2].map((k) => { const [c, r] = LIGHT(taskState(p, k, ops), p, k); return <span key={k} style={{ display: 'flex', justifyContent: 'center' }}><span className="light" title={`${TASKS[k]}: ${taskStatus(p, k, ops)}`} style={{ background: c as string, borderRadius: r as number }} /></span>; })}
                       </button>
                     ))}
                   </div>
@@ -183,7 +183,7 @@ export function PostProcessingView() {
                       </div>
                       {isBad(t) && (
                         <div className="row wrap">
-                          {t === 'warn' && k === 2 && <button type="button" className="btn primary" onClick={() => st.set({ reviewed: { ...st.reviewed, [tkey(p.num, k)]: true } })}>Mark reviewed</button>}
+                          {t === 'warn' && reviewable(p, k, ops) && <button type="button" className="btn primary" onClick={() => st.set({ reviewed: { ...st.reviewed, [tkey(p.num, k)]: true } })}>Mark reviewed</button>}
                           <button type="button" className="btn" onClick={() => enqueue([tkey(p.num, k)])}>Reprocess {n}</button>
                         </div>
                       )}

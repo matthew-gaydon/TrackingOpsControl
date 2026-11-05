@@ -142,7 +142,7 @@ The engine only says what is wrong *now*. `src/alerts/ledger.ts` keeps every **o
 
 Status messages are one occurrence per message (keyed on what they're about plus their start time) and keep their own `at` / `clearedAt`. Alerts derived from the data use the time the app first saw them. Conditions already present when the app starts show "Active" with no duration, because their start is unknown.
 
-To try it in the demo: repush the failed cloud tasks or reprocess the flagged spin pitches, and those alerts move to cleared-not-acknowledged instead of disappearing.
+To try it in the demo: repush the failed cloud tasks, or reprocess or **Mark reviewed** the flagged spin pitch, and those alerts move to cleared-not-acknowledged instead of disappearing.
 
 ## Converting real exports
 

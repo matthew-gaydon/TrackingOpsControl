@@ -181,11 +181,11 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, focusAlertId: null, pop: null } as never);
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
   const hitT = p.hit ? hitTone(p.hit.trackPct, ds) : null;
-  const quick: { k: string; label: string; value: string; tone: Tone | 'none'; sub: string; text?: string; go?: () => void }[] = [
-    { k: 'conf', label: 'Confidence', value: pass ? 'PASS' : 'FAIL', tone: pass ? 'ok' : 'crit', sub: `track ${p.trackLength} · quality ${p.trackQuality}`,
+  const quick: { k: string; label: string; value: string; tone: Tone | 'none'; text?: string; go?: () => void }[] = [
+    { k: 'conf', label: 'Confidence', value: pass ? 'PASS' : 'FAIL', tone: pass ? 'ok' : 'crit',
       text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => st.set({ pop: null, fieldView: 'pitchToPlate', imgMode: 'mosaic', bigCam: null }) },
-    { k: 'acs', label: 'ACS delivery', value: ACS[p.acs].label, tone: ACS[p.acs].tone, sub: '' },
-    { k: 'hit', label: 'Hit tracked', value: p.hit ? `${p.hit.trackPct}%` : 'No hit', tone: hitT ?? 'none', sub: hitT === 'ok' ? 'Good hit track' : hitT ? 'Poor hit track' : '',
+    { k: 'acs', label: 'ACS delivery', value: ACS[p.acs].label, tone: ACS[p.acs].tone },
+    { k: 'hit', label: 'Hit tracked', value: p.hit ? `${p.hit.trackPct}%` : 'No hit', tone: hitT ?? 'none',
       text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => st.set({ pop: null, fieldView: 'fullField', imgMode: 'hit', bigCam: null }) },
   ];
   const TONE = {
@@ -204,10 +204,9 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
         {quick.map((q) => {
           const t = TONE[q.tone]; const bad = q.tone === 'warn' || q.tone === 'crit';
-          const box = { display: 'flex', flexDirection: 'column' as const, gap: 4, padding: 10, borderRadius: 8, textAlign: 'left' as const, background: t.bg, border: `1px solid ${bad && st.pop === q.k ? t.ink : t.edge}` };
+          const box = { display: 'flex', flexDirection: 'column' as const, gap: 3, padding: '8px 10px', borderRadius: 8, textAlign: 'left' as const, background: t.bg, border: `1px solid ${bad && st.pop === q.k ? t.ink : t.edge}` };
           const inner = (<><span className="tiny" style={{ color: 'var(--text-2)' }}>{q.label}</span>
-            <span className="row mono" style={{ gap: 6, fontSize: 14, fontWeight: 700, color: t.ink }}>{q.tone !== 'none' && <HealthDot h={q.tone} size={8} />}{q.value}</span>
-            {q.sub && <span className="tiny muted">{q.sub}</span>}</>);
+            <span className="row mono" style={{ gap: 6, fontSize: 14, fontWeight: 700, color: t.ink }}>{q.tone !== 'none' && <HealthDot h={q.tone} size={8} />}{q.value}</span></>);
           return bad && q.go ? <button key={q.k} type="button" style={box} onClick={() => pop(q.k)} aria-label={`${q.label} ${q.value}, show details`}>{inner}</button> : <div key={q.k} style={box}>{inner}</div>;
         })}
       </div>

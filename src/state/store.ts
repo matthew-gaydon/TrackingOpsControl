@@ -5,6 +5,7 @@ import type { Condition, Route } from '../alerts/engine';
 import { acknowledge, reconcile, type Alert, type Occurrence } from '../alerts/ledger';
 
 export type View = 'game' | 'cameras' | 'pp' | 'cloud';
+export type FlowStage = 'idle' | 'setup' | 'live' | 'ended';
 export interface Zoom { s: number; x: number; y: number }
 export interface MenuPos { x: number; y: number; task: number | null }
 
@@ -31,6 +32,13 @@ export interface UiState {
   /** Alert checklist ticks, by `<occurrence id>|<check>`. Guidance only: acknowledging doesn't require them. */
   checked: Record<string, true>;
   session: SessionMode | null;        // operator override of game.session
+  /**
+   * Game flow: Start Setup → Pre-Game Setup → Live Tracking → Tracking Ended.
+   * `at` holds when each stage began (dataset clock). Starting Live Tracking goes In session;
+   * ending it goes Out. The other stages will drive system actions later.
+   */
+  flow: { stage: FlowStage; at: Partial<Record<FlowStage, number>> };
+  flowConfirmEnd: boolean;
   idsOpen: boolean;
 
   // game
@@ -103,7 +111,7 @@ export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
 export const useUi = create<UiState>((set, get) => ({
   ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
   view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, drawer: false, drawerTab: 'open', dev: false,
-  ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false,
+  ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false, flow: { stage: 'idle', at: {} }, flowConfirmEnd: false,
   gameSel: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
   cam: 'P1', camTab: 'mosaic', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
   ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { usePick, useUi } from '../../state/store';
+import { clockMs, usePick, useUi, type FlowStage } from '../../state/store';
+import { useGoInSession } from '../../components/Shell';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
+import { fmtClock } from '../../data/time';
 import { ACS, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import type { Tone } from '../../data/model';
@@ -9,6 +11,73 @@ import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
 import { ZoomBox, wasDrag } from '../../components/ZoomBox';
 
 type FV = 'combined' | 'pitchToPlate' | 'fullField' | 'biomechanics';
+
+const STAGES: { k: Exclude<FlowStage, 'idle'>; label: string }[] = [
+  { k: 'setup', label: 'Pre-Game Setup' }, { k: 'live', label: 'Live Tracking' }, { k: 'ended', label: 'Tracking Ended' },
+];
+const NEXT: Record<FlowStage, { to: FlowStage; label: string } | null> = {
+  idle: { to: 'setup', label: 'Start Setup' }, setup: { to: 'live', label: 'Start Live Tracking' },
+  live: { to: 'ended', label: 'End Live Tracking' }, ended: null,
+};
+
+/**
+ * Game Flow: the stages of a game. Each button moves to the next stage. Starting Live Tracking
+ * takes the system In session; ending it (after a confirm) takes it Out. Other system actions
+ * hook in here later.
+ */
+function GameFlow() {
+  const st = usePick('flow', 'flowConfirmEnd', 'set');
+  const goIn = useGoInSession();
+  const { stage, at } = st.flow;
+  const next = NEXT[stage];
+  const go = (to: FlowStage) => {
+    if (to === 'live') goIn();
+    if (to === 'ended') st.set({ session: 'out' });
+    st.set((s) => ({ flow: { stage: to, at: { ...s.flow.at, [to]: clockMs(s) } }, flowConfirmEnd: false }));
+  };
+  const idx = STAGES.findIndex((x) => x.k === stage);
+  const current = STAGES[idx];
+  const tone = stage === 'live' ? { bg: '#12301F', ink: 'var(--ok-ink)', dot: 'var(--ok)' } : stage === 'ended' ? { bg: 'var(--panel-2)', ink: 'var(--text-2)', dot: 'var(--muted)' } : stage === 'setup' ? { bg: 'var(--accent-bg)', ink: '#A9D6FF', dot: 'var(--accent)' } : { bg: 'var(--panel-2)', ink: 'var(--text-3)', dot: '#2A313C' };
+  return (
+    <section aria-label="Game flow" className="col" style={{ gap: 6, padding: '10px 12px', borderRadius: 10, background: 'var(--panel)', border: `1px solid ${stage === 'live' ? '#23503A' : 'var(--border)'}` }}>
+      <span className="small" style={{ color: 'var(--text-3)' }}>Game Flow</span>
+      {/* current status, large */}
+      <div className="row" aria-live="polite" style={{ gap: 10, padding: '8px 10px', borderRadius: 8, background: tone.bg }}>
+        <span className="dot" style={{ width: 10, height: 10, background: tone.dot, animation: stage === 'live' ? 'blink 1.6s infinite' : undefined }} />
+        <span className="grow" style={{ fontWeight: 700, fontSize: 15, color: tone.ink }}>{current?.label ?? 'Not started'}</span>
+        {current && at[current.k] !== undefined && <span className="mono tiny muted" title="Started (UTC)">{fmtClock(at[current.k]!)}</span>}
+      </div>
+      {/* stages so far */}
+      {idx > 0 && (
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {STAGES.slice(0, idx).map((x) => (
+            <li key={x.k} className="row tiny" style={{ gap: 8, color: 'var(--text-3)' }}>
+              <span aria-hidden="true" style={{ color: 'var(--ok-ink)' }}>✓</span><span className="grow">{x.label}</span>
+              {at[x.k] !== undefined && <span className="mono muted">{fmtClock(at[x.k]!)}</span>}
+            </li>
+          ))}
+        </ol>
+      )}
+      {/* the next step */}
+      {next && (next.to !== 'ended' || !st.flowConfirmEnd) && (
+        <button type="button" className={`btn ${next.to === 'ended' ? 'danger' : next.to === 'live' ? 'go' : 'primary'}`} style={{ justifyContent: 'center', minHeight: 36, fontSize: 13 }}
+          onClick={() => (next.to === 'ended' ? st.set({ flowConfirmEnd: true }) : go(next.to))}>
+          {next.label}
+        </button>
+      )}
+      {next?.to === 'ended' && st.flowConfirmEnd && (
+        <div className="col" style={{ gap: 8, padding: 10, borderRadius: 8, background: 'var(--crit-bg)', border: '1px solid var(--crit-edge)' }}>
+          <span className="small" style={{ color: '#FFD7D3', lineHeight: 1.45 }}>End live tracking? This takes the system Out of session.</span>
+          <div className="row">
+            <button type="button" className="btn danger" onClick={() => go('ended')}>End Live Tracking</button>
+            <button type="button" className="btn" onClick={() => st.set({ flowConfirmEnd: false })}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {next?.to === 'live' && <span className="tiny muted">Starting live tracking takes the system In session.</span>}
+    </section>
+  );
+}
 
 function HealthTiles() {
   const ds = useDs(); const st = usePick('goTo', 'set'); const al = useAlerts(); const ops = usePpOps();
@@ -34,33 +103,32 @@ function HealthTiles() {
   const r = ds.game.redundancy;
   const redFocus = al.focus && !al.focus.acked && al.focus.route.target === 'red';
   const link = (ok: boolean, name: string) => (
-    <div className="row" style={{ gap: 10, padding: '6px 0', borderTop: '1px solid var(--line)' }}>
-      <HealthDot h={ok ? 'ok' : 'warn'} size={10} />
-      <span className="grow" style={{ fontWeight: 700, fontSize: 14 }}>{name}</span>
-      <span className="mono" style={{ fontWeight: 700, fontSize: 13, color: ok ? 'var(--ok-ink)' : 'var(--warn-ink)' }}>{ok ? 'Connected' : 'Down'}</span>
+    <div className="col" style={{ flex: '1 1 0', gap: 2, padding: '6px 8px', borderRadius: 7, background: ok ? '#112219' : 'var(--warn-bg)', border: `1px solid ${ok ? '#23503A' : 'var(--warn-edge)'}` }}>
+      <span className="row" style={{ gap: 6 }}><HealthDot h={ok ? 'ok' : 'warn'} size={9} /><span style={{ fontWeight: 700, fontSize: 14 }}>{name}</span></span>
+      <span className="mono" style={{ fontWeight: 700, fontSize: 12, color: ok ? 'var(--ok-ink)' : 'var(--warn-ink)' }}>{ok ? 'Connected' : 'Down'}</span>
     </div>
   );
   return (
-    <div className="col scroll" style={{ flex: '0 0 250px', gap: 10, minWidth: 0 }}>
-      <section aria-label="Redundancy" className="col" style={{ gap: 4, padding: '12px 14px', borderRadius: 10, background: 'var(--panel)',
+    <div className="col scroll" style={{ flex: '0 0 272px', gap: 6, minWidth: 0, scrollbarWidth: 'thin' }}>
+      <GameFlow />
+      <section aria-label="Redundancy" className="col" style={{ gap: 8, padding: '10px 12px', borderRadius: 10, background: 'var(--panel)',
         border: redFocus ? '2px solid var(--warn)' : `1px solid ${r.btcConnected && r.bdsConnected ? 'var(--border)' : 'var(--warn-edge)'}` }}>
-        <div className="row" style={{ justifyContent: 'space-between', paddingBottom: 6 }}>
-          <span className="small" style={{ color: 'var(--text-3)' }}>Redundancy</span>
+        <div className="row" style={{ gap: 8 }}>
+          <span className="small grow" style={{ color: 'var(--text-3)' }}>Redundancy</span>
+          <span className="mono tiny muted" title="Peers">peers +{r.peers}</span>
           <span className="mono" style={{ padding: '3px 12px', borderRadius: 5, fontWeight: 700, fontSize: 16, letterSpacing: '.04em', background: '#1D3A5C', color: '#A9D6FF' }}>{r.role}</span>
         </div>
-        {link(r.btcConnected, 'BTC')}
-        {link(r.bdsConnected, 'BDS')}
-        <div className="row" style={{ gap: 10, padding: '6px 0 0', borderTop: '1px solid var(--line)' }}>
-          <span className="grow" style={{ fontWeight: 700, fontSize: 14 }}>Peers</span>
-          <span className="mono" style={{ fontWeight: 700, fontSize: 13 }}>+{r.peers}</span>
+        <div className="row" style={{ gap: 8, alignItems: 'stretch' }}>
+          {link(r.btcConnected, 'BTC')}
+          {link(r.bdsConnected, 'BDS')}
         </div>
       </section>
       {tiles.map((x) => (
-        <button key={x.label} type="button" onClick={x.go} className="row" style={{ gap: 12, padding: '12px 14px', borderRadius: 10, textAlign: 'left', minHeight: 64, width: '100%', background: 'var(--panel)', border: `1px solid ${x.h === 'ok' ? 'var(--border)' : x.h === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
+        <button key={x.label} type="button" onClick={x.go} className="row" style={{ gap: 12, padding: '7px 12px', borderRadius: 10, textAlign: 'left', width: '100%', background: 'var(--panel)', border: `1px solid ${x.h === 'ok' ? 'var(--border)' : x.h === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
           <HealthDot h={x.h} size={12} />
           <span className="col grow" style={{ gap: 2, alignItems: 'flex-start' }}>
             <span className="small" style={{ color: 'var(--text-3)' }}>{x.label}</span>
-            <span className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-hi)', lineHeight: 1.3 }}>{x.value}</span>
+            <span className="mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-hi)', lineHeight: 1.3 }}>{x.value}</span>
             <span className="tiny" style={{ color: x.h === 'ok' ? 'var(--muted)' : x.h === 'warn' ? 'var(--warn-ink)' : 'var(--crit-ink)' }}>{x.note}</span>
           </span>
           <Chevron />

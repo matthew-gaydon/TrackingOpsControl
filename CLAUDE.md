@@ -24,6 +24,8 @@ src/state/hooks.ts       useDs / useAlertSync (runs the engine once, in App) / u
 src/components/          Shell (header, banner, drawer, toasts), ui primitives, ZoomBox.
 src/views/{game,cameras,pp,cloud}/   One folder per view.
 ```
+- **One clock.** `clockMs()` in `store.ts` is the dataset clock, and every time on screen is UTC (`fmtClock`). Components that show a ticking time use `useNow()` (or `<AlertWhen>`). Never use `Date.now()` or local time for display.
+- **Subscribe narrowly.** Components read the store with `usePick('field', …)` or a `useUi((s) => s.x)` selector, never `useUi()` with no selector: the clock ticks every second and zoom drags update the store continuously.
 - **Data is read-only.** Operator actions (acknowledge, save camera settings, reprocess, repush, session change) live in the store as overlays on the dataset. When the real backend arrives, those store actions become API calls.
 - Mock behaviour is in `App.tsx` (`useMockProcessing`): the reprocess queue drains one task every 2 s, and a repushed cloud task succeeds after 4 s.
 

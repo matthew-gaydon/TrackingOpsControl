@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
-import { useUi, type View } from '../state/store';
-import { useAlerts, useDs, useSession } from '../state/hooks';
+import { usePick, useUi, type View } from '../state/store';
+import { useAlerts, useDs, useNow, useSession } from '../state/hooks';
+import { fmtClock } from '../data/time';
 import { listDatasets } from '../data/load';
 import { Arrow, Chevron, SevBadge } from './ui';
-import type { Alert } from '../alerts/ledger';
+import { alertWhen, type Alert } from '../alerts/ledger';
 import type { SessionMode } from '../data/types';
 
 const VIEWS: [View, string][] = [['game', 'Game'], ['cameras', 'Cameras'], ['pp', 'Post-processing'], ['cloud', 'Cloud processing']];
 const VIEW_NAME: Record<View, string> = { game: 'Game', cameras: 'Cameras', pp: 'Post-processing', cloud: 'Cloud processing' };
 
-function useClock() {
-  const [t, setT] = useState(() => new Date());
-  useEffect(() => { const i = setInterval(() => setT(new Date()), 1000); return () => clearInterval(i); }, []);
-  return t.toLocaleTimeString([], { hour12: false });
+/** Header clock: the dataset clock in UTC, the same clock every pitch and alert time uses. */
+function Clock() {
+  const now = useNow();
+  return <span className="mono" style={{ fontSize: 18, fontWeight: 500 }} title="Dataset clock (UTC)">{fmtClock(now)}<span className="tiny muted" style={{ marginLeft: 6, fontSize: 11 }}>UTC</span></span>;
+}
+
+/** Ticking "Active · 3m 12s" text. Only this re-renders each second, not the alert list around it. */
+function AlertWhen({ a }: { a: Alert }) {
+  const now = useNow();
+  return <>{alertWhen(a, now)}</>;
 }
 
 /** Switches the session; going In also acknowledges the session alert and its developer detail. */
@@ -26,11 +33,10 @@ export function useGoInSession() {
 
 export function Header() {
   const ds = useDs();
-  const st = useUi();
+  const st = usePick('drawer', 'idsOpen', 'set', 'view');
   const al = useAlerts();
   const session = useSession();
   const goIn = useGoInSession();
-  const clock = useClock();
   const [datasets, setDatasets] = useState<string[]>([ds.name]);
   useEffect(() => { listDatasets().then(setDatasets); }, []);
   const realOpen = al.open.filter((a) => a.sev !== 'dev').length;
@@ -59,7 +65,7 @@ export function Header() {
             {datasets.map((d) => <option key={d}>{d}</option>)}
           </select>
         </label>
-        <span className="mono" style={{ fontSize: 18, fontWeight: 500 }}>{clock}</span>
+        <Clock />
         <button type="button" aria-expanded={st.drawer} onClick={() => st.set({ drawer: !st.drawer })}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 8, fontWeight: 700, fontSize: 13, minHeight: 40, ...btnBg }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8" /><path d="M10 20a2 2 0 004 0" /></svg>
@@ -123,7 +129,7 @@ export function Header() {
 /** "Arrived from alert" banner. */
 export function FocusBanner() {
   const al = useAlerts();
-  const st = useUi();
+  const st = usePick('ack', 'prevView', 'set');
   const goIn = useGoInSession();
   const a = al.focus;
   if (!a) return null;
@@ -135,7 +141,7 @@ export function FocusBanner() {
       <div className="col" style={{ gap: 6, flex: '1 1 420px', minWidth: 0 }}>
         <div className="row wrap" style={{ alignItems: 'baseline', gap: 10 }}>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#F6F8FA' }}>{a.title}</span>
-          <span className="mono tiny" style={{ color: '#A5B0BF' }}>{a.when}</span>
+          <span className="mono tiny" style={{ color: '#A5B0BF' }}><AlertWhen a={a} /></span>
           {acked && <span className="pill solid-ok" style={{ fontSize: 10 }}>ACKNOWLEDGED</span>}
         </div>
         <span style={{ color: 'var(--text-2)', lineHeight: 1.45 }}>{a.summary}</span>
@@ -158,7 +164,7 @@ export function FocusBanner() {
 
 /** "Back to Game · Pitch N" after following a link on the pitch card. */
 export function Crumb() {
-  const st = useUi();
+  const st = usePick('crumbPitch', 'set', 'view');
   if (st.crumbPitch === null || st.view === 'game') return null;
   return (
     <div className="row wrap small" style={{ flex: '0 0 auto', gap: 10, margin: '12px 12px 0', padding: '8px 12px', borderRadius: 8, background: 'var(--accent-bg)', border: '1px solid var(--accent-edge)', color: '#CFE8FF' }}>
@@ -169,7 +175,7 @@ export function Crumb() {
 }
 
 function AlertCard({ a, open }: { a: Alert; open: boolean }) {
-  const st = useUi();
+  const st = usePick('ack', 'goTo');
   const red = a.sev === 'crit' || a.sev === 'issue';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 12, borderRadius: 8, ...(!open ? { background: 'var(--panel-2)', border: '1px solid var(--border)', opacity: .85 } : a.cleared ? { background: '#1A1F28', border: '1px dashed var(--crit-edge)' } : red ? { background: 'var(--crit-bg)', border: '1px solid #8A3330' } : a.sev === 'dev' ? { background: 'var(--panel-2)', border: '1px solid var(--border)' } : { background: 'var(--warn-bg)', border: '1px solid var(--warn-edge)' }) }}>
@@ -177,7 +183,7 @@ function AlertCard({ a, open }: { a: Alert; open: boolean }) {
         <SevBadge sev={a.sev} />
         <span className="col grow" style={{ gap: 2 }}>
           <span style={{ fontWeight: 600, color: '#F6F8FA' }}>{a.title}</span>
-          <span className="mono tiny" style={{ color: '#A5B0BF' }}>{a.cleared && !a.acked && !a.replaced ? 'CLEARED · NOT ACKNOWLEDGED · ' : ''}{a.when}</span>
+          <span className="mono tiny" style={{ color: '#A5B0BF' }}>{a.cleared && !a.acked && !a.replaced ? 'CLEARED · NOT ACKNOWLEDGED · ' : ''}<AlertWhen a={a} /></span>
         </span>
       </div>
       <div className="row wrap">
@@ -191,7 +197,7 @@ function AlertCard({ a, open }: { a: Alert; open: boolean }) {
 }
 
 export function AlertDrawer() {
-  const st = useUi();
+  const st = usePick('dev', 'drawer', 'drawerTab', 'set');
   const al = useAlerts();
   if (!st.drawer) return null;
   const items = st.drawerTab === 'open' ? al.open : al.done;
@@ -216,7 +222,7 @@ export function AlertDrawer() {
 }
 
 export function Toasts() {
-  const st = useUi();
+  const st = usePick('dismissed', 'goTo', 'set');
   const al = useAlerts();
   const goIn = useGoInSession();
   const list = al.open.filter((a) => a.notify && !a.cleared && !st.dismissed[a.id]).slice(0, 3);

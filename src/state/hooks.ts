@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useUi } from './store';
+import { clockMs, useUi } from './store';
 import { deriveConditions, RANK, type Severity } from '../alerts/engine';
 import { toAlert, type Alert } from '../alerts/ledger';
 import type { CloudOps, PpOps } from '../data/model';
@@ -32,12 +32,18 @@ export function useAlertSync() {
   const ds = useDs();
   const session = useSession();
   const pp = usePpOps(), cloud = useCloudOps();
-  const elapsed = useUi((s) => s.elapsedSec);
-  // only re-derive when an appearsAfterSec threshold could have been crossed
-  const gate = ds.status.filter((m) => m.appearsAfterSec && elapsed >= m.appearsAfterSec).length;
+  // only re-derive (and re-render) when an appearsAfterSec threshold is crossed, not every tick
+  const gate = useUi((s) => ds.status.filter((m) => m.appearsAfterSec && s.elapsedSec >= m.appearsAfterSec).length);
   useEffect(() => {
     useUi.getState().syncAlerts(deriveConditions({ ds, session, elapsedSec: useUi.getState().elapsedSec, pp, cloud }));
   }, [ds, session, gate, pp, cloud]);
+}
+
+/** The dataset clock (UTC ms), re-rendering once a second. Only for components that show a ticking time. */
+export function useNow(): number {
+  const ds = useUi((s) => s.ds), loadedAt = useUi((s) => s.loadedAt);
+  useUi((s) => s.elapsedSec);
+  return clockMs({ ds, loadedAt });
 }
 
 export interface AlertState {
@@ -55,13 +61,10 @@ export interface AlertState {
 }
 
 export function useAlerts(): AlertState {
-  const ds = useDs();
   const ledger = useUi((s) => s.ledger);
-  const elapsed = useUi((s) => s.elapsedSec);
   const dev = useUi((s) => s.dev), focusId = useUi((s) => s.focusAlertId);
   return useMemo(() => {
-    const now = ds.nowMs + elapsed * 1000;
-    const all = ledger.map((o) => toAlert(o, now));
+    const all = ledger.map(toAlert);
     const present = all.filter((a) => a.sev !== 'dev' || dev);
     const open = present.filter((a) => !a.acked).sort((x, y) => Number(x.cleared) - Number(y.cleared) || RANK[y.sev] - RANK[x.sev]);
     const done = present.filter((a) => a.acked).sort((x, y) => (y.ackedAt ?? 0) - (x.ackedAt ?? 0));
@@ -74,5 +77,5 @@ export function useAlerts(): AlertState {
       focus: focusId ? byId[focusId] ?? null : null,
       countFor: (view) => { const xs = real.filter((a) => a.route.view === view); return { n: xs.length, worst: worstOf(xs) }; },
     };
-  }, [ds, ledger, elapsed, dev, focusId]);
+  }, [ledger, dev, focusId]);
 }

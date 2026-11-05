@@ -1,4 +1,4 @@
-import { useUi } from '../../state/store';
+import { usePick } from '../../state/store';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { isBad, pitchWorst, taskState, taskStatus, taskValue, tkey, TASKS, type TaskState } from '../../data/model';
@@ -12,7 +12,7 @@ const pl = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : w === 'pitch' ? 
 const GRID = '16px 1.4fr 1fr 1.6fr 1fr 90px';
 
 export function PostProcessingView() {
-  const ds = useDs(); const st = useUi(); const ops = usePpOps(); const al = useAlerts();
+  const ds = useDs(); const st = usePick('ppAffected', 'ppFilter', 'ppMenu', 'ppPicks', 'ppQueue', 'ppSel', 'ppTask', 'reviewed', 'set'); const ops = usePpOps(); const al = useAlerts();
   const enqueue = (keys: string[]) => st.set((s) => { const q = [...s.ppQueue]; keys.forEach((k) => { if (!q.includes(k)) q.push(k); }); return { ppQueue: q }; });
 
   const keep = (p: PitchFile) => st.ppFilter === 'all' || (st.ppFilter === 'flag' && pitchWorst(p, ops) !== 'ok') || (st.ppFilter === 'affected' && st.ppAffected.includes(p.num));

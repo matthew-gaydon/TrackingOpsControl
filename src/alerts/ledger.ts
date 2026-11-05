@@ -11,6 +11,9 @@
  *  - A cleared, acknowledged occurrence whose condition comes back raises a NEW occurrence.
  *  - An acknowledged, still-live alert that gains a member (another camera below full rate,
  *    another cloud task failed, …) raises a NEW occurrence; the old one is marked replaced.
+ *    A member that drops out and comes back counts as gained, so every repeat drop is raised.
+ *  - `alertedAt` moves whenever an occurrence should grab attention again (raised, reopened, or an
+ *    unacknowledged alert gains a member), so a hidden notification comes back.
  *  - Acknowledging is per occurrence, so it never hides a later problem.
  *
  * Pure functions only: the store holds the ledger and calls these. When the real backend arrives,
@@ -27,6 +30,8 @@ export interface Occurrence {
   c: Condition;
   /** When the ledger first saw it (dataset clock, ms). */
   raisedAt: number;
+  /** Last time this occurrence should have grabbed attention: raised, reopened, or gained a member. */
+  alertedAt: number;
   /** When the problem started, if known. null = it was already happening when the ledger started. */
   startedAt: number | null;
   clearedAt?: number;
@@ -38,7 +43,8 @@ export interface Occurrence {
 }
 
 const same = (a: Condition, b: Condition) => JSON.stringify(a) === JSON.stringify(b);
-const grew = (now?: string[], acked?: string[]) => !!now && now.some((m) => !(acked ?? []).includes(m));
+/** True if `now` has a member that `before` didn't. */
+const grew = (now?: string[], before?: string[]) => !!now && now.some((m) => !(before ?? []).includes(m));
 
 /**
  * Merge the engine's current conditions into the ledger.
@@ -56,7 +62,7 @@ export function reconcile(prev: Occurrence[], conds: Condition[], now: number, f
   const raise = (c: Condition, known: boolean) => {
     const n = (count.get(c.key) ?? 0) + 1;
     count.set(c.key, n);
-    const o: Occurrence = { id: `${c.key}#${n}`, key: c.key, c, raisedAt: now, startedAt: c.startedAt ?? (known ? now : null), clearedAt: c.clearedAt };
+    const o: Occurrence = { id: `${c.key}#${n}`, key: c.key, c, raisedAt: now, alertedAt: now, startedAt: c.startedAt ?? (known ? now : null), clearedAt: c.clearedAt };
     next.push(o);
     latest.set(c.key, next.length - 1);
     changed = true;
@@ -73,17 +79,20 @@ export function reconcile(prev: Occurrence[], conds: Condition[], now: number, f
 
     if (live || c.clearedAt !== undefined) {
       // the same occurrence: either still live, or a source-cleared message we already hold
-      if (live && o.ackedAt !== undefined && grew(c.members, o.ackedMembers)) {
+      // a member that wasn't there at acknowledgement, or that dropped out and came back
+      const gained = live && (grew(c.members, o.ackedMembers) || grew(c.members, o.c.members));
+      if (gained && o.ackedAt !== undefined) {
         const fresh = raise(c, true);
         next[i] = { ...o, clearedAt: now, replacedBy: fresh.id };
         continue;
       }
       const clearedAt = c.clearedAt ?? o.clearedAt;
-      if (!same(o.c, c) || clearedAt !== o.clearedAt) { next[i] = { ...o, c, clearedAt }; changed = true; }
+      const alertedAt = gained && grew(c.members, o.c.members) ? now : o.alertedAt;
+      if (!same(o.c, c) || clearedAt !== o.clearedAt || alertedAt !== o.alertedAt) { next[i] = { ...o, c, clearedAt, alertedAt }; changed = true; }
       continue;
     }
     // it had cleared and is back
-    if (o.ackedAt === undefined) { next[i] = { ...o, c, clearedAt: undefined }; changed = true; }
+    if (o.ackedAt === undefined) { next[i] = { ...o, c, clearedAt: undefined, alertedAt: now }; changed = true; }
     else raise(c, true);
   }
 
@@ -98,24 +107,32 @@ export function acknowledge(prev: Occurrence[], id: string, now: number): Occurr
   return prev.map((o) => (o.id === id && o.ackedAt === undefined ? { ...o, ackedAt: now, ackedMembers: o.c.members } : o));
 }
 
-/** What the views read: the condition plus its lifecycle. */
+/**
+ * What the views read: the condition plus its lifecycle. Holds no clock-dependent text, so the
+ * alert list only changes when the ledger does. Durations come from `alertWhen` (see <AlertWhen>).
+ */
 export interface Alert extends Omit<Condition, 'startedAt' | 'clearedAt'> {
   id: string;
   cleared: boolean;
   acked: boolean;
   replaced: boolean;
-  /** "Active · 3m 12s", "Cleared · lasted 1m 50s at 04:49", … */
-  when: string;
-  raisedAt: number; startedAt: number | null; clearedAt?: number; ackedAt?: number;
+  raisedAt: number; alertedAt: number; startedAt: number | null; clearedAt?: number; ackedAt?: number;
 }
 
-export function toAlert(o: Occurrence, now: number): Alert {
+export function toAlert(o: Occurrence): Alert {
   const { startedAt: _s, clearedAt: _c, ...c } = o.c;
-  const when = o.replacedBy ? `Replaced by a newer alert at ${fmtClock(o.clearedAt!).slice(0, 5)}`
-    : o.clearedAt !== undefined ? (o.startedAt !== null ? `Cleared · lasted ${fmtDuration((o.clearedAt - o.startedAt) / 1000)} at ${fmtClock(o.clearedAt).slice(0, 5)}` : `Cleared at ${fmtClock(o.clearedAt).slice(0, 5)}`)
-    : o.startedAt !== null ? `Active · ${fmtDuration((now - o.startedAt) / 1000)}` : 'Active';
   return {
-    ...c, id: o.id, cleared: o.clearedAt !== undefined, acked: o.ackedAt !== undefined, replaced: !!o.replacedBy, when,
-    raisedAt: o.raisedAt, startedAt: o.startedAt, clearedAt: o.clearedAt, ackedAt: o.ackedAt,
+    ...c, id: o.id, cleared: o.clearedAt !== undefined, acked: o.ackedAt !== undefined, replaced: !!o.replacedBy,
+    raisedAt: o.raisedAt, alertedAt: o.alertedAt, startedAt: o.startedAt, clearedAt: o.clearedAt, ackedAt: o.ackedAt,
   };
+}
+
+/** "Active · 3m 12s", "Cleared · lasted 1m 50s at 04:49", … (UTC, dataset clock). */
+export function alertWhen(a: Pick<Alert, 'replaced' | 'startedAt' | 'clearedAt'>, now: number): string {
+  const hm = (ms: number) => fmtClock(ms).slice(0, 5);
+  if (a.replaced) return `Replaced by a newer alert at ${hm(a.clearedAt!)}`;
+  if (a.clearedAt !== undefined) {
+    return a.startedAt !== null ? `Cleared · lasted ${fmtDuration((a.clearedAt - a.startedAt) / 1000)} at ${hm(a.clearedAt)}` : `Cleared at ${hm(a.clearedAt)}`;
+  }
+  return a.startedAt !== null ? `Active · ${fmtDuration((now - a.startedAt) / 1000)}` : 'Active';
 }

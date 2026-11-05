@@ -1,4 +1,4 @@
-import { useUi } from '../../state/store';
+import { usePick } from '../../state/store';
 import { useCloudOps, useDs, usePpOps } from '../../state/hooks';
 import { CLOUD_TASKS, cloudState, tkey, trackpacCloud } from '../../data/model';
 import type { CloudResult, PitchFile, TrackpacCloud } from '../../data/types';
@@ -18,7 +18,7 @@ const pl = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : w === 'pitch' ? 
 const GRID = '24px 1.3fr 1fr 1fr 1fr 1fr';
 
 export function CloudView() {
-  const ds = useDs(); const st = useUi(); const pp = usePpOps(); const ops = useCloudOps();
+  const ds = useDs(); const st = usePick('clMenu', 'cloudAnchor', 'cloudFilter', 'cloudPicks', 'set'); const pp = usePpOps(); const ops = useCloudOps();
   const tp = (p: PitchFile) => trackpacCloud(p, pp);
   const cs = (p: PitchFile, k: number) => cloudState(p, k, pp, ops);
   const rowFailed = (p: PitchFile) => CLOUD_TASKS.some((_, k) => cs(p, k) === 'failed');

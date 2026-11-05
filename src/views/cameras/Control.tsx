@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react';
-import { useUi } from '../../state/store';
+import { usePick, useUi } from '../../state/store';
 import { useAlerts, useDs } from '../../state/hooks';
 import { img } from '../../data/load';
 import { health, healthNote, isTracking, label } from '../../data/model';
@@ -46,7 +46,7 @@ const Row = ({ label: l, changed, children }: { label: string; changed?: boolean
 );
 
 export function ControlPanel() {
-  const ds = useDs(); const st = useUi(); const al = useAlerts(); const getS = useSettings();
+  const ds = useDs(); const st = usePick('ack', 'bmcaNote', 'cam', 'clickPts', 'ctrlTab', 'lensRestart', 'moveMsg', 'nudgeOn', 'nudgeStep', 'overlays', 'pickPt', 'resetOpen', 'set'); const al = useAlerts(); const getS = useSettings();
   const c = ds.cameras.find((x) => x.id === st.cam) ?? ds.cameras[0];
   const { sv, lv, dirty } = getS(c.id);
   const upd = (patch: Partial<CameraSettings>) => st.set((s) => ({ ctlLive: { ...s.ctlLive, [c.id]: { ...(s.ctlLive[c.id] ?? {}), ...patch } } }));

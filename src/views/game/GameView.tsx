@@ -1,4 +1,4 @@
-import { useUi } from '../../state/store';
+import { usePick, useUi } from '../../state/store';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { GROUP, health, healthNote, isBad, label, mark, rawTaskState, strikeZone, taskState, TASKS, type Health } from '../../data/model';
@@ -9,7 +9,7 @@ import { ZoomBox, wasDrag } from '../../components/ZoomBox';
 type FV = 'combined' | 'pitchToPlate' | 'fullField' | 'biomechanics';
 
 function HealthTiles() {
-  const ds = useDs(); const st = useUi(); const al = useAlerts(); const ops = usePpOps();
+  const ds = useDs(); const st = usePick('goTo', 'set'); const al = useAlerts(); const ops = usePpOps();
   const hs = ds.cameras.map((c) => ({ c, h: health(c, ds) }));
   const problems = hs.filter((x) => x.h !== 'ok');
   const down = hs.filter((x) => x.h === 'crit').length;
@@ -96,7 +96,7 @@ function CamImage({ c, p, mode, big }: { c: CameraFile; p: PitchFile; mode: 'mos
 }
 
 function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
-  const ds = useDs(); const st = useUi();
+  const ds = useDs(); const st = usePick('bigCam', 'fieldView', 'imgMode', 'lastHitOverlay', 'set');
   const fv = st.fieldView as FV;
   const cams = fv === 'combined' ? [] : ds.cameras.filter((c) => c.group === fv);
   const mode = fv === 'biomechanics' ? 'mosaic' : st.imgMode;
@@ -153,7 +153,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
 }
 
 function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boolean; latestNum: number }) {
-  const ds = useDs(); const st = useUi(); const ops = usePpOps();
+  const ds = useDs(); const st = usePick('pop', 'set', 'szAll'); const ops = usePpOps();
   const pass = p.confidence > ds.thresholds.confidencePass;
   const sz = strikeZone(p, ds);
   const bad = sz.filter((z) => z.state !== 'ok');
@@ -243,7 +243,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
 }
 
 function Timeline({ sel }: { sel: number }) {
-  const ds = useDs(); const st = useUi(); const ops = usePpOps();
+  const ds = useDs(); const st = usePick('set'); const ops = usePpOps();
   const latest = ds.pitches.at(-1)!.num;
   const C = { ok: 'var(--ok)', warn: 'var(--warn)', crit: 'var(--crit)', none: '#2A313C', hit: '#B48CFF' };
   const lane = (c: string) => ({ display: 'block', height: 6, margin: '4px 0', borderRadius: 2, background: c });
@@ -277,7 +277,7 @@ function Timeline({ sel }: { sel: number }) {
 }
 
 export function GameView() {
-  const ds = useDs(); const st = useUi();
+  const ds = useDs(); const st = usePick('gameSel', 'set');
   const latest = ds.pitches.at(-1)!;
   const sel = st.gameSel ?? latest.num;
   const p = ds.pitches.find((x) => x.num === sel) ?? latest;

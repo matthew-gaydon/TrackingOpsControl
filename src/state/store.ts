@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import type { CameraSettings, Dataset, SessionMode } from '../data/types';
 import type { Condition, Route } from '../alerts/engine';
 import { acknowledge, reconcile, type Alert, type Occurrence } from '../alerts/ledger';
@@ -10,7 +11,9 @@ export interface MenuPos { x: number; y: number; task: number | null }
 export interface UiState {
   ds: Dataset | null;
   loadError: string | null;
+  /** Wall-clock time the dataset loaded. The dataset clock runs from game.now at this moment. */
   loadedAt: number;
+  /** Whole seconds since load; ticks once a second. Use it to re-render, but read time from clockMs / useNow. */
   elapsedSec: number;
 
   // shell + alerts
@@ -86,7 +89,11 @@ export interface UiState {
   syncAlerts: (conds: Condition[]) => void;
 }
 
-/** The dataset clock right now: game.now plus the time since the dataset loaded. */
+/**
+ * THE dataset clock (UTC ms): game.now plus the time since the dataset loaded. Every "now" in the
+ * app (header clock, alert durations, ledger timestamps) comes from here, so a replay clock only
+ * has to change this function.
+ */
 export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
   return s.ds ? s.ds.nowMs + (Date.now() - s.loadedAt) : Date.now();
 }
@@ -126,6 +133,28 @@ export const useUi = create<UiState>((set, get) => ({
   syncAlerts: (conds) => {
     const s = get();
     const ledger = reconcile(s.ledger, conds, clockMs(s), !s.ledgerReady);
-    if (ledger !== s.ledger || !s.ledgerReady) set({ ledger, ledgerReady: true });
+    if (ledger === s.ledger && s.ledgerReady) return;
+    // an occurrence that grabs attention again (reopened, or another camera dropped) un-hides its notification
+    const before = new Map(s.ledger.map((o) => [o.id, o.alertedAt]));
+    let dismissed = s.dismissed;
+    for (const o of ledger) {
+      if (dismissed[o.id] && before.has(o.id) && before.get(o.id) !== o.alertedAt) {
+        if (dismissed === s.dismissed) dismissed = { ...dismissed };
+        delete dismissed[o.id];
+      }
+    }
+    set({ ledger, ledgerReady: true, dismissed });
   },
 }));
+
+/**
+ * Subscribe to just the store fields a component uses (shallow-compared), so it re-renders only
+ * when one of them changes, not on every clock tick or zoom drag. Actions (set, goTo, ack…) are stable.
+ */
+export function usePick<K extends keyof UiState>(...keys: K[]): Pick<UiState, K> {
+  return useUi(useShallow((s: UiState) => {
+    const o = {} as Pick<UiState, K>;
+    for (const k of keys) o[k] = s[k];
+    return o;
+  }));
+}

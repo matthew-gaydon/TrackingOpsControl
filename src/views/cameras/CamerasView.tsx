@@ -1,4 +1,4 @@
-import { useUi } from '../../state/store';
+import { usePick } from '../../state/store';
 import { useAlerts, useDs } from '../../state/hooks';
 import { img } from '../../data/load';
 import { GROUP, health, healthNote, isTracking, label } from '../../data/model';
@@ -7,7 +7,7 @@ import { ZoomBox } from '../../components/ZoomBox';
 import { ControlPanel, useAnyDirty } from './Control';
 
 function CameraList() {
-  const ds = useDs(); const st = useUi(); const anyDirty = useAnyDirty();
+  const ds = useDs(); const st = usePick('cam', 'camFilter', 'set'); const anyDirty = useAnyDirty();
   const order = { crit: 0, warn: 1, ok: 2 };
   const rows = ds.cameras.map((c) => ({ c, h: health(c, ds) }))
     .filter(({ c, h }) => st.camFilter === 'all' || (st.camFilter === 'problems' ? h !== 'ok' : c.group === st.camFilter))
@@ -44,7 +44,7 @@ function CameraList() {
 }
 
 function Monitoring() {
-  const ds = useDs(); const st = useUi(); const al = useAlerts();
+  const ds = useDs(); const st = usePick('ack', 'cam', 'camTab', 'set'); const al = useAlerts();
   const c = ds.cameras.find((x) => x.id === st.cam) ?? ds.cameras[0];
   const h = health(c, ds);
   const tabs: [typeof st.camTab, string][] = isTracking(c) ? [['tracking', 'Tracking window'], ['mosaic', 'Ball mosaic']] : [['mosaic', 'Ball mosaic'], ['still', 'Monitored image']];
@@ -100,7 +100,7 @@ function Monitoring() {
 }
 
 export function CamerasView() {
-  const st = useUi(); const ds = useDs(); const anyDirty = useAnyDirty();
+  const st = usePick('camSub', 'set'); const ds = useDs(); const anyDirty = useAnyDirty();
   const dirty = ds.cameras.filter((c) => anyDirty(c.id)).length;
   return (
     <div className="view" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start' }}>

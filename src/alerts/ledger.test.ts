@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Condition } from './engine';
-import { acknowledge, reconcile, toAlert, type Occurrence } from './ledger';
+import { acknowledge, alertWhen, reconcile, toAlert, type Occurrence } from './ledger';
+
+const when = (o: Occurrence, now: number) => alertWhen(toAlert(o), now);
 
 const T0 = Date.parse('2026-11-04T05:00:00Z');
 const sec = (n: number) => T0 + n * 1000;
@@ -23,7 +25,7 @@ describe('reconcile', () => {
   it('marks conditions present at start as having an unknown start time', () => {
     const l = reconcile([], [cond('bds')], sec(0), true);
     expect(l[0].startedAt).toBeNull();
-    expect(toAlert(l[0], sec(30)).when).toBe('Active');
+    expect(when(l[0], sec(30))).toBe('Active');
   });
 
   it('returns the same array when nothing changed', () => {
@@ -37,7 +39,7 @@ describe('reconcile', () => {
     expect(l).toHaveLength(1);
     expect(l[0].clearedAt).toBe(sec(40));
     expect(open(l)).toHaveLength(1);
-    expect(toAlert(l[0], sec(60)).when).toBe('Cleared · lasted 40 s at 05:00');
+    expect(when(l[0], sec(60))).toBe('Cleared · lasted 40 s at 05:00');
   });
 
   it('reopens a cleared, unacknowledged occurrence instead of duplicating it', () => {
@@ -81,7 +83,7 @@ describe('reconcile', () => {
     expect(l.map((o) => o.id)).toEqual(['fps#1', 'fps#2']);
     expect(l[0]).toMatchObject({ clearedAt: sec(10), replacedBy: 'fps#2' });
     expect(open(l).map((o) => o.id)).toEqual(['fps#2']);
-    expect(toAlert(l[0], sec(20)).when).toBe('Replaced by a newer alert at 05:00');
+    expect(when(l[0], sec(20))).toBe('Replaced by a newer alert at 05:00');
   });
 
   it('acknowledging one occurrence leaves later ones open', () => {
@@ -98,7 +100,7 @@ describe('reconcile', () => {
     expect(l[0]).toMatchObject({ startedAt: sec(-120), clearedAt: sec(-10) });
     l = reconcile(l, [msg], sec(5));
     expect(l).toHaveLength(1);
-    expect(toAlert(l[0], sec(5)).when).toBe('Cleared · lasted 1m 50s at 04:59');
+    expect(when(l[0], sec(5))).toBe('Cleared · lasted 1m 50s at 04:59');
   });
 
   it('records a message clearing later on the same occurrence', () => {
@@ -106,6 +108,43 @@ describe('reconcile', () => {
     l = reconcile(l, [cond('missing:P6@1', { startedAt: sec(-40), clearedAt: sec(30) })], sec(31));
     expect(l).toHaveLength(1);
     expect(l[0].clearedAt).toBe(sec(30));
+  });
+});
+
+describe('repeat drops', () => {
+  it('raises again when an acknowledged member recovers and drops again', () => {
+    let l = reconcile([], [fps('B1', 'B2')], sec(0));
+    l = ackKey(l, 'fps', sec(5));
+    l = reconcile(l, [fps('B1')], sec(10));            // B2 recovers, B1 keeps the alert live
+    expect(open(l)).toHaveLength(0);
+    l = reconcile(l, [fps('B1', 'B2')], sec(20));      // B2 drops again
+    expect(l.map((o) => o.id)).toEqual(['fps#1', 'fps#2']);
+    expect(l[0]).toMatchObject({ replacedBy: 'fps#2', clearedAt: sec(20) });
+    expect(open(l).map((o) => o.id)).toEqual(['fps#2']);
+  });
+
+  it('re-alerts an unacknowledged alert when a member drops again', () => {
+    let l = reconcile([], [fps('B1', 'B2')], sec(0));
+    expect(l[0].alertedAt).toBe(sec(0));
+    l = reconcile(l, [fps('B1')], sec(10));
+    expect(l[0].alertedAt).toBe(sec(0));               // recovering is not an alert
+    l = reconcile(l, [fps('B1', 'B2')], sec(20));
+    expect(l).toHaveLength(1);
+    expect(l[0].alertedAt).toBe(sec(20));
+  });
+
+  it('re-alerts a cleared, unacknowledged alert that comes back', () => {
+    let l = reconcile([], [cond('down:P6')], sec(0));
+    l = reconcile(l, [], sec(10));
+    l = reconcile(l, [cond('down:P6')], sec(20));
+    expect(l).toHaveLength(1);
+    expect(l[0]).toMatchObject({ alertedAt: sec(20), clearedAt: undefined });
+  });
+
+  it('does not re-alert an alert that is merely still there', () => {
+    let l = reconcile([], [fps('B1', 'B2')], sec(0));
+    l = reconcile(l, [fps('B1', 'B2')], sec(10));
+    expect(l[0].alertedAt).toBe(sec(0));
   });
 });
 

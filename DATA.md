@@ -137,6 +137,8 @@ The engine only says what is wrong *now*. `src/alerts/ledger.ts` keeps every **o
 | It comes back while still unacknowledged | The same alert reopens (no duplicate) |
 | It comes back after being acknowledged | A **new** alert, so it isn't hidden by the old acknowledgement |
 | A grouped alert (cameras below full rate, cloud tasks failed, spin fit error) gains a member after being acknowledged | A **new** alert; the old one shows "Replaced by a newer alert" |
+| A member recovers and then drops again (for example a camera falls below full rate a second time) | Counts as gaining a member: a **new** alert if acknowledged, otherwise the open one notifies again |
+| A cleared, unacknowledged alert comes back | Reopens and notifies again, even if its notification had been hidden |
 
 Status messages are one occurrence per message (keyed on what they're about plus their start time) and keep their own `at` / `clearedAt`. Alerts derived from the data use the time the app first saw them. Conditions already present when the app starts show "Active" with no duration, because their start is unknown.
 

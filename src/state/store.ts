@@ -28,6 +28,8 @@ export interface UiState {
   ledger: Occurrence[];
   ledgerReady: boolean;
   dismissed: Record<string, true>;    // toasts hidden (does not acknowledge), by occurrence id
+  /** Alert checklist ticks, by `<occurrence id>|<check>`. Guidance only: acknowledging doesn't require them. */
+  checked: Record<string, true>;
   session: SessionMode | null;        // operator override of game.session
   idsOpen: boolean;
 
@@ -101,7 +103,7 @@ export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
 export const useUi = create<UiState>((set, get) => ({
   ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
   view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, drawer: false, drawerTab: 'open', dev: false,
-  ledger: [], ledgerReady: false, dismissed: {}, session: null, idsOpen: false,
+  ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false,
   gameSel: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
   cam: 'P1', camTab: 'tracking', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
   ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,

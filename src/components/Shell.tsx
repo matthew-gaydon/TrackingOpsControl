@@ -101,7 +101,12 @@ export function Header() {
           )}
         </div>
         <div className="col" style={{ gap: 2 }}><span className="lbl">Game mode · BDS</span>
-          <span className="row" style={{ gap: 6, padding: '3px 8px', borderRadius: 5, background: '#12301F', color: 'var(--ok-ink)', fontWeight: 700, fontSize: 12 }}><span className="dot" style={{ width: 7, height: 7, background: 'var(--ok)' }} />{g.gameMode}</span>
+          {(() => {
+            // LIVE is the only mode where recording matters for the broadcast; anything else reads as "not a game"
+            const live = g.gameMode === 'LIVE';
+            return <span className="row" style={{ gap: 6, padding: '3px 8px', borderRadius: 5, background: live ? '#12301F' : 'var(--panel-2)', color: live ? 'var(--ok-ink)' : 'var(--text-2)', border: live ? undefined : '1px solid var(--border-2)', fontWeight: 700, fontSize: 12 }}>
+              <span className={`dot${live ? '' : ' sq'}`} style={{ width: 7, height: 7, background: live ? 'var(--ok)' : 'var(--muted)' }} />{g.gameMode}</span>;
+          })()}
         </div>
         <div style={ring(target === 'session')}>
           <span className="lbl">Session</span>
@@ -129,7 +134,7 @@ export function Header() {
 /** "Arrived from alert" banner. */
 export function FocusBanner() {
   const al = useAlerts();
-  const st = usePick('ack', 'prevView', 'set');
+  const st = usePick('ack', 'checked', 'prevView', 'set');
   const goIn = useGoInSession();
   const a = al.focus;
   if (!a) return null;
@@ -146,11 +151,17 @@ export function FocusBanner() {
         </div>
         <span style={{ color: 'var(--text-2)', lineHeight: 1.45 }}>{a.summary}</span>
         {a.raw && <span className="mono tiny" style={{ color: '#A5B0BF' }}>{a.raw}</span>}
-        {a.checks.length > 0 && (
-          <div className="row wrap" style={{ gap: 6 }}>
-            {a.checks.map((k) => <label key={k} className="row small" style={{ gap: 6, padding: '5px 9px', borderRadius: 6, background: 'rgba(11,14,19,.5)', border: '1px solid var(--border-2)' }}><input type="checkbox" />{k}</label>)}
-          </div>
-        )}
+        {a.checks.length > 0 && (() => {
+          const ck = (k: string) => `${a.id}|${k}`;
+          const n = a.checks.filter((k) => st.checked[ck(k)]).length;
+          const toggle = (k: string) => st.set((s) => { const c = { ...s.checked }; if (c[ck(k)]) delete c[ck(k)]; else c[ck(k)] = true; return { checked: c }; });
+          return (
+            <div className="row wrap" style={{ gap: 6 }}>
+              <span className="mono tiny" style={{ color: '#A5B0BF' }}>Checks {n}/{a.checks.length}</span>
+              {a.checks.map((k) => <label key={k} className="row small" style={{ gap: 6, padding: '5px 9px', borderRadius: 6, background: 'rgba(11,14,19,.5)', border: '1px solid var(--border-2)' }}><input type="checkbox" checked={!!st.checked[ck(k)]} disabled={acked} onChange={() => toggle(k)} />{k}</label>)}
+            </div>
+          );
+        })()}
       </div>
       <div className="row wrap">
         {a.fix && !acked && <button type="button" className="btn" style={{ border: 0, background: 'var(--warn)', color: '#241A05', fontWeight: 700 }} onClick={goIn}>{a.fix.label}</button>}

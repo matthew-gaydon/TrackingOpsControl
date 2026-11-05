@@ -111,7 +111,7 @@ export function PostProcessingView() {
           </div>
           <div style={{ overflowX: 'auto' }}>
             <div style={{ minWidth: 720 }}>
-              <div className="lbl" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span>{TASKS.map((t) => <span key={t}>{t}</span>)}<span>Worker</span></div>
+              <div className="lbl" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span>{TASKS.map((t) => <span key={t}>{t}</span>)}<span title="Placeholder: worker assignment isn't in the dataset yet">Worker · sample</span></div>
               {visible.map((p) => {
                 const w = pitchWorst(p, ops);
                 return (
@@ -120,7 +120,7 @@ export function PostProcessingView() {
                     <HealthDot h={w === 'ok' ? 'ok' : w} />
                     <span className="mono small">Pitch {p.num} · {p.time}</span>
                     {TASKS.map((_, k) => <span key={k} data-task={k} className="mono small" style={{ color: COL[taskState(p, k, ops)] }}>{k === 2 ? taskValue(p, k, ops) : taskState(p, k, ops) === 'ok' ? taskValue(p, k, ops) : taskStatus(p, k, ops)}</span>)}
-                    <span className="mono tiny muted">{p.num % 3 === 1 ? 'BCPP1' : 'BPP1 · BCPP1'}</span>
+                    <span className="mono tiny" style={{ color: 'var(--faint)', fontStyle: 'italic' }} title="Placeholder value">{p.num % 3 === 1 ? 'BCPP1' : 'BPP1 · BCPP1'}</span>
                   </button>
                 );
               })}
@@ -128,7 +128,7 @@ export function PostProcessingView() {
           </div>
           <div className="row wrap" style={{ padding: '12px 14px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
             <button type="button" className="btn" disabled={!failedKeys(ds.pitches).length} onClick={() => enqueue(failedKeys([...ds.pitches].reverse()))}>Reprocess failed ({failedKeys(ds.pitches).length})</button>
-            <button type="button" className="btn">Bulk reprocess with model…</button>
+            <button type="button" className="btn" disabled title="Not built in the prototype yet">Bulk reprocess with model… · coming soon</button>
             <span className="grow" />
             <button type="button" className="btn danger" disabled={!st.ppQueue.length} onClick={() => st.set({ ppQueue: [] })}>Clear task queue</button>
           </div>

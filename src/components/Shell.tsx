@@ -117,15 +117,6 @@ export function Header() {
             ))}
           </div>
         </div>
-        <div style={ring(target === 'red')}>
-          <span className="lbl">Redundancy</span>
-          <span className="row small" style={{ gap: 6 }}>
-            <span style={{ padding: '1px 8px', borderRadius: 4, fontWeight: 700, background: '#1D3A5C', color: '#A9D6FF' }}>{g.redundancy.role}</span>
-            <span className="row" style={{ gap: 4 }}><span className={`dot${g.redundancy.btcConnected ? '' : ' sq'}`} style={{ width: 7, height: 7, background: g.redundancy.btcConnected ? 'var(--ok)' : 'var(--warn)' }} />BTC</span>
-            <span className="row" style={{ gap: 4, color: g.redundancy.bdsConnected ? undefined : 'var(--warn-ink)' }}><span className={`dot${g.redundancy.bdsConnected ? '' : ' sq'}`} style={{ width: 7, height: 7, background: g.redundancy.bdsConnected ? 'var(--ok)' : 'var(--warn)' }} />BDS</span>
-            <span className="muted">+{g.redundancy.peers}</span>
-          </span>
-        </div>
       </div>
     </header>
   );

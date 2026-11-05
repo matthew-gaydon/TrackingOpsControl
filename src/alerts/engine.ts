@@ -155,7 +155,7 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
     out.push({ key: 'session', sev: 'warn', title: `Session ${session.toUpperCase()} while game is LIVE`, where: 'Header › Session', summary: 'Cameras are not recording to disk and PP tasks are not processed. Switch the session to In.', checks: [], notify: true, route: { view: 'game', target: 'session' }, fix: { label: 'Go in session', action: 'goInSession' }, line: 'No recordings or PP for pitches right now.' });
   }
   if (!ds.game.redundancy.bdsConnected) {
-    out.push({ key: 'bds', sev: 'warn', title: 'BDS not connected', where: 'Header › Redundancy', summary: 'Game mode and GamePK both come from BDS, so they may be stale until it reconnects.', checks: ['BaseballDataServer launched', 'Network path to BDS'], notify: false, route: { view: 'game', target: 'red' }, line: 'Game mode and GamePK may be stale.' });
+    out.push({ key: 'bds', sev: 'warn', title: 'BDS not connected', where: 'Game › Redundancy', summary: 'Game mode and GamePK both come from BDS, so they may be stale until it reconnects.', checks: ['BaseballDataServer launched', 'Network path to BDS'], notify: false, route: { view: 'game', target: 'red' }, line: 'Game mode and GamePK may be stale.' });
   }
   const { tssOffsetMs, latencyMs } = ds.game.timing;
   if (tssOffsetMs > ds.thresholds.tssOffsetMaxMs || latencyMs > ds.thresholds.latencyMaxMs) {

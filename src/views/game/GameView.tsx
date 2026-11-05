@@ -31,8 +31,30 @@ function HealthTiles() {
     { label: 'Data & timing', value: `${ds.game.redundancy.bdsConnected ? 'BDS connected' : 'BDS down'} · TSS ${timingBad ? t.tssOffsetMs + ' ms' : 'ok'}`, h: dataBad ? 'warn' : 'ok', note: `Latency ${t.latencyMs} ms ${t.latencyMs > ds.thresholds.latencyMaxMs ? 'high' : 'normal'}`,
       go: () => { const a = [al.byKey.bds, al.byKey.timing].find((x) => x && !x.cleared); if (a) st.goTo(a); } },
   ];
+  const r = ds.game.redundancy;
+  const redFocus = al.focus && !al.focus.acked && al.focus.route.target === 'red';
+  const link = (ok: boolean, name: string) => (
+    <div className="row" style={{ gap: 10, padding: '6px 0', borderTop: '1px solid var(--line)' }}>
+      <HealthDot h={ok ? 'ok' : 'warn'} size={10} />
+      <span className="grow" style={{ fontWeight: 700, fontSize: 14 }}>{name}</span>
+      <span className="mono" style={{ fontWeight: 700, fontSize: 13, color: ok ? 'var(--ok-ink)' : 'var(--warn-ink)' }}>{ok ? 'Connected' : 'Down'}</span>
+    </div>
+  );
   return (
-    <div className="col" style={{ flex: '0 0 250px', gap: 10, minWidth: 0 }}>
+    <div className="col scroll" style={{ flex: '0 0 250px', gap: 10, minWidth: 0 }}>
+      <section aria-label="Redundancy" className="col" style={{ gap: 4, padding: '12px 14px', borderRadius: 10, background: 'var(--panel)',
+        border: redFocus ? '2px solid var(--warn)' : `1px solid ${r.btcConnected && r.bdsConnected ? 'var(--border)' : 'var(--warn-edge)'}` }}>
+        <div className="row" style={{ justifyContent: 'space-between', paddingBottom: 6 }}>
+          <span className="small" style={{ color: 'var(--text-3)' }}>Redundancy</span>
+          <span className="mono" style={{ padding: '3px 12px', borderRadius: 5, fontWeight: 700, fontSize: 16, letterSpacing: '.04em', background: '#1D3A5C', color: '#A9D6FF' }}>{r.role}</span>
+        </div>
+        {link(r.btcConnected, 'BTC')}
+        {link(r.bdsConnected, 'BDS')}
+        <div className="row" style={{ gap: 10, padding: '6px 0 0', borderTop: '1px solid var(--line)' }}>
+          <span className="grow" style={{ fontWeight: 700, fontSize: 14 }}>Peers</span>
+          <span className="mono" style={{ fontWeight: 700, fontSize: 13 }}>+{r.peers}</span>
+        </div>
+      </section>
       {tiles.map((x) => (
         <button key={x.label} type="button" onClick={x.go} className="row" style={{ gap: 12, padding: '12px 14px', borderRadius: 10, textAlign: 'left', minHeight: 64, width: '100%', background: 'var(--panel)', border: `1px solid ${x.h === 'ok' ? 'var(--border)' : x.h === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
           <HealthDot h={x.h} size={12} />

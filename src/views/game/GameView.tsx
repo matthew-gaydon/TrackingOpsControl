@@ -49,8 +49,8 @@ function HealthTiles() {
 function Combined({ hit }: { hit?: { trackPct: number; distanceFt: number } | null }) {
   const show = useUi((s) => s.lastHitOverlay);
   return (
-    <div style={{ position: 'relative', flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, background: '#0D1012', minHeight: 420 }}>
-      <svg viewBox="0 0 600 450" role="img" aria-label="Combined bird's-eye view with tracked players and the last pitch path" style={{ width: '100%', maxWidth: 760, height: 'auto' }}>
+    <div className="stage fill" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, background: '#0D1012', borderRadius: '0 0 10px 10px' }}>
+      <svg viewBox="0 0 600 450" role="img" aria-label="Combined bird's-eye view with tracked players and the last pitch path" style={{ width: '100%', height: '100%', maxWidth: 1000 }}>
         <path d="M300 445 L40 185 Q60 30 300 18 Q540 30 560 185 Z" fill="#17301F" stroke="#2E4A37" strokeWidth="2" />
         <path d="M300 410 L70 180 Q300 -30 530 180 Z" fill="#1C3A26" />
         <circle cx="300" cy="335" r="92" fill="#3D3122" />
@@ -105,7 +105,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
   const latest = ds.pitches.at(-1)!;
   const badge = (c: CameraFile) => { const h = health(c, ds); return h === 'ok' ? null : <span className="tag-over" style={{ right: 6, top: 6, color: h === 'crit' ? 'var(--crit-ink)' : 'var(--warn-ink)', fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 10 }}>{healthNote(c, ds)}</span>; };
   return (
-    <section className="panel" style={{ flex: '999 1 600px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+    <section className="panel" style={{ flex: '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <div className="row wrap" style={{ gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
         <Seg role="tablist" label="Field view" value={fv} onChange={(v) => st.set({ fieldView: v, bigCam: null })}
           options={[['combined', 'Combined'], ['pitchToPlate', 'PitchToPlate'], ['fullField', 'FullField'], ['biomechanics', 'Biomechanics']]} />
@@ -115,7 +115,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
         {(fv === 'pitchToPlate' || fv === 'fullField') && <Seg label="Image type" value={st.imgMode} onChange={(v) => st.set({ imgMode: v })} options={[['mosaic', 'Ball mosaic'], ['hit', 'Hit image']]} />}
       </div>
       {fv === 'combined' ? <Combined hit={[...ds.pitches].reverse().find((x) => x.hit)?.hit ?? latest.hit} /> : (
-        <div className="col" style={{ flex: '1 1 auto', gap: 10, padding: 12, background: '#0D1012', minHeight: 420 }}>
+        <div className="col fill" style={{ gap: 10, padding: 12, background: '#0D1012', borderRadius: '0 0 10px 10px' }}>
           <div className="row wrap">
             <span className="mono" style={{ fontSize: 13 }}>Pitch {p.num} · {p.time}</span>
             {reviewing && <span className="pill info">REVIEW</span>}
@@ -123,7 +123,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
             {big && <button type="button" className="btn" onClick={() => st.set({ bigCam: null })}>All {cams.length} cameras</button>}
           </div>
           {!big ? (
-            <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${fv === 'biomechanics' ? 4 : fv === 'fullField' ? 4 : 3}, minmax(0, 1fr))` }}>
+            <div className="fill scroll" style={{ display: 'grid', alignContent: 'start', gap: 8, gridTemplateColumns: `repeat(${fv === 'biomechanics' ? 4 : fv === 'fullField' ? 4 : 3}, minmax(0, 1fr))` }}>
               {cams.map((c) => (
                 <button key={c.id} type="button" aria-label={`${label(c)}, enlarge`} onClick={() => { if (!wasDrag()) st.set({ bigCam: c.id }); }}
                   style={{ position: 'relative', aspectRatio: '2.4 / 1', padding: 0, border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', background: 'var(--deep)' }}>
@@ -136,11 +136,13 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
               ))}
             </div>
           ) : (
-            <div className="row" style={{ gap: 10 }}>
+            <div className="row stage fill" style={{ gap: 10 }}>
               <button type="button" className="icon-btn" aria-label="Previous camera" onClick={() => step(-1)} style={{ width: 40, height: 40 }}><Chevron dir="left" /></button>
-              <ZoomBox zoomKey={`gb:${fv}:${big.id}:${mode}:${p.num}`} style={{ flex: '1 1 auto', minWidth: 0, aspectRatio: '2.4 / 1', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
-                <CamImage c={big} p={p} mode={mode} big />
-              </ZoomBox>
+              <div style={{ flex: '1 1 auto', alignSelf: 'stretch', minWidth: 0, containerType: 'size', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ZoomBox zoomKey={`gb:${fv}:${big.id}:${mode}:${p.num}`} style={{ width: 'min(100cqw, calc(100cqh * 2.4))', aspectRatio: '2.4 / 1', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
+                  <CamImage c={big} p={p} mode={mode} big />
+                </ZoomBox>
+              </div>
               <button type="button" className="icon-btn" aria-label="Next camera" onClick={() => step(1)} style={{ width: 40, height: 40 }}><Chevron /></button>
             </div>
           )}
@@ -169,7 +171,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   ];
   const navBtn = { width: 32, height: 32 };
   return (
-    <aside className="panel panel-pad col" style={{ flex: '1 1 380px', maxWidth: 460, minWidth: 0, gap: 10 }}>
+    <aside className="panel panel-pad col scroll" style={{ flex: '1 1 380px', maxWidth: 460, minWidth: 0, gap: 10 }}>
       <div className="row">
         <button type="button" className="icon-btn" style={navBtn} aria-label="Previous pitch" disabled={p.num <= 1} onClick={() => st.set({ gameSel: p.num - 1, pop: null })}><Chevron dir="left" /></button>
         <div className="col grow" style={{ gap: 0 }}><h2 style={{ fontSize: 16, fontWeight: 600 }}>Pitch {p.num}</h2><span className="mono small muted">{p.time}</span></div>
@@ -299,7 +301,7 @@ export function GameView() {
         </div>
       )}
       <HealthTiles />
-      <div className="row wrap" style={{ gap: 12, alignItems: 'stretch', flex: '1 1 auto' }}>
+      <div className="fit-row fill">
         <FieldPanel p={p} reviewing={reviewing} />
         <PitchCard p={p} reviewing={reviewing} latestNum={latest.num} />
       </div>

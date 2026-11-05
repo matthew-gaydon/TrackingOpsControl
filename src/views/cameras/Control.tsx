@@ -112,12 +112,12 @@ export function ControlPanel() {
   const aw = c.antiwobble;
   const ballTable: [string, number, number, keyof CameraSettings, keyof CameraSettings | null, number][] = lb ? [
     ['Strength', lb.strength, 0, 'strMin', null, 1], ['Perimeter', lb.perimeter, 2, 'perMin', 'perMax', 5], ['Area', lb.area, 2, 'areaMin', 'areaMax', 5]] : [];
-  const tableCols = { display: 'grid', gridTemplateColumns: 'minmax(72px, 1fr) 148px minmax(76px, 1fr) 148px', columnGap: 14, alignItems: 'center', justifyItems: 'center', minHeight: 36 } as const;
+  const tableCols = { display: 'grid', gridTemplateColumns: 'minmax(72px, 1fr) 148px minmax(76px, 1fr) 148px', columnGap: 8, alignItems: 'center', justifyItems: 'center', minHeight: 36 } as const;
   const camAlerts = al.open.filter((a) => a.cameraId === c.id && a.sev !== 'dev');
 
   return (
-    <div className="col" style={{ gap: 12 }}>
-      <section className="panel">
+    <div className="ctl-layout fill">
+      <section className="panel fill" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div className="panel-head">
           <h2 style={{ fontSize: 16, fontWeight: 600 }}>{label(c)}</h2><span className="mono small muted">Live image</span>
           <span className={`pill ${h}`}>{h === 'ok' ? 'Healthy' : healthNote(c, ds)}</span>
@@ -136,12 +136,13 @@ export function ControlPanel() {
           <span className="grow" />
           {showCal && (dx !== gx || dy !== gy) && <span className="row tiny" style={{ color: 'var(--text-2)' }}><svg width="26" height="6" aria-hidden="true"><line x1="0" y1="3" x2="26" y2="3" stroke="#FF8BEA" strokeWidth="2" strokeDasharray="5 4" /></svg>Saved position</span>}
         </div>
-        <div style={{ padding: 12, background: 'var(--deep)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+        {/* sized to the image's aspect so the overlays line up, as large as the stage allows */}
+        <div className="stage fill" style={{ containerType: 'size', background: 'var(--deep)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {c.running && live ? (
-            <ZoomBox zoomKey={`c:${c.id}`} style={{ width: '100%', borderRadius: 6, border: '1px solid var(--line)' }}>
+            <ZoomBox zoomKey={`c:${c.id}`} style={{ width: `min(calc(100cqw - 24px), calc((100cqh - 24px) * ${W / H}))`, aspectRatio: `${W} / ${H}`, borderRadius: 6, border: '1px solid var(--line)' }}>
               {(scale) => (
                 <>
-                  <img src={live} alt={`Live image from ${label(c)}`} draggable={false} style={{ display: 'block', width: '100%', filter: `brightness(${bright.toFixed(2)}) blur(${blur.toFixed(1)}px)` }} />
+                  <img src={live} alt={`Live image from ${label(c)}`} draggable={false} style={{ display: 'block', width: '100%', height: '100%', filter: `brightness(${bright.toFixed(2)}) blur(${blur.toFixed(1)}px)` }} />
                   <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} role="img" aria-label="Calibration and ball detection overlays">
                     {showCal && (dx !== gx || dy !== gy) && <g transform={`translate(${gx} ${gy})`} stroke="#FF8BEA" strokeOpacity={0.7} strokeWidth={2} strokeDasharray="9 7" fill="none">{cal!.lines.map((l, i) => <line key={i} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} />)}</g>}
                     {showCal && <g transform={`translate(${dx} ${dy})`} stroke="var(--cal)" strokeWidth={2.5} fill="none">{cal!.lines.map((l, i) => <line key={i} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} />)}</g>}
@@ -162,7 +163,7 @@ export function ControlPanel() {
                 </>
               )}
             </ZoomBox>
-          ) : <span className="muted" style={{ padding: '60px 0' }}>{c.running ? 'No live image in this dataset' : 'No live image: this camera isn’t running'}</span>}
+          ) : <span className="muted">{c.running ? 'No live image in this dataset' : 'No live image: this camera isn’t running'}</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 1, background: 'var(--border)', borderTop: '1px solid var(--border)', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
           {([['Frame rate', c.running ? `${c.fps}/${c.targetFps ?? ds.thresholds.targetFps}` : '—', !c.running ? 'crit' : ''],
@@ -177,7 +178,7 @@ export function ControlPanel() {
         <span className="tiny muted" style={{ display: 'block', padding: '8px 14px' }}>Scroll to zoom and drag to pan. In this prototype the image roughly responds to exposure, gain, iris and focus, and the overlays move as you nudge.</span>
       </section>
 
-      <section className="panel panel-pad col" style={{ gap: 10, border: focus ? '2px solid var(--warn)' : undefined }}>
+      <section className="panel panel-pad col ctl-side" style={{ gap: 10, border: focus ? '2px solid var(--warn)' : undefined }}>
         <Seg role="tablist" label="Camera controls" value={tab} onChange={(v) => st.set({ ctrlTab: v, resetOpen: false, pickPt: null })}
           options={(['image', 'ball', 'calib'] as Sec[]).map((k) => [k, <>{TAB_NAME[k]}{dirty(k).length > 0 && <><span className="changed-dot" style={{ width: 7, height: 7 }} /><span className="sr">has unsaved changes</span></>}</>])} />
         {!c.running ? (
@@ -188,13 +189,14 @@ export function ControlPanel() {
           </div>
         ) : (
           <>
+            <div className="col ctl-body" style={{ gap: 10 }}>
             <div className="row small" style={{ alignItems: 'flex-start', padding: '8px 10px', borderRadius: 7, background: 'var(--warn-bg)', border: '1px solid #4E3E17', color: '#FFE2A3', lineHeight: 1.45 }}>
               <span>⚠</span><span>Game is {ds.game.gameMode}. Changes reach the camera straight away. <strong>Save</strong> keeps them; <strong>Revert</strong> undoes them.</span>
             </div>
             {camAlerts.map((a) => (
               <div key={a.id} className="row card" style={{ padding: '8px 10px' }}><SevBadge sev={a.sev} /><span className="grow small" style={{ fontWeight: 600 }}>{a.title}</span><button type="button" className="btn" onClick={() => st.ack(a.id)}>Acknowledge</button></div>
             ))}
-            <div style={{ display: 'grid', gap: 10, alignItems: 'stretch', gridTemplateColumns: tab === 'ball' && isTracking(c) ? 'minmax(260px, 1fr) minmax(520px, 2fr)' : 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+            <div style={{ display: 'grid', gap: 10, alignItems: 'stretch', gridTemplateColumns: tab === 'ball' && isTracking(c) ? 'repeat(auto-fit, minmax(min(100%, 540px), 1fr))' : 'repeat(auto-fit, minmax(260px, 1fr))' }}>
               {tab === 'image' && <>
                 <Box title="Exposure">
                   {tog('autoExp', 'Auto exposure')}
@@ -295,6 +297,7 @@ export function ControlPanel() {
                   )}
                 </Box>
               </>}
+            </div>
             </div>
             {(tab !== 'ball' || isTracking(c)) && (
               <div className="row wrap" style={{ paddingTop: 10, borderTop: '1px solid var(--border)' }}>

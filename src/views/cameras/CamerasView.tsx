@@ -15,11 +15,11 @@ function CameraList() {
   const healthy = ds.cameras.filter((c) => health(c, ds) === 'ok').length;
   const filters: [typeof st.camFilter, string][] = [['all', 'All'], ['problems', 'Problems'], ['pitchToPlate', 'PitchToPlate'], ['fullField', 'FullField'], ['biomechanics', 'Biomechanics']];
   return (
-    <aside className="panel panel-pad col" style={{ flex: '1 1 270px', maxWidth: 300, minWidth: 0, gap: 12 }}>
+    <aside className="panel panel-pad col" style={{ flex: '0 0 290px', minWidth: 0, minHeight: 0, gap: 12 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}><h2 style={{ fontSize: 14, fontWeight: 600 }}>Cameras</h2><span className="mono small muted">{healthy}/{ds.cameras.length} healthy</span></div>
       <span className="tiny muted" style={{ lineHeight: 1.4 }}>Every camera is checked the same way: is it running, and at full frame rate. Problems sort to the top.</span>
       <div className="row wrap" style={{ gap: 4 }}>{filters.map(([k, l]) => <button key={k} type="button" className="filter" aria-pressed={st.camFilter === k} onClick={() => st.set({ camFilter: k })}>{l}</button>)}</div>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <ul className="fill scroll" style={{ listStyle: 'none', margin: '0 -6px 0 0', padding: '0 6px 0 0', display: 'flex', flexDirection: 'column', gap: 3 }}>
         {rows.map(({ c, h }) => {
           const on = st.cam === c.id;
           return (
@@ -63,8 +63,8 @@ function Monitoring() {
     ['Capture host', c.host ?? '—'],
   ];
   return (
-    <>
-      <section className="panel" style={{ border: focused ? '2px solid var(--warn)' : undefined }}>
+    <div className="col fill" style={{ gap: 12 }}>
+      <section className="panel fill" style={{ display: 'flex', flexDirection: 'column', border: focused ? '2px solid var(--warn)' : undefined }}>
         <div className="panel-head">
           <h2 style={{ fontSize: 16, fontWeight: 600 }}>{label(c)}</h2>
           <span className="mono small muted">{GROUP[c.group].name}</span>
@@ -72,19 +72,19 @@ function Monitoring() {
           <span className="grow" />
           <Seg role="tablist" label="Camera feed" value={tab} onChange={(v) => st.set({ camTab: v })} options={tabs} />
         </div>
-        <div style={{ padding: 12, background: 'var(--deep)', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 360 }}>
+        <div className="stage fill" style={{ background: 'var(--deep)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {c.running && src ? (
-            <ZoomBox zoomKey={`m:${c.id}:${tab}`} style={{ width: '100%', borderRadius: 6, border: '1px solid var(--line)' }}>
-              <img src={src} alt={`${label(c)} ${tab === 'tracking' ? 'tracking window' : tab === 'still' ? 'monitored image' : 'ball mosaic'}`} draggable={false} style={{ width: '100%', display: 'block' }} />
+            <ZoomBox zoomKey={`m:${c.id}:${tab}`} style={{ position: 'absolute', inset: 12, borderRadius: 6 }}>
+              <img src={src} alt={`${label(c)} ${tab === 'tracking' ? 'tracking window' : tab === 'still' ? 'monitored image' : 'ball mosaic'}`} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </ZoomBox>
-          ) : <span className="muted" style={{ padding: '60px 0' }}>{c.running ? 'No image in this dataset' : 'No feed: this camera isn’t running'}</span>}
+          ) : <span className="muted">{c.running ? 'No image in this dataset' : 'No feed: this camera isn’t running'}</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 1, background: 'var(--border)', borderTop: '1px solid var(--border)', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
           {facts.map(([k, v, s]) => <div key={k} className="col" style={{ background: 'var(--panel)', padding: '10px 14px', gap: 2 }}><span className="lbl">{k}</span><span className="mono" style={{ fontSize: 16, fontWeight: 600, color: s === 'crit' ? 'var(--crit-ink)' : s === 'warn' ? 'var(--warn-ink)' : 'var(--text-hi)' }}>{v}</span></div>)}
         </div>
         {!isTracking(c) && <div className="small muted" style={{ padding: '10px 14px', borderTop: '1px solid var(--border)' }}>Biomechanics camera: no live tracking, so there are no tracking metrics to show.</div>}
       </section>
-      <section className="panel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <section className="panel scroll" style={{ flex: '0 1 auto', maxHeight: 200, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h2 style={{ fontSize: 14, fontWeight: 600 }}>Alerts on {label(c)}</h2>
         {alerts.length === 0 && <span className="small muted">None. This camera is healthy.</span>}
         {alerts.map((a) => (
@@ -95,7 +95,7 @@ function Monitoring() {
           </div>
         ))}
       </section>
-    </>
+    </div>
   );
 }
 
@@ -103,9 +103,9 @@ export function CamerasView() {
   const st = usePick('camSub', 'set'); const ds = useDs(); const anyDirty = useAnyDirty();
   const dirty = ds.cameras.filter((c) => anyDirty(c.id)).length;
   return (
-    <div className="view" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start' }}>
+    <div className="view fit-row">
       <CameraList />
-      <main className="col" style={{ flex: '999 1 560px', minWidth: 0, gap: 12 }}>
+      <main className="col" style={{ flex: '999 1 560px', minWidth: 0, minHeight: 0, gap: 12 }}>
         <div className="row wrap" style={{ gap: 12 }}>
           <Seg role="tablist" large label="Camera mode" value={st.camSub} onChange={(v) => st.set({ camSub: v, resetOpen: false })} options={[['monitor', 'Monitoring'], ['control', 'Control']]} />
           <span className="small muted" style={{ flex: '1 1 240px' }}>{st.camSub === 'monitor' ? 'Health and feeds for each camera.' : 'Image, ball tuning and calibration for the selected camera. Everything else stays in BMCA.'}</span>

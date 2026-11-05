@@ -89,7 +89,7 @@ export function CloudView() {
         </div>
       </div>
 
-      <main className="panel" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <main className="panel fill" style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <div className="panel-head">
           <h2 style={{ fontSize: 14, fontWeight: 600 }}>Pitches</h2>
           <div className="row" style={{ gap: 4 }}>
@@ -106,9 +106,9 @@ export function CloudView() {
           <button type="button" className="btn primary" aria-haspopup="menu" disabled={!sel.length} onClick={(e) => openMenu(null, e, true)}>Repush…</button>
           {sel.length > 0 && <button type="button" className="btn" onClick={() => st.set({ cloudPicks: {}, clMenu: null })}>Clear selection</button>}
         </div>
-        <div style={{ overflowX: 'auto' }}>
+        <div className="fill scroll">
           <div style={{ minWidth: 780 }}>
-            <div className="lbl" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span><span>Trackpac (local)</span>{CLOUD_TASKS.map(([, n]) => <span key={n}>{n} (cloud)</span>)}</div>
+            <div className="lbl sticky-head" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span><span>Trackpac (local)</span>{CLOUD_TASKS.map(([, n]) => <span key={n}>{n} (cloud)</span>)}</div>
             {visible.map((p) => {
               const t = tp(p); const att = attention(p);
               return (

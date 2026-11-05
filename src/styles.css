@@ -105,3 +105,29 @@ h1, h2, h3 { margin: 0; }
 .list-row.hl { background: #221C10; box-shadow: inset 3px 0 0 var(--warn); }
 .chip { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 700; min-height: 24px; }
 .light { display: inline-block; width: 12px; height: 12px; }
+
+/* ---- fit layout ----
+   On a desktop-size window (at least 1200 × 600) every view fills the window: the page doesn't
+   scroll, and long content (camera list, pitch lists, pitch card, PP detail) scrolls inside its
+   own panel, so everything else stays where it is.
+   .fit-row  a row of panels that never wraps on desktop
+   .fill     takes the height left over in its column
+   .scroll   scrolls inside itself
+   .stage    an image area: fills on desktop, a fixed height on small windows
+   Smaller windows fall back to a normal scrolling page. */
+.fit-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.scroll { overflow: auto; max-height: 70vh; }
+.stage { position: relative; height: 50vh; min-height: 220px; }
+.sticky-head { position: sticky; top: 0; z-index: 1; background: var(--panel); }
+/* Cameras › Control: image above controls on small windows; controls beside the image on desktop */
+.ctl-layout { display: flex; flex-direction: column; gap: 12px; }
+.ctl-body { overflow: auto; }
+@media (min-width: 1200px) and (min-height: 600px) {
+  .fit-row { flex-wrap: nowrap; min-height: 0; }
+  .fill { flex: 1 1 0; min-height: 0; }
+  .scroll { max-height: none; min-height: 0; }
+  .stage { height: auto; min-height: 160px; }
+  .ctl-layout { flex-direction: row; }
+  .ctl-side { flex: 0 0 clamp(520px, 36vw, 620px); min-height: 0; }
+  .ctl-body { flex: 1 1 auto; min-height: 0; }
+}

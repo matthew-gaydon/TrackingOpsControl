@@ -246,7 +246,7 @@ export function Toasts() {
             <div className="row" style={{ alignItems: 'flex-start', gap: 10 }}>
               <SevBadge sev={a.sev} />
               <span className="col grow" style={{ gap: 2 }}><span style={{ fontWeight: 600, color: '#F6F8FA' }}>{a.title}</span><span className="small" style={{ color: 'var(--text-2)' }}>{a.line}</span></span>
-              <button type="button" aria-label="Hide notification (does not acknowledge)" onClick={() => st.set({ dismissed: { ...st.dismissed, [a.id]: true } })} style={{ border: 0, background: 'transparent', color: 'var(--text-3)', fontSize: 14 }}>✕</button>
+              <button type="button" aria-label="Hide notification (does not acknowledge)" onClick={() => st.set((s) => ({ dismissed: { ...s.dismissed, [a.id]: true } }))} style={{ border: 0, background: 'transparent', color: 'var(--text-3)', fontSize: 14 }}>✕</button>
             </div>
             <div className="row wrap">
               <button type="button" className="btn primary" onClick={() => st.goTo(a)}>Take me there<Arrow /></button>

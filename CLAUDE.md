@@ -40,6 +40,7 @@ src/views/{game,cameras,pp,cloud}/   One folder per view.
 - Post-processing and Cloud use row selection (click / Ctrl / Shift), a right-click menu, and a bar with the action button and **Clear selection**. No checkboxes.
 - A spin with a result whose fit error is at or over `spinFitErrorReview` shows **Needs review** (amber) and can be accepted with **Mark reviewed** or reprocessed; either removes it from the spin alert. A spin with no result is **Failed**, reprocess only.
 - Trackpac result wording: **Valid** (green) / **Validation failed** (amber) / **Failed** (red, no result).
+- **Views fit the window.** On a desktop window (at least 1200 × 600) no view scrolls as a page. Fixed panels stay put, and long content (camera list, pitch lists, pitch card, PP detail, control settings) scrolls inside its own panel. Use the layout classes in `styles.css` (`fit-row`, `fill`, `scroll`, `stage`, `sticky-head`) for new panels. Smaller windows fall back to a scrolling page.
 - Every camera image is zoomable (`ZoomBox`: wheel zoom, drag to pan, −/%/+).
 - Colours and fonts are in `src/styles.css` `:root` (IBM Plex Sans / Mono). Every numeric control uses `Stepper` (− [value] +).
 

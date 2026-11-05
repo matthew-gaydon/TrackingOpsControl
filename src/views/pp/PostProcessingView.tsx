@@ -91,8 +91,8 @@ export function PostProcessingView() {
         </div>
       </div>
 
-      <div className="row wrap" style={{ gap: 12, alignItems: 'stretch', flex: '1 1 auto' }}>
-        <main className="panel" style={{ flex: '999 1 600px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className="fit-row fill">
+        <main className="panel" style={{ flex: '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <div className="panel-head">
             <h2 style={{ fontSize: 14, fontWeight: 600 }}>Pitches</h2>
             <div className="row" style={{ gap: 4 }}>
@@ -109,9 +109,9 @@ export function PostProcessingView() {
             <button type="button" className="btn primary" aria-haspopup="menu" disabled={!sel.length} onClick={(e) => openMenu(null, e, true)}>Reprocess…</button>
             {sel.length > 0 && <button type="button" className="btn" onClick={() => st.set({ ppPicks: {}, ppSel: null, ppMenu: null, ppTask: null })}>Clear selection</button>}
           </div>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="fill scroll">
             <div style={{ minWidth: 720 }}>
-              <div className="lbl" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span>{TASKS.map((t) => <span key={t}>{t}</span>)}<span title="Placeholder: worker assignment isn't in the dataset yet">Worker · sample</span></div>
+              <div className="lbl sticky-head" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border)' }}><span /><span>Pitch</span>{TASKS.map((t) => <span key={t}>{t}</span>)}<span title="Placeholder: worker assignment isn't in the dataset yet">Worker · sample</span></div>
               {visible.map((p) => {
                 const w = pitchWorst(p, ops);
                 return (
@@ -134,7 +134,7 @@ export function PostProcessingView() {
           </div>
         </main>
 
-        <aside className="panel panel-pad col" style={{ flex: '1 1 400px', maxWidth: 500, minWidth: 0, gap: 12 }}>
+        <aside className="panel panel-pad col scroll" style={{ flex: '1 1 400px', maxWidth: 500, minWidth: 0, gap: 12 }}>
           {sel.length === 0 && <div className="col" style={{ flex: '1 1 auto', alignItems: 'center', justifyContent: 'center', padding: '60px 12px', textAlign: 'center' }}><span style={{ fontSize: 13, color: 'var(--text-2)' }}>No pitches selected</span><span className="small muted">Select a pitch to see its tasks, or several pitches for an overview.</span></div>}
           {sel.length > 1 && (() => {
             const probs = [0, 1, 2].map((k) => sel.filter((p) => isBad(taskState(p, k, ops))).length);

@@ -53,7 +53,7 @@ export function Header() {
           <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="none" stroke="#5AB8FF" strokeWidth="2" /><circle cx="13" cy="13" r="4" fill="#5AB8FF" /></svg>
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
             <span style={{ fontWeight: 700, letterSpacing: '.02em', fontSize: 14 }}>TrackingOpsControl</span>
-            <span className="mono tiny muted">{g.venue}</span>
+            <span className="row mono tiny muted" style={{ gap: 6 }}>{g.venue}{ds.sample && <span className="pill neutral" style={{ fontSize: 9, padding: '1px 6px' }} title="This session has no data in the prototype yet, so it shows the demo dataset">SAMPLE DATA</span>}</span>
           </div>
         </div>
         <span className="grow" />

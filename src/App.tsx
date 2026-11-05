@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUi } from './state/store';
 import { useAlerts, useAlertSync } from './state/hooks';
-import { loadDataset, datasetName } from './data/load';
+import { loadDataset, loadSessions, datasetName, sessionParam } from './data/load';
 import { getOperator, signIn, toSessions } from './state/launch';
 import { LoginView, SessionsView } from './views/launch/LaunchViews';
 import { AlertDrawer, Crumb, FocusBanner, Header, Toasts } from './components/Shell';
@@ -54,7 +54,13 @@ function SessionApp({ name }: { name: string }) {
   const ds = useUi((s) => s.ds), err = useUi((s) => s.loadError);
   useMockProcessing();
   useEffect(() => {
+    const sid = sessionParam();
     loadDataset(name)
+      .then(async (d) => {
+        // a session picked on the launch page: show its identity (a stand-in dataset keeps its own cameras and pitches)
+        const s = sid ? (await loadSessions().catch(() => [])).find((x) => x.sessionId === sid) : undefined;
+        return s ? { ...d, sample: s.sample, game: { ...d.game, sessionId: s.sessionId, gamePk: s.gamePk, venue: s.venue || d.game.venue } } : d;
+      })
       .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', ppSel: d.pitches.at(-1)?.num ?? null, loadedAt: Date.now() }))
       .catch((e: Error) => useUi.getState().set({ loadError: e.message }));
   }, [name]);

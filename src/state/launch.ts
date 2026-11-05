@@ -24,9 +24,11 @@ export function signOut() {
   window.location.href = urlWithData(null);
 }
 
-/** Open a session's dataset in the main view. */
-export function openSession(dataset: string) {
-  window.location.href = urlWithData(dataset);
+/** Open a session's dataset in the main view. `sessionId` lets the main view show that session's identity. */
+export function openSession(dataset: string, sessionId?: string) {
+  const u = new URL(urlWithData(dataset));
+  if (sessionId) u.searchParams.set('session', sessionId);
+  window.location.href = u.toString();
 }
 
 /** Back to the session list (stays signed in). */
@@ -37,5 +39,6 @@ export function toSessions() {
 function urlWithData(dataset: string | null): string {
   const u = new URL(window.location.href);
   if (dataset) u.searchParams.set('data', dataset); else u.searchParams.delete('data');
+  u.searchParams.delete('session');
   return u.toString();
 }

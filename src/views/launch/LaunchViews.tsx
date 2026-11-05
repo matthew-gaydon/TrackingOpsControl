@@ -43,24 +43,40 @@ export function LoginView({ onSignedIn }: { onSignedIn: (name: string) => void }
 }
 
 const STATUS: Record<string, { label: string; tone: 'ok' | 'info' | 'none'; order: number }> = {
-  live: { label: 'LIVE', tone: 'ok', order: 0 }, scheduled: { label: 'SCHEDULED', tone: 'info', order: 1 }, final: { label: 'FINAL', tone: 'none', order: 2 },
+  opened: { label: 'OPEN', tone: 'ok', order: 0 }, live: { label: 'LIVE', tone: 'ok', order: 0 },
+  scheduled: { label: 'SCHEDULED', tone: 'info', order: 1 },
+  closed: { label: 'CLOSED', tone: 'none', order: 2 }, final: { label: 'FINAL', tone: 'none', order: 2 },
 };
 const st = (s: string) => STATUS[s] ?? { label: s.toUpperCase(), tone: 'none' as const, order: 3 };
-const GRID = '110px minmax(180px, 1.6fr) 110px minmax(150px, 1.2fr) minmax(170px, 1.3fr) 150px 90px';
+const GRID = '104px minmax(220px, 2fr) 104px 140px minmax(110px, .8fr) 90px 150px';
+const startMs = (s: SessionEntry) => Date.parse(s.start) || 0;
+const upcoming = (a: SessionEntry, b: SessionEntry, now: number) => {
+  const fa = startMs(a) >= now, fb = startMs(b) >= now;
+  return fa !== fb ? (fa ? -1 : 1) : fa ? startMs(a) - startMs(b) : startMs(b) - startMs(a);
+};
 
 /** The sessions available to the operator. Pick one, then open it. Double-click opens straight away. */
 export function SessionsView({ operator }: { operator: string }) {
   const [sessions, setSessions] = useState<SessionEntry[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'live' | 'scheduled' | 'final'>('all');
+  const [filter, setFilter] = useState('all');
+  const [q, setQ] = useState('');
   useEffect(() => { loadSessions().then(setSessions).catch((e: Error) => setErr(e.message)); }, []);
 
-  const rows = useMemo(() => (sessions ?? [])
-    .filter((s) => filter === 'all' || s.status === filter)
-    .sort((a, b) => st(a.status).order - st(b.status).order || Date.parse(b.start) - Date.parse(a.start)), [sessions, filter]);
+  const statuses = useMemo(() => [...new Set((sessions ?? []).map((s) => s.status))].sort((a, b) => st(a).order - st(b).order), [sessions]);
+  const now = Date.now();
+  const rows = useMemo(() => {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    return (sessions ?? [])
+      .filter((s) => filter === 'all' || s.status === filter)
+      .filter((s) => { const hay = [s.title, s.sessionId, s.gamePk, s.league, s.gameType, s.gameMode, s.venue, s.start.slice(0, 10)].join(' ').toLowerCase(); return words.every((w) => hay.includes(w)); })
+      // open first; then scheduled: upcoming soonest first, then any past ones newest first; then closed, newest first
+      .sort((a, b) => st(a.status).order - st(b.status).order || (st(a.status).order === 1 ? upcoming(a, b, now) : startMs(b) - startMs(a)));
+  }, [sessions, filter, q]);
   const picked = rows.find((s) => s.sessionId === sel) ?? null;
   const count = (k: string) => (sessions ?? []).filter((s) => s.status === k).length;
+  const open = (s: SessionEntry) => s.dataset && openSession(s.dataset, s.sessionId);
 
   return (
     <div className="app">
@@ -75,47 +91,52 @@ export function SessionsView({ operator }: { operator: string }) {
         <main className="panel fill" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, maxWidth: 1400, width: '100%', alignSelf: 'center' }}>
           <div className="panel-head">
             <h1 style={{ fontSize: 16, fontWeight: 600 }}>Choose a session</h1>
-            <div className="row" style={{ gap: 4 }}>
-              {([['all', `All · ${(sessions ?? []).length}`], ['live', `Live · ${count('live')}`], ['scheduled', `Scheduled · ${count('scheduled')}`], ['final', `Final · ${count('final')}`]] as const).map(([k, l]) => (
+            <div className="row wrap" style={{ gap: 4 }}>
+              {[['all', `All · ${(sessions ?? []).length}`], ...statuses.map((k) => [k, `${st(k).label[0]}${st(k).label.slice(1).toLowerCase()} · ${count(k)}`])].map(([k, l]) => (
                 <button key={k} type="button" className="filter" aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>
               ))}
             </div>
+            <input type="search" aria-label="Search sessions" placeholder="Search team, league, date, session ID, GamePK" value={q} onChange={(e) => setQ(e.target.value)}
+              style={{ flex: '1 1 220px', maxWidth: 340, padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border-2)', background: 'var(--ground)', color: 'var(--text)', fontSize: 13 }} />
             <span className="grow" />
-            <button type="button" className="btn primary" disabled={!picked?.dataset} onClick={() => picked?.dataset && openSession(picked.dataset)}>
+            <button type="button" className="btn primary" disabled={!picked?.dataset} onClick={() => picked && open(picked)}>
               {picked ? `Open ${picked.title}` : 'Open session'}<Arrow />
             </button>
           </div>
           <div className="fill scroll">
-            <div style={{ minWidth: 960 }}>
+            <div style={{ minWidth: 1000 }}>
               <div className="lbl sticky-head" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '8px 16px', borderBottom: '1px solid var(--border)' }}>
-                <span>Status</span><span>Game</span><span>Mode</span><span>Start (UTC)</span><span>Session ID</span><span>GamePK</span><span />
+                <span>Status</span><span>Game</span><span>Type</span><span>Start (UTC)</span><span>Session ID</span><span>GamePK</span><span />
               </div>
-              {err && <div className="small" style={{ padding: 16, color: 'var(--crit-ink)' }}>Couldn’t load public/data/sessions.json: {err}</div>}
+              {err && <div className="small" style={{ padding: 16, color: 'var(--crit-ink)' }}>Couldn’t load sessions: {err}</div>}
               {!sessions && !err && <div className="small muted" style={{ padding: 16 }}>Loading sessions…</div>}
-              {sessions && rows.length === 0 && <div className="small muted" style={{ padding: 16 }}>No sessions here.</div>}
+              {sessions && rows.length === 0 && <div className="small muted" style={{ padding: 16 }}>No sessions match.</div>}
               {rows.map((s) => {
                 const t = st(s.status); const can = !!s.dataset;
-                const d = new Date(Date.parse(s.start));
+                const ms = startMs(s);
                 return (
                   <button key={s.sessionId} type="button" aria-pressed={sel === s.sessionId} className="list-row"
-                    onClick={() => setSel(s.sessionId)} onDoubleClick={() => can && openSession(s.dataset!)}
-                    style={{ gridTemplateColumns: GRID, gap: 12, padding: '12px 16px', minHeight: 58, opacity: can ? 1 : 0.6 }}>
+                    onClick={() => setSel(s.sessionId)} onDoubleClick={() => open(s)}
+                    style={{ gridTemplateColumns: GRID, gap: 12, padding: '10px 16px', minHeight: 54, opacity: can ? 1 : 0.6 }}>
                     <span className={`pill ${t.tone === 'none' ? 'neutral' : t.tone}`} style={{ justifySelf: 'start' }}>
                       {t.tone === 'ok' && <span className="dot" style={{ width: 7, height: 7, background: 'var(--ok)', marginRight: 6, animation: 'blink 1.6s infinite' }} />}{t.label}
                     </span>
-                    <span className="col" style={{ gap: 2 }}><span style={{ fontWeight: 600, fontSize: 14 }}>{s.title}</span><span className="mono tiny muted">{s.venue}</span></span>
+                    <span className="col" style={{ gap: 2, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                      <span className="tiny muted" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[s.league, s.gameType, s.venue].filter(Boolean).join(' · ')}</span>
+                    </span>
                     <span className="mono small">{s.gameMode}</span>
-                    <span className="mono small">{isNaN(d.getTime()) ? s.start : `${d.toISOString().slice(0, 10)} ${fmtClock(d.getTime()).slice(0, 5)}`}</span>
+                    <span className="mono small">{ms ? `${new Date(ms).toISOString().slice(0, 10)} ${fmtClock(ms).slice(0, 5)}` : s.start}</span>
                     <span className="mono small" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.sessionId}</span>
                     <span className="mono small">{s.gamePk ?? '—'}</span>
-                    <span className="tiny muted" style={{ textAlign: 'right' }}>{can ? '' : 'No data yet'}</span>
+                    <span className="tiny muted" style={{ textAlign: 'right' }}>{!can ? 'No data yet' : s.sample ? 'Opens with sample data' : ''}</span>
                   </button>
                 );
               })}
             </div>
           </div>
           <div className="small muted" style={{ padding: '10px 16px', borderTop: '1px solid var(--border)' }}>
-            Select a session and choose Open, or double-click it. Sessions marked “No data yet” are listed but have no dataset in this prototype.
+            Select a session and choose Open, or double-click it. Sessions without data of their own open with the demo data as a stand-in, marked SAMPLE DATA in the header.
           </div>
         </main>
       </div>

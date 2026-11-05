@@ -1,4 +1,4 @@
-import { DEFAULT_THRESHOLDS, type CameraFile, type Dataset, type GameFile, type PitchFile, type SessionEntry, type StatusMessage } from './types';
+import { DEFAULT_THRESHOLDS, type CameraFile, type Dataset, type GameFile, type PitchFile, type MesaSession, type SessionEntry, type StatusMessage } from './types';
 import { fmtClock, hasDate, resolveNow, resolveTime } from './time';
 
 /** The open session's dataset, from ?data=<name>. null = no session open (show the launch page). */
@@ -16,8 +16,17 @@ async function getJson<T>(url: string, fallback?: T): Promise<T> {
   return (await r.json()) as T;
 }
 
+/** "local.<folder>" = data/<folder>/ (served by the dev server); anything else = public/data/<name>/. */
+const datasetBase = (name: string) => name.startsWith('local.') ? `${import.meta.env.BASE_URL}local-data/${name.slice(6)}/` : `${import.meta.env.BASE_URL}data/${name}/`;
+
+/** The session picked on the launch page, from ?session=<id>. */
+export function sessionParam(): string | null {
+  const p = new URLSearchParams(window.location.search).get('session');
+  return p && /^[\w.-]+$/.test(p) ? p : null;
+}
+
 export async function loadDataset(name: string): Promise<Dataset> {
-  const base = `${import.meta.env.BASE_URL}data/${name}/`;
+  const base = datasetBase(name);
   const [game, cameras, pitches, status] = await Promise.all([
     getJson<GameFile>(base + 'game.json'),
     getJson<CameraFile[]>(base + 'cameras.json'),
@@ -46,8 +55,29 @@ export async function loadDataset(name: string): Promise<Dataset> {
   };
 }
 
-/** Sessions for the launch page (public/data/sessions.json). */
+/** A real GroundControl session record, as the launch page shows it. */
+export function fromMesa(r: MesaSession): SessionEntry {
+  const s = r.session; const away = r.teams?.away?.name, home = r.teams?.home?.name;
+  return {
+    sessionId: s.id, gamePk: s.mlbGamePk ?? null,
+    title: away && home ? `${away} @ ${home}` : away || home || s.metadata?.display_name || s.metadata?.alias || s.id,
+    venue: [r.venue?.name, r.venue?.surface?.description].filter(Boolean).join(' · '),
+    start: s.startTime, gameMode: s.type, status: s.status.toLowerCase(),
+    league: r.league?.name ?? r.competition?.name, gameType: s.mlbGameType,
+  };
+}
+
+/**
+ * Sessions for the launch page. Real sessions from the local data/ folder when there are any
+ * (each opens data/<sessionId>/ if that folder holds a dataset, otherwise the demo dataset as a
+ * stand-in); otherwise the built-in placeholder list in public/data/sessions.json.
+ */
 export async function loadSessions(): Promise<SessionEntry[]> {
+  const local = await getJson<MesaSession[] | null>(`${import.meta.env.BASE_URL}local-data/sessions.json`, null).catch(() => null);
+  if (Array.isArray(local) && local.length) {
+    const folders = new Set(await getJson<string[]>(`${import.meta.env.BASE_URL}local-data/datasets.json`, []).catch(() => [] as string[]));
+    return local.filter((r) => r?.session?.id).map(fromMesa).map((e) => folders.has(e.sessionId) ? { ...e, dataset: `local.${e.sessionId}` } : { ...e, dataset: 'demo', sample: true });
+  }
   const f = await getJson<{ sessions: SessionEntry[] }>(`${import.meta.env.BASE_URL}data/sessions.json`);
   return f.sessions ?? [];
 }

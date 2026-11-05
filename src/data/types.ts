@@ -139,9 +139,11 @@ export interface StatusMessage {
 }
 
 /**
- * public/data/sessions.json: the sessions an operator can open from the launch page.
- * Placeholder format until real session data arrives; `dataset` names the folder under
- * public/data/ that holds the session's data (no dataset = listed but can't be opened yet).
+ * A session on the launch page, after loading. Sources (see loadSessions):
+ *  - data/*sessions*.json (git-ignored, local): real GroundControl session records (MesaSession[])
+ *  - public/data/sessions.json: the built-in placeholder list ({ sessions: SessionEntry[] })
+ * `dataset` is what opens: a folder under public/data/, or "local.<folder>" for data/<folder>/.
+ * `sample` = the session has no data of its own yet, so it opens the demo dataset as a stand-in.
  */
 export interface SessionEntry {
   sessionId: string;                   // Hawk-Eye session ID (GroundControl)
@@ -149,11 +151,23 @@ export interface SessionEntry {
   title: string;                       // e.g. "Away @ Home"
   venue: string;
   start: string;                       // full timestamp (UTC)
-  gameMode: 'LIVE' | 'PRACTICE' | 'TEST' | string;
-  status: 'live' | 'scheduled' | 'final' | string;
+  gameMode: string;                    // placeholder: LIVE | PRACTICE | TEST; real: session type GAME | SIMULATION
+  status: string;                      // placeholder: live | scheduled | final; real: opened | scheduled | closed
+  league?: string;
+  gameType?: string;                   // e.g. Regular Season, Spring Training
   dataset?: string;
+  sample?: boolean;
 }
 export interface SessionsFile { sessions: SessionEntry[] }
+
+/** A real GroundControl session record (only the fields the app reads). */
+export interface MesaSession {
+  session: { id: string; mlbGamePk?: number; mlbGameType?: string; startTime: string; status: string; type: string; metadata?: { display_name?: string; alias?: string } };
+  teams?: { home?: { name: string }; away?: { name: string } };
+  venue?: { name?: string; surface?: { description?: string } };
+  league?: { name?: string };
+  competition?: { name?: string };
+}
 
 /** A pitch after loading: `atMs` is its absolute time and `time` is a display clock ("HH:MM:SS.mmm"). */
 export interface Pitch extends PitchFile { atMs: number }
@@ -170,6 +184,8 @@ export interface Dataset {
   pitches: Pitch[];
   status: Status[];
   thresholds: Thresholds;
+  /** True when this session has no data of its own and is showing the demo dataset. */
+  sample?: boolean;
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {

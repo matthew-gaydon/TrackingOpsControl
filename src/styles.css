@@ -129,6 +129,6 @@ h1, h2, h3 { margin: 0; }
   .scroll { max-height: none; min-height: 0; }
   .stage { height: auto; min-height: 160px; }
   .ctl-layout { flex-direction: row; }
-  .ctl-side { flex: 0 0 clamp(520px, 36vw, 620px); min-height: 0; }
+  .ctl-side { flex: 0 0 360px; min-height: 0; }
   .ctl-body { flex: 1 1 auto; min-height: 0; }
 }

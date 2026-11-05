@@ -112,7 +112,6 @@ export function ControlPanel() {
   const aw = c.antiwobble;
   const ballTable: [string, number, number, keyof CameraSettings, keyof CameraSettings | null, number][] = lb ? [
     ['Strength', lb.strength, 0, 'strMin', null, 1], ['Perimeter', lb.perimeter, 2, 'perMin', 'perMax', 5], ['Area', lb.area, 2, 'areaMin', 'areaMax', 5]] : [];
-  const tableCols = { display: 'grid', gridTemplateColumns: 'minmax(72px, 1fr) 148px minmax(76px, 1fr) 148px', columnGap: 8, alignItems: 'center', justifyItems: 'center', minHeight: 36 } as const;
   const camAlerts = al.open.filter((a) => a.sev !== 'dev' && !a.replaced && (a.cameraId === c.id || a.members?.includes(c.id)));
 
   return (
@@ -196,7 +195,7 @@ export function ControlPanel() {
             {camAlerts.map((a) => (
               <div key={a.id} className="row card" style={{ padding: '8px 10px' }}><SevBadge sev={a.sev} /><span className="grow small" style={{ fontWeight: 600 }}>{a.title}</span><button type="button" className="btn" onClick={() => st.ack(a.id)}>Acknowledge</button></div>
             ))}
-            <div style={{ display: 'grid', gap: 10, alignItems: 'stretch', gridTemplateColumns: tab === 'ball' && isTracking(c) ? 'repeat(auto-fit, minmax(min(100%, 540px), 1fr))' : 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+            <div className="col" style={{ gap: 10 }}>
               {tab === 'image' && <>
                 <Box title="Exposure">
                   {tog('autoExp', 'Auto exposure')}
@@ -226,15 +225,17 @@ export function ControlPanel() {
                 </Box>
                 <Box title="Ball tuning" note="A candidate counts as a ball only inside these limits. Last ball is the latest candidate on this camera, so you can see the effect of a change before the next pitch.">
                   {lb ? <>
-                    <div style={tableCols}><span /><span className="lbl" style={{ fontSize: 10 }}>Min</span><span className="lbl" style={{ fontSize: 10 }}>Last ball</span><span className="lbl" style={{ fontSize: 10 }}>Max</span></div>
                     {ballTable.map(([l, last, dec, mn, mx, step]) => {
                       const ok = last >= (lv[mn] as number) && (!mx || last <= (lv[mx] as number));
                       return (
-                        <div key={l} style={tableCols}>
-                          <span className="small" style={{ justifySelf: 'start', color: 'var(--text-2)' }}>{l}</span>
-                          <Stepper label={`minimum ${l}`} value={lv[mn] as number} onChange={(v) => upd({ [mn]: v })} step={step} decimals={dec} min={0} disabled={!lv.lmr} changed={chg(mn)} />
-                          <span className="mono small" style={{ fontWeight: 600, color: ok ? '#9FD9BA' : 'var(--crit-ink)' }}>{last.toFixed(dec)}{ok ? '' : ' ✕'}</span>
-                          {mx ? <Stepper label={`maximum ${l}`} value={lv[mx] as number} onChange={(v) => upd({ [mx]: v })} step={step * 5} decimals={dec} min={0} disabled={!lv.lmr} changed={chg(mx)} /> : <span className="tiny" style={{ color: 'var(--faint)' }}>no max</span>}
+                        <div key={l} className="col" style={{ gap: 0, paddingTop: 6, borderTop: '1px solid var(--line)' }}>
+                          <div className="row">
+                            <span className="grow small" style={{ fontWeight: 600, color: 'var(--text-2)' }}>{l}</span>
+                            <span className="tiny muted">Last ball</span>
+                            <span className="mono small" style={{ fontWeight: 600, color: ok ? '#9FD9BA' : 'var(--crit-ink)' }}>{last.toFixed(dec)}{ok ? ' ✓' : ' ✕'}</span>
+                          </div>
+                          <Row label="Min" changed={chg(mn)}><Stepper label={`minimum ${l}`} value={lv[mn] as number} onChange={(v) => upd({ [mn]: v })} step={step} decimals={dec} min={0} disabled={!lv.lmr} changed={chg(mn)} /></Row>
+                          {mx && <Row label="Max" changed={chg(mx)}><Stepper label={`maximum ${l}`} value={lv[mx] as number} onChange={(v) => upd({ [mx]: v })} step={step * 5} decimals={dec} min={0} disabled={!lv.lmr} changed={chg(mx)} /></Row>}
                         </div>
                       );
                     })}

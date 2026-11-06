@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useUi, type MenuPos } from '../state/store';
 import { SHORT, type Severity } from '../alerts/engine';
 
@@ -36,15 +36,73 @@ export const Switch = ({ on, onChange, label, disabled }: { on: boolean; onChang
   <button type="button" className="switch" aria-pressed={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}><span /></button>
 );
 
+/** Ctrl (or ⌘) multiplies a step by this: Ctrl-click ± , Ctrl+↑/↓ or Ctrl+wheel. */
+export const BIG_STEP = 10;
+
+/**
+ * Numeric control: − [value] +.
+ *  - ± buttons step by `step`; hold Ctrl (⌘ on Mac) for ×10.
+ *  - Click the value to type a number; Enter or leaving the box applies it, Esc cancels. Out-of-range values clamp.
+ *  - While the box has focus, the mouse wheel and ↑ / ↓ step it too (Ctrl for ×10).
+ */
 export function Stepper({ value, onChange, step, decimals = 0, min = -Infinity, max = Infinity, label, disabled, changed, width }: {
   value: number; onChange: (v: number) => void; step: number; decimals?: number; min?: number; max?: number; label: string; disabled?: boolean; changed?: boolean; width?: number;
 }) {
-  const r = (x: number) => +x.toFixed(decimals);
+  const fix = (x: number) => Math.min(max, Math.max(min, +x.toFixed(decimals)));
+  const [draft, setDrafted] = useState<string | null>(null);   // text being typed; null = not editing
+  const draftRef = useRef<string | null>(null);                 // same, for handlers that run before a re-render
+  const setDraft = (v: string | null) => { draftRef.current = v; setDrafted(v); };
+  const input = useRef<HTMLInputElement>(null);
+  // after Enter or ↑/↓ the new value is selected, so typing replaces it (done once React has written the new value)
+  const wantSelect = useRef(false);
+  const reselect = () => { wantSelect.current = true; };
+  useLayoutEffect(() => {
+    if (wantSelect.current && document.activeElement === input.current) input.current?.select();
+    wantSelect.current = false;
+  });
+  // the wheel handler is attached once, so it reads the latest props from here
+  const latest = useRef({ value, onChange, step, fix, disabled });
+  latest.current = { value, onChange, step, fix, disabled };
+  const nudge = (dir: 1 | -1, big: boolean) => {
+    const l = latest.current; if (l.disabled) return;
+    const next = l.fix(l.value + dir * l.step * (big ? BIG_STEP : 1));
+    l.value = next;   // fast wheel ticks arrive before a re-render: each builds on the last
+    l.onChange(next);
+    setDraft(null);
+  };
+  useEffect(() => {
+    const el = input.current; if (!el) return;
+    // non-passive so the page (or browser zoom, with Ctrl) doesn't move while the box is being adjusted
+    const onWheel = (e: WheelEvent) => {
+      if (document.activeElement !== el || !e.deltaY) return;
+      e.preventDefault();
+      nudge(e.deltaY < 0 ? 1 : -1, e.ctrlKey || e.metaKey);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const commit = () => {
+    const d = draftRef.current;
+    if (d === null) return;
+    const n = parseFloat(d.replace(',', '.'));
+    if (!isNaN(n)) onChange(fix(n));
+    setDraft(null);
+  };
   return (
     <span className="stepper">
-      <button type="button" aria-label={`Decrease ${label}`} disabled={disabled} onClick={() => onChange(Math.max(min, r(value - step)))}>−</button>
-      <span className={`val${changed ? ' changed' : ''}${disabled ? ' off' : ''}`} style={width ? { width } : undefined}>{value.toFixed(decimals)}</span>
-      <button type="button" aria-label={`Increase ${label}`} disabled={disabled} onClick={() => onChange(Math.min(max, r(value + step)))}>+</button>
+      <button type="button" aria-label={`Decrease ${label}`} title={`−${step} (Ctrl: −${+(step * BIG_STEP).toFixed(decimals)})`} disabled={disabled} onClick={(e) => nudge(-1, e.ctrlKey || e.metaKey)}>−</button>
+      <input ref={input} type="text" inputMode="decimal" aria-label={label} disabled={disabled}
+        className={`val${changed ? ' changed' : ''}${disabled ? ' off' : ''}`} style={width ? { width } : undefined}
+        value={draft ?? value.toFixed(decimals)}
+        onFocus={(e) => e.currentTarget.select()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { commit(); reselect(); }
+          else if (e.key === 'Escape') { setDraft(null); e.currentTarget.blur(); }   // cancel: nothing left to apply on blur
+          else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); nudge(e.key === 'ArrowUp' ? 1 : -1, e.ctrlKey || e.metaKey); reselect(); }
+        }} />
+      <button type="button" aria-label={`Increase ${label}`} title={`+${step} (Ctrl: +${+(step * BIG_STEP).toFixed(decimals)})`} disabled={disabled} onClick={(e) => nudge(1, e.ctrlKey || e.metaKey)}>+</button>
     </span>
   );
 }

@@ -80,6 +80,10 @@ h1, h2, h3 { margin: 0; }
 .stepper .val { width: 74px; padding: 5px 4px; border-radius: 5px; background: var(--ground); border: 1px solid var(--border); text-align: center; font-family: var(--mono); font-size: 13px; color: var(--text-hi); white-space: nowrap; }
 .stepper .val.changed { color: var(--unsaved); }
 .stepper .val.off { color: var(--faint); }
+input.val { outline: none; cursor: text; }
+input.val:hover:not(:disabled) { border-color: var(--border-2); }
+input.val:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(90,184,255,.25); }
+input.val:disabled { cursor: not-allowed; }
 .switch { flex: 0 0 auto; width: 40px; height: 22px; border-radius: 11px; border: 0; padding: 2px; display: flex; background: #36404F; }
 .switch[aria-pressed='true'] { background: #2F7FC1; justify-content: flex-end; }
 .switch > span { width: 18px; height: 18px; border-radius: 50%; background: #F3F6F9; }

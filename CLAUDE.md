@@ -49,7 +49,7 @@ src/views/{game,cameras,pitches,pp,cloud}/   One folder per view. Pitches reuses
 - **Game Flow** (Game view, top left): Start Setup → Pre-Game Setup → Start Live Tracking → Live Tracking → End Live Tracking (confirm) → Tracking Ended. Starting Live Tracking goes In session; ending it goes Out. Stage state is `flow` in the store; other system actions will hook into `GameFlow.go()`.
 - **Views fit the window.** On a desktop window (at least 1200 × 600) no view scrolls as a page. Fixed panels stay put, and long content (camera list, pitch lists, pitch card, PP detail, control settings) scrolls inside its own panel. Use the layout classes in `styles.css` (`fit-row`, `fill`, `scroll`, `stage`, `sticky-head`) for new panels. Smaller windows fall back to a scrolling page.
 - Every camera image is zoomable (`ZoomBox`: wheel zoom, drag to pan, −/%/+).
-- Colours and fonts are in `src/styles.css` `:root` (IBM Plex Sans / Mono). Every numeric control uses `Stepper` (− [value] +).
+- Colours and fonts are in `src/styles.css` `:root` (IBM Plex Sans / Mono). Every numeric control uses `Stepper` (− [value] +): click the value to type a number (Enter applies, Esc cancels, out-of-range clamps); while it has focus the mouse wheel and ↑/↓ step it; Ctrl (⌘) makes any step ×10 (`BIG_STEP`).
 
 ## Open questions (from the brief)
 - Which alerts notify versus badge only; sound for criticals; escalation if a critical sits unacknowledged.

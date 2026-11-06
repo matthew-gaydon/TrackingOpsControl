@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { loadSessions } from '../../data/load';
 import { fmtClock } from '../../data/time';
 import type { SessionEntry } from '../../data/types';
-import { loadCreated, openSession, saveCreated, signOut } from '../../state/launch';
+import { displayName, loadCreated, openSession, saveCreated, signOut } from '../../state/launch';
 import { Arrow, Chevron, HealthDot } from '../../components/ui';
 
 const Logo = ({ size = 26 }: { size?: number }) => (
@@ -11,7 +11,7 @@ const Logo = ({ size = 26 }: { size?: number }) => (
 
 const field = { padding: '10px 12px', borderRadius: 7, border: '1px solid var(--border-2)', background: 'var(--ground)', color: 'var(--text)', fontSize: 14 } as const;
 
-/** Operator sign-in. Prototype: any operator name signs in; the password is not checked or stored. */
+/** Operator sign-in with a Hawk-Eye email. Prototype: any login signs in; the password is not checked or stored. */
 export function LoginView({ onSignedIn }: { onSignedIn: (name: string) => void }) {
   const [name, setName] = useState('');
   const [pw, setPw] = useState('');
@@ -28,15 +28,15 @@ export function LoginView({ onSignedIn }: { onSignedIn: (name: string) => void }
           </div>
         </div>
         <label className="col" style={{ gap: 6 }}>
-          <span className="lbl">Operator</span>
-          <input autoFocus autoComplete="username" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your operator name" style={field} />
+          <span className="lbl">Hawk-Eye email</span>
+          <input autoFocus type="email" autoComplete="username" value={name} onChange={(e) => setName(e.target.value)} placeholder="first.last@hawkeyeinnovations.com" style={field} />
         </label>
         <label className="col" style={{ gap: 6 }}>
           <span className="lbl">Password</span>
           <input type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} style={field} />
         </label>
         <button type="submit" className="btn primary" disabled={!ok} style={{ justifyContent: 'center', minHeight: 42, fontSize: 14 }}>Sign in</button>
-        <span className="tiny muted" style={{ lineHeight: 1.5 }}>Prototype: any operator name signs in and the password isn’t checked or kept. Real sign-in is still an open question for the backend.</span>
+        <span className="tiny muted" style={{ lineHeight: 1.5 }}>Prototype: any login signs in and the password isn’t checked or kept. Real sign-in is still an open question for the backend.</span>
       </form>
     </div>
   );
@@ -109,7 +109,7 @@ export function SessionsView({ operator }: { operator: string }) {
         <Logo />
         <span style={{ fontWeight: 700, letterSpacing: '.02em', fontSize: 14 }}>TrackingOpsControl</span>
         <span className="grow" />
-        <span className="small muted">Signed in as</span><span style={{ fontWeight: 600 }}>{operator}</span>
+        <span className="small muted">Logged in as:</span><span style={{ fontWeight: 600 }} title={operator}>{displayName(operator)}</span>
         <button type="button" className="btn" onClick={signOut}>Sign out</button>
       </header>
       <div className="view">

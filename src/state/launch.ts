@@ -21,6 +21,19 @@ export function saveCreated(list: SessionEntry[]) {
   try { localStorage.setItem(CREATED_KEY, JSON.stringify(list)); } catch { /* storage unavailable: kept for this page only */ }
 }
 
+/**
+ * How the signed-in operator is shown: first initial + last name from a Hawk-Eye email
+ * ("first.last@hawkeyeinnovations.com" -> "FLast"; middle names are dropped). A login that
+ * isn't first.last is shown as entered (an email shows just the part before the @).
+ */
+export function displayName(login: string): string {
+  const local = login.trim().split('@')[0];
+  const parts = local.split(/[._]/).filter(Boolean);
+  const cap = (w: string) => w.split('-').map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()).join('-');
+  if (parts.length < 2) return local;
+  return parts[0].charAt(0).toUpperCase() + cap(parts[parts.length - 1]);
+}
+
 export function getOperator(): string | null {
   try { return sessionStorage.getItem(KEY); } catch { return null; }
 }

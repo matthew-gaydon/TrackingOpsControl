@@ -1,7 +1,7 @@
 import { usePick, useUi, type View } from '../state/store';
 import { useAlerts, useDs, useNow, useSession } from '../state/hooks';
 import { fmtClock } from '../data/time';
-import { getOperator, signOut, toSessions } from '../state/launch';
+import { displayName, getOperator, signOut, toSessions } from '../state/launch';
 import { Arrow, Chevron, SevBadge } from './ui';
 import { alertWhen, type Alert } from '../alerts/ledger';
 import type { SessionMode } from '../data/types';
@@ -57,7 +57,7 @@ export function Header() {
           </div>
         </div>
         <span className="grow" />
-        <span className="row small" style={{ gap: 6 }}><span className="muted">Operator</span><span style={{ fontWeight: 600 }}>{operator ?? '—'}</span></span>
+        <span className="row small" style={{ gap: 6 }} title={operator ?? undefined}><span className="muted">Logged in as:</span><span style={{ fontWeight: 600 }}>{operator ? displayName(operator) : '—'}</span></span>
         <button type="button" className="btn" title={`Dataset: ${ds.name}`} onClick={toSessions}>Switch session</button>
         <button type="button" className="btn" onClick={signOut}>Sign out</button>
         <Clock />

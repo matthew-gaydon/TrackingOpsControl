@@ -67,7 +67,7 @@ Used when `data/` has no sessions files:
 ] }
 ```
 
-Sign-in is a placeholder too: any operator name signs in, the password isn't checked or kept, and the name is held for the browser tab only (`src/state/launch.ts`).
+Sign-in is a placeholder too: operators sign in with their Hawk-Eye email (any login works for now), the password isn’t checked or kept, and the login is held for the browser tab only (`src/state/launch.ts`). The header shows it as first initial + last name: `first.last@hawkeyeinnovations.com` → **Logged in as: FLast**.
 
 Anything you leave out falls back to sensible defaults, so you can grow a dataset one file at a time. Start with `cameras.json` and some images.
 

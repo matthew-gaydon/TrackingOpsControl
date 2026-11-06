@@ -23,6 +23,7 @@
 //     Rows are matched to pitches by time (the ball reaches the plate 0-3 s after the export's time).
 //     "SZD-X n" / "SZD-Z n" are BMCC tracking camera n; a camera with no value all game isn't part of
 //     the strike zone and is left out; "-" on a pitch = no data from that camera. Confidence 1 = PASS, 0 = FAIL.
+//     The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo.
 // Still not available, shown as "No data": track length/quality, spin fit error, cloud states.
 // Each row is treated as a valid Trackpac result (the export is produced from the processed track).
 // Cameras, redundancy and timing aren't in a pitch export either: they come from the `healthy`
@@ -126,6 +127,17 @@ const pitches = rows.map((r) => {
   };
 }).filter((p) => p.num !== undefined).sort((a, b) => a.num - b.num);
 if (!pitches.length) { console.error('no pitches in the CSV'); process.exit(1); }
+
+// Demo fill: the strike-zone export stops at camera 12, so FullField 7 and 8 (tracking cameras 13
+// and 14) get random X and Z within ±0.003 on every matched pitch (own fixed seed: same every run).
+const SZ_FILL = [13, 14];
+let fillSeed = [...sessionId].reduce((a, c) => (a * 37 + c.charCodeAt(0)) >>> 0, 11);
+const fillRand = () => ((fillSeed = (fillSeed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+const within = (m) => r3((fillRand() * 2 - 1) * m);
+if (szFile) {
+  for (const n of SZ_FILL) if (!szCams.includes(n)) szCams.push(n);
+  for (const p of pitches) if (p.strikeZone) for (const n of SZ_FILL) if (p.strikeZone[n] === undefined) p.strikeZone[n] = { x: within(0.003), z: within(0.003) };
+}
 
 // strike zone: keep only cameras with a value somewhere in the game, keyed by camera id
 const szLive = szCams.filter((n) => pitches.some((p) => p.strikeZone?.[n]));

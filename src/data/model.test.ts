@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS, type Dataset, type PitchFile } from './types';
-import { pitchWorst, reviewable, strikeZone, szParts, taskState, taskStatus, taskValue, type PpOps } from './model';
+import { pitchWorst, reviewable, strikeZone, szParts, szVerdict, taskState, taskStatus, taskValue, type PpOps } from './model';
 import type { CameraFile } from './types';
 import { deriveConditions } from '../alerts/engine';
 
@@ -95,6 +95,15 @@ describe('strike zone contributions', () => {
     const p = { ...ds.pitches[0], strikeZone: { P1: { x: 0.009, z: 0 }, P2: { x: 0, z: -0.0081 }, P3: { x: 0.007, z: 0 }, F1: { x: 0.02, z: 0 }, F2: null } };
     const z = Object.fromEntries(strikeZone(p, ds).map((x) => [x.cam.id, x.state]));
     expect(z).toEqual({ P1: 'crit', P2: 'crit', P3: 'warn', F1: 'warn', F2: 'none' });
+  });
+
+  it('colours a pitch by how many PitchToPlate cameras sit between tolerance and critical', () => {
+    const p2p = { ...ds, cameras: ['P1', 'P2', 'P3', 'P4'].map((id) => cam(id, 'pitchToPlate')).concat(cam('F1', 'fullField')) } as Dataset;
+    const at = (...xs: number[]) => ({ ...ds.pitches[0], strikeZone: { ...Object.fromEntries(xs.map((x, i) => [`P${i + 1}`, { x, z: 0 }])), F1: { x: 0.007, z: 0 } } });
+    expect(szVerdict(at(0.006, 0, 0, 0), p2p)).toEqual({ crit: [], warn: [] });                  // one: card only
+    expect(szVerdict(at(0.006, -0.007, 0, 0), p2p).warn).toHaveLength(1);                       // two: amber
+    expect(szVerdict(at(0.006, -0.007, 0.0075, 0), p2p).crit).toHaveLength(1);                  // three: red
+    expect(szVerdict(at(0.006, 0, 0, 0.009), p2p).crit).toEqual(['PitchToPlate 1 Δ +0.009']);  // over critical: red (test cameras all number 1)
   });
 
   it('raises one alert for running PitchToPlate cameras missing from the strike zone', () => {

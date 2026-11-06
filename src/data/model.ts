@@ -155,6 +155,25 @@ export function szState(d: number | null, c: CameraFile, ds: Dataset): SzState {
 }
 
 /** Per tracking camera; empty when the dataset has no strike-zone data for this pitch. */
+/**
+ * Strike-zone problems that colour a pitch on the timeline (PitchToPlate cameras only):
+ *  - a camera with no value: amber
+ *  - a camera over strikeZoneCritical: red
+ *  - cameras between strikeZoneTolerance and strikeZoneCritical: 2+ amber, 3+ red (strikeZoneBandAmber / Red)
+ */
+export function szVerdict(p: PitchFile, ds: Dataset): { crit: string[]; warn: string[] } {
+  const crit: string[] = [], warn: string[] = [];
+  const p2p = strikeZone(p, ds).filter((z) => z.cam.group === 'pitchToPlate');
+  for (const z of p2p) {
+    if (z.d === null) warn.push(`${label(z.cam)} no strike zone`);
+    else if (z.state === 'crit') crit.push(`${label(z.cam)} Δ ${z.d > 0 ? '+' : ''}${z.d.toFixed(3)}`);
+  }
+  const band = p2p.filter((z) => z.d !== null && z.state === 'warn');
+  const { strikeZoneBandAmber: amber, strikeZoneBandRed: red, strikeZoneTolerance: tol, strikeZoneCritical: max } = ds.thresholds;
+  if (band.length >= amber) (band.length >= red ? crit : warn).push(`${band.length} PitchToPlate cameras Δ ±${tol}–${max} (${band.map((z) => mark(z.cam)).join(', ')})`);
+  return { crit, warn };
+}
+
 export function strikeZone(p: PitchFile, ds: Dataset) {
   if (!p.strikeZone) return [];
   const zone = p.strikeZone;

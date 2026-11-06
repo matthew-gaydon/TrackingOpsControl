@@ -4,7 +4,7 @@ import { useGoInSession } from '../../components/Shell';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { fmtClock } from '../../data/time';
-import { ACS, confidencePass, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { ACS, confidencePass, szVerdict, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import type { Tone } from '../../data/model';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
@@ -375,12 +375,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
 function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
   if (confidencePass(p, ds) === false) crit.push('confidence fail');
-  // strike zone: a PitchToPlate camera with no value is amber; one over the critical Δ is red
-  for (const z of strikeZone(p, ds)) {
-    if (z.cam.group !== 'pitchToPlate') continue;
-    if (z.d === null) warn.push(`${label(z.cam)} no strike zone`);
-    else if (z.state === 'crit') crit.push(`${label(z.cam)} Δ ${z.d > 0 ? '+' : ''}${z.d.toFixed(3)}`);
-  }
+  const sz = szVerdict(p, ds); crit.push(...sz.crit); warn.push(...sz.warn);
   if (p.hit && p.hit.trackPct != null) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
   if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });

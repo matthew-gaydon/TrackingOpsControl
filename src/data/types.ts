@@ -43,6 +43,9 @@ export interface Thresholds {
   confidencePass: number;              // pitch confidence pass line (7)
   strikeZoneTolerance: number;         // |Δ| above this is out of tolerance: amber (0.005)
   strikeZoneCritical: number;          // PitchToPlate |Δ| above this is red, on the card and the pitch timeline (0.008)
+  /** PitchToPlate cameras between tolerance and critical on one pitch: this many make it amber (2), this many red (3). */
+  strikeZoneBandAmber: number;
+  strikeZoneBandRed: number;
   spinFitErrorReview: number;          // spin fit error review line (0.25)
   tssOffsetMaxMs: number;              // TSS offset above this raises a timing warning (10)
   latencyMaxMs: number;                // pitch latency above this raises a timing warning (400)
@@ -202,7 +205,7 @@ export interface Dataset {
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
-  targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, strikeZoneCritical: 0.008, spinFitErrorReview: 0.25,
+  targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, strikeZoneCritical: 0.008, strikeZoneBandAmber: 2, strikeZoneBandRed: 3, spinFitErrorReview: 0.25,
   tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 80, hitTrackPoorPct: 50,
 };
 

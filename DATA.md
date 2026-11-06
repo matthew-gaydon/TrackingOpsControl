@@ -154,7 +154,7 @@ Health comes from these fields alone: **not running → crit**, **fps below targ
 }
 ```
 
-Pitch card colours: confidence **PASS** (green) / **FAIL** (red): BMCC's binary `confidenceOk` when present, else the `confidence` score against `thresholds.confidencePass`. ACS **SUCCESS** green / **NO SWING** grey / **NEEDS REVIEW** amber / **FAILED** red. Hit tracked % green at `hitTrackGoodPct` (80) or more, red under `hitTrackPoorPct` (50), amber between. The Game pitch timeline shows one light per pitch: its worst deliverable. For the strike zone that means a PitchToPlate camera with no value makes the pitch amber, and a PitchToPlate |Δ| over `thresholds.strikeZoneCritical` (default 0.008) makes it red.
+Pitch card colours: confidence **PASS** (green) / **FAIL** (red): BMCC's binary `confidenceOk` when present, else the `confidence` score against `thresholds.confidencePass`. ACS **SUCCESS** green / **NO SWING** grey / **NEEDS REVIEW** amber / **FAILED** red. Hit tracked % green at `hitTrackGoodPct` (80) or more, red under `hitTrackPoorPct` (50), amber between. The Game pitch timeline shows one light per pitch: its worst deliverable. For the strike zone that means a PitchToPlate camera with no value makes the pitch amber, a PitchToPlate |Δ| over `thresholds.strikeZoneCritical` (default 0.008) makes it red, and PitchToPlate cameras between tolerance and critical make it amber at 2 or more (`strikeZoneBandAmber`) and red at 3 or more (`strikeZoneBandRed`).
 
 Cloud states: Trackpac `queued | processing | successful | needs_validation | uploaded | failed`; cloud tasks `queued | processing | success | failed`.
 

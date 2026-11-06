@@ -94,34 +94,50 @@ export interface CameraSettings {
 }
 
 export interface SzDelta { x: number; z: number }
+
+export interface PitchInfo {
+  pitcher?: string; pitcherTeam?: string; batter?: string; batterTeam?: string;
+  inning?: number; half?: 'Top' | 'Bottom'; outs?: number; balls?: number; strikes?: number;
+  pitchType?: string;                  // e.g. Fastball, Slider
+  call?: string;                       // e.g. BallCalled, InPlay
+  result?: string;                     // play result, e.g. Single, Strikeout
+  exitSpeed?: number;                  // mph, batted balls only
+  launchAngle?: number;                // degrees
+}
 export type PpResult = 'success' | 'failed';
 export type AcsStatus = 'success' | 'review' | 'fail';
 export type TrackpacResult = 'valid' | 'validation_failed' | 'failed';
-export type TrackpacCloud = 'queued' | 'processing' | 'successful' | 'needs_validation' | 'uploaded' | 'failed';
-export type CloudResult = 'queued' | 'processing' | 'success' | 'failed';
+export type TrackpacCloud = 'queued' | 'processing' | 'successful' | 'needs_validation' | 'uploaded' | 'failed' | 'unknown';
+export type CloudResult = 'queued' | 'processing' | 'success' | 'failed' | 'unknown';
 
 export interface PitchFile {
   num: number;                         // 1-based pitch number in the game
   time: string;                        // full timestamp, or clock "HH:MM:SS" / BMCC style "05-09-23.565"
-  confidence: number;
-  trackLength: number;
-  trackQuality: number;
-  /** ACS delivery: success (green), review (amber), fail (red). */
-  acs: AcsStatus;
+  /** Hawk-Eye track confidence. Omitted when the source doesn't have it (e.g. a pitch CSV export): shown as "No data". */
+  confidence?: number;
+  trackLength?: number;
+  trackQuality?: number;
+  /** ACS delivery: success (green), review (amber), fail (red). Omitted = no data. */
+  acs?: AcsStatus;
   /** Older datasets: true = success, false = fail. Read only when `acs` is missing. */
   acsDelivered?: boolean;
-  hit?: { trackPct: number; distanceFt: number } | null;
+  /** Batted ball. trackPct = how much of the hit was tracked; null/omitted = unknown. */
+  hit?: { trackPct?: number | null; distanceFt?: number | null } | null;
   /**
    * Strike-zone Δ per tracking camera id (P1..P6, F1..F8): { x, z } in the plate's X and Z.
    * null = no data from that camera. Older datasets give a single number (the worse axis).
+   * Omitted entirely = the source has no strike-zone data.
    */
-  strikeZone: Record<string, SzDelta | number | null>;
+  strikeZone?: Record<string, SzDelta | number | null>;
+  /** Game context from a pitch export (pitcher, batter, count, pitch type, result). Shown on the pitch card. */
+  info?: PitchInfo;
   pp: {
     release: { status: PpResult; mph?: number };
     spin: { status: PpResult; rpm?: number; fitError?: number };
     trackpac: { status: TrackpacResult };
   };
-  cloud: { trackpac: TrackpacCloud; bat: CloudResult; pitcherBiomech: CloudResult; batterBiomech: CloudResult };
+  /** Omitted = the source has no cloud processing state (shown as "No data"). */
+  cloud?: { trackpac: TrackpacCloud; bat: CloudResult; pitcherBiomech: CloudResult; batterBiomech: CloudResult };
   /** Per-camera images for this pitch, keyed by camera id. */
   images?: Record<string, Partial<Record<'mosaic' | 'hit', ImagePath>>>;
   spinStrip?: ImagePath;

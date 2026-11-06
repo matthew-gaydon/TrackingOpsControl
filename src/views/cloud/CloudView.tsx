@@ -8,10 +8,12 @@ const TPS: Record<TrackpacCloud, [string, string, string]> = {
   queued: ['Queued', 'background:#1E242E;color:#C9D2DE', '#5E6B7D'], processing: ['Processing', 'background:#10243A;color:#A9D6FF', '#5AB8FF'],
   successful: ['Successful', 'background:#13261C;color:#9FD9BA', '#2FB57A'], needs_validation: ['Needs validation', 'background:#3A2A0E;color:#FFE0A0', '#F5B841'],
   failed: ['Failed', 'background:#3A1513;color:#FFB0AA', '#FF5F57'], uploaded: ['Uploaded', 'background:#1F7A4D;color:#FFFFFF', '#3DD68C'],
+  unknown: ['No data', 'background:transparent;color:#6C7787;border:1px dashed #36404F', '#2A313C'],
 };
 const CLS: Record<CloudResult, [string, string, string]> = {
   queued: ['Queued', 'background:#1E242E;color:#C9D2DE', '#5E6B7D'], processing: ['Processing', 'background:#10243A;color:#A9D6FF', '#5AB8FF'],
   success: ['Success', 'background:#1F7A4D;color:#FFFFFF', '#3DD68C'], failed: ['Failed', 'background:#3A1513;color:#FFB0AA', '#FF5F57'],
+  unknown: ['No data', 'background:transparent;color:#6C7787;border:1px dashed #36404F', '#2A313C'],
 };
 const css = (s: string) => Object.fromEntries(s.split(';').map((d) => d.split(':')).map(([k, v]) => [k.replace(/-(\w)/g, (_, c) => c.toUpperCase()), v]));
 const pl = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : w === 'pitch' ? 'es' : 's'}`;
@@ -89,6 +91,11 @@ export function CloudView() {
         </div>
       </div>
 
+      {ds.pitches.every((p) => !p.cloud) && (
+        <div className="row small" style={{ gap: 10, padding: '10px 14px', borderRadius: 8, background: 'var(--panel-2)', border: '1px dashed var(--border-2)', color: 'var(--text-3)' }}>
+          This dataset has no cloud processing data, so every task shows No data. Repush is still available to try the flow.
+        </div>
+      )}
       <main className="panel fill" style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <div className="panel-head">
           <h2 style={{ fontSize: 14, fontWeight: 600 }}>Pitches</h2>

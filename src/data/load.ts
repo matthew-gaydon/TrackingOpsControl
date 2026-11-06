@@ -44,7 +44,7 @@ export async function loadDataset(name: string): Promise<Dataset> {
     name, base, game, nowMs, cameras,
     pitches: [...pitches].sort((a, b) => a.num - b.num).map((p) => {
       const atMs = when(p.time, `pitch ${p.num}`);
-      const acs = p.acs ?? (p.acsDelivered === false ? 'fail' : 'success');
+      const acs = p.acs ?? (p.acsDelivered === undefined ? undefined : p.acsDelivered ? 'success' : 'fail');
       return { ...p, acs, atMs, time: hasDate(p.time) ? fmtClock(atMs, true) : p.time };
     }),
     status: status.map((m, i) => ({

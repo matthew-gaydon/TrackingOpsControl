@@ -138,7 +138,7 @@ function HealthTiles() {
   );
 }
 
-function Combined({ hit }: { hit?: { trackPct: number; distanceFt: number } | null }) {
+function Combined({ hit }: { hit?: PitchFile['hit'] }) {
   const show = useUi((s) => s.lastHitOverlay);
   return (
     <div className="stage fill" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12, background: '#0D1012', borderRadius: '0 0 10px 10px' }}>
@@ -156,7 +156,7 @@ function Combined({ hit }: { hit?: { trackPct: number; distanceFt: number } | nu
           <g>
             <path d="M300 401 Q360 250 452 128" stroke="#C6A4FF" strokeWidth="2.5" fill="none" strokeDasharray="6 5" />
             <circle cx="452" cy="128" r="6" fill="none" stroke="#C6A4FF" strokeWidth="2" />
-            <text x="440" y="112" textAnchor="end" fill="#DCC8FF" fontSize="12" fontFamily="IBM Plex Mono, monospace">{hit.distanceFt} ft · track {hit.trackPct}%</text>
+            <text x="440" y="112" textAnchor="end" fill="#DCC8FF" fontSize="12" fontFamily="IBM Plex Mono, monospace">{[hit.distanceFt != null && `${Math.round(hit.distanceFt)} ft`, hit.trackPct != null && `track ${hit.trackPct}%`].filter(Boolean).join(' · ')}</text>
           </g>
         )}
         <g fill="#F06BD4">{[[300, 333], [306, 414], [290, 418], [352, 318], [330, 268], [262, 282], [240, 326], [170, 190], [300, 120], [430, 190], [388, 352]].map(([x, y]) => <circle key={x + ':' + y} cx={x} cy={y} r="4" />)}</g>
@@ -264,18 +264,18 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
 
 function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boolean; latestNum: number }) {
   const ds = useDs(); const st = usePick('pop', 'set', 'szAll'); const ops = usePpOps();
-  const pass = p.confidence > ds.thresholds.confidencePass;
+  const pass = p.confidence === undefined ? null : p.confidence > ds.thresholds.confidencePass;
   const sz = strikeZone(p, ds);
   const bad = sz.filter((z) => z.state !== 'ok');
   const tol = ds.thresholds.strikeZoneTolerance;
   const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, focusAlertId: null, pop: null } as never);
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
-  const hitT = p.hit ? hitTone(p.hit.trackPct, ds) : null;
+  const hitT = p.hit && p.hit.trackPct != null ? hitTone(p.hit.trackPct, ds) : null;
   const quick: { k: string; label: string; value: string; tone: Tone | 'none'; text?: string; go?: () => void }[] = [
-    { k: 'conf', label: 'Confidence', value: pass ? 'PASS' : 'FAIL', tone: pass ? 'ok' : 'crit',
+    { k: 'conf', label: 'Confidence', value: pass === null ? 'No data' : pass ? 'PASS' : 'FAIL', tone: pass === null ? 'none' : pass ? 'ok' : 'crit',
       text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => st.set({ pop: null, fieldView: 'pitchToPlate', imgMode: 'mosaic', bigCam: null }) },
-    { k: 'acs', label: 'ACS delivery', value: ACS[p.acs].label, tone: ACS[p.acs].tone },
-    { k: 'hit', label: 'Hit tracked', value: p.hit ? `${p.hit.trackPct}%` : 'No hit', tone: hitT ?? 'none',
+    { k: 'acs', label: 'ACS delivery', value: p.acs ? ACS[p.acs].label : 'No data', tone: p.acs ? ACS[p.acs].tone : 'none' },
+    { k: 'hit', label: 'Hit tracked', value: !p.hit ? 'No hit' : p.hit.trackPct != null ? `${p.hit.trackPct}%` : 'No data', tone: hitT ?? 'none',
       text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => st.set({ pop: null, fieldView: 'fullField', imgMode: 'hit', bigCam: null }) },
   ];
   const TONE = {
@@ -291,6 +291,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
         {reviewing && <span className="pill info">REVIEW</span>}
         <button type="button" className="icon-btn" style={navBtn} aria-label="Next pitch" disabled={!reviewing} onClick={() => st.set({ gameSel: p.num + 1 >= latestNum ? null : p.num + 1, pop: null })}><Chevron /></button>
       </div>
+      {p.info && <PitchContext i={p.info} p={p} />}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
         {quick.map((q) => {
           const t = TONE[q.tone]; const bad = q.tone === 'warn' || q.tone === 'crit';
@@ -302,6 +303,11 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
       </div>
       {quick.filter((q) => (q.tone === 'warn' || q.tone === 'crit') && q.go && st.pop === q.k).map((q) => <GoPopout key={q.k} text={q.text!} onGo={q.go!} onCancel={() => st.set({ pop: null })} />)}
 
+      {sz.length === 0 ? (
+        <div className="row small" style={{ gap: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--panel-2)', border: '1px dashed var(--border-2)', color: 'var(--text-3)' }}>
+          <span className="lbl">Strike zone agreement</span><span className="grow" /><span>No data in this dataset</span>
+        </div>
+      ) : (
       <div className="col" style={{ gap: 10, padding: 12, borderRadius: 8, background: 'var(--panel-2)', border: `1px solid ${bad.length ? 'var(--warn-edge)' : 'var(--border)'}` }}>
         <div className="row wrap" style={{ justifyContent: 'space-between' }}>
           <span className="lbl">Strike zone agreement</span>
@@ -332,12 +338,13 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
           </div>
         )}
       </div>
+      )}
 
       <div className="col">
         <span className="lbl">Post-processing</span>
         {TASKS.map((n, k) => {
           const t = taskState(p, k, ops); const ok = t === 'ok' || t === 'reviewed'; const red = rawTaskState(p, k) === 'crit' && t === 'crit';
-          const value = k === 0 ? `${p.pp.release.mph ?? '—'} mph` : k === 1 ? `${p.pp.spin.rpm ?? '—'} rpm · err ${p.pp.spin.fitError ?? '—'}` : t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
+          const value = k === 0 ? `${p.pp.release.mph ?? '—'} mph` : k === 1 ? `${p.pp.spin.rpm ?? '—'} rpm${p.pp.spin.fitError !== undefined ? ` · err ${p.pp.spin.fitError}` : ''}` : t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
           const review = reviewable(p, k, ops);
           const status = t === 'reviewed' ? 'Reviewed' : t === 'ok' ? 'Success' : t === 'queued' || t === 'processing' ? 'Queued' : review && !red ? 'Needs review' : 'Failed';
           const box = { width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, textAlign: 'left' as const, background: ok ? 'var(--panel-2)' : red ? 'var(--crit-bg)' : 'var(--warn-bg)', border: `1px solid ${ok ? 'var(--border)' : red ? 'var(--crit-edge)' : 'var(--warn-edge)'}` };
@@ -360,11 +367,38 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   );
 }
 
+const CALL: Record<string, string> = {
+  BallCalled: 'Ball', StrikeCalled: 'Called strike', StrikeSwinging: 'Swinging strike', FoulBall: 'Foul', InPlay: 'In play', HitByPitch: 'Hit by pitch',
+};
+/** Who, when and what for a pitch from a pitch export (shown only when the dataset has it). */
+function PitchContext({ i, p }: { i: NonNullable<PitchFile['info']>; p: PitchFile }) {
+  const call = i.call ? CALL[i.call] ?? i.call : undefined;
+  const result = i.result && i.result !== 'Undefined' ? i.result : undefined;
+  const pitch = [i.pitchType, p.pp.release.mph != null && `${p.pp.release.mph.toFixed(1)} mph`, p.pp.spin.rpm != null && `${Math.round(p.pp.spin.rpm)} rpm`].filter(Boolean).join(' · ');
+  const bat = [i.exitSpeed != null && `EV ${i.exitSpeed.toFixed(1)} mph`, i.launchAngle != null && `LA ${Math.round(i.launchAngle)}°`, p.hit?.distanceFt != null && `${Math.round(p.hit.distanceFt)} ft`].filter(Boolean).join(' · ');
+  return (
+    <div className="col" style={{ gap: 4, padding: '8px 10px', borderRadius: 8, background: 'var(--panel-2)', border: '1px solid var(--border)' }}>
+      <div className="row tiny" style={{ gap: 8, color: 'var(--text-3)' }}>
+        {i.inning != null && <span className="mono" style={{ fontWeight: 700, color: 'var(--text-2)' }}>{i.half === 'Bottom' ? 'Bot' : 'Top'} {i.inning}</span>}
+        {i.outs != null && <span className="mono">{i.outs} out</span>}
+        {i.balls != null && i.strikes != null && <span className="mono">{i.balls}-{i.strikes}</span>}
+      </div>
+      <div className="small" style={{ lineHeight: 1.35 }}>
+        <span style={{ fontWeight: 600 }}>{i.pitcher ?? '—'}</span>{i.pitcherTeam && <span className="muted"> ({i.pitcherTeam})</span>}
+        <span className="muted"> to </span>
+        <span style={{ fontWeight: 600 }}>{i.batter ?? '—'}</span>{i.batterTeam && <span className="muted"> ({i.batterTeam})</span>}
+      </div>
+      {pitch && <span className="mono small" style={{ color: 'var(--text-2)' }}>{pitch}</span>}
+      {(call || result || bat) && <span className="small" style={{ color: 'var(--text-2)' }}>{[call, result].filter(Boolean).join(' · ')}{bat && <span className="mono muted">{call || result ? ' · ' : ''}{bat}</span>}</span>}
+    </div>
+  );
+}
+
 /** One verdict per pitch: the worst of its deliverables. Red if any is red, amber if any is amber, else green. */
 function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
-  if (p.confidence <= ds.thresholds.confidencePass) crit.push('confidence fail');
-  if (p.hit) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
+  if (p.confidence !== undefined && p.confidence <= ds.thresholds.confidencePass) crit.push('confidence fail');
+  if (p.hit && p.hit.trackPct != null) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
   if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });
   return { h: crit.length ? 'crit' : warn.length ? 'warn' : 'ok', problems: [...crit, ...warn] };

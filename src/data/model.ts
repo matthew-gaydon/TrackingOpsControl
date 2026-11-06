@@ -80,7 +80,7 @@ export function taskValue(p: PitchFile, k: number, ops: PpOps): string {
   const t = taskState(p, k, ops);
   if (t === 'queued' || t === 'processing') return taskStatus(p, k, ops);
   if (k === 2) return t === 'ok' ? 'Valid' : t === 'crit' ? 'Failed' : t === 'reviewed' ? 'Validation failed · reviewed' : 'Validation failed';
-  const spin = `RPM ${p.pp.spin.rpm ?? '—'} · err ${p.pp.spin.fitError ?? '—'}`;
+  const spin = `RPM ${p.pp.spin.rpm ?? '—'}${p.pp.spin.fitError !== undefined ? ` · err ${p.pp.spin.fitError}` : ''}`;
   if (k === 1 && reviewable(p, k, ops) && (t === 'warn' || t === 'reviewed')) return t === 'reviewed' ? `${spin} · reviewed` : spin;
   if (t === 'reviewed') return 'Reviewed by operator';
   if (t !== 'ok') return 'Needs reprocess';
@@ -97,6 +97,7 @@ export type CloudKey = (typeof CLOUD_TASKS)[number][0];
 export interface CloudOps { retried: Record<string, number>; done: Record<string, true> }
 
 export function trackpacCloud(p: PitchFile, pp: PpOps): TrackpacCloud {
+  if (!p.cloud) return 'unknown';
   const t = taskState(p, 2, pp);
   if (t === 'crit') return 'failed';
   if (t === 'warn') return 'needs_validation';
@@ -105,6 +106,7 @@ export function trackpacCloud(p: PitchFile, pp: PpOps): TrackpacCloud {
   return p.cloud.trackpac;
 }
 export function cloudState(p: PitchFile, k: number, pp: PpOps, ops: CloudOps): CloudResult {
+  if (!p.cloud) return 'unknown';
   if (trackpacCloud(p, pp) !== 'uploaded') return 'queued';
   const key = tkey(p.num, k);
   if (ops.retried[key]) return 'processing';
@@ -132,9 +134,12 @@ export function szParts(v: SzDelta | number | null | undefined): { x: number | n
 /** no data -> crit, outside tolerance -> warn. */
 export const szTone = (d: number | null, ds: Dataset): Tone => (d === null ? 'crit' : Math.abs(d) > ds.thresholds.strikeZoneTolerance ? 'warn' : 'ok');
 
+/** Per tracking camera; empty when the dataset has no strike-zone data for this pitch. */
 export function strikeZone(p: PitchFile, ds: Dataset) {
+  if (!p.strikeZone) return [];
+  const zone = p.strikeZone;
   return ds.cameras.filter(isTracking).map((c) => {
-    const { x, z, worst } = szParts(p.strikeZone[c.id]);
+    const { x, z, worst } = szParts(zone[c.id]);
     return { cam: c, d: worst, x, z, state: szTone(worst, ds) };
   });
 }

@@ -62,7 +62,7 @@ function Monitoring() {
   const alerts = al.all.filter((a) => a.sev !== 'dev' && !a.replaced && (a.cameraId === c.id || a.members?.includes(c.id)));
   const focused = al.focus?.cameraId === c.id && !al.focus.acked;
   // multicam and player tracking show up as alerts when they go wrong, so they aren't repeated here
-  const sz = latest && isTracking(c) ? szParts(latest.strikeZone[c.id]) : null;
+  const sz = latest?.strikeZone && isTracking(c) ? szParts(latest.strikeZone[c.id]) : null;
   const szFact = (axis: 'X' | 'Z', v: number | null): [string, string, string] => [`Strike zone ${axis} Δ · pitch ${latest!.num}`, v === null ? 'no data' : (v >= 0 ? '+' : '') + v.toFixed(3), szTone(v, ds) === 'ok' ? '' : szTone(v, ds)];
   const facts: [string, string, string?][] = [
     ['Connection', c.running ? 'Connected' : 'Not connected', c.running ? '' : 'crit'],

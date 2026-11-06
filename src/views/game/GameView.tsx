@@ -187,24 +187,34 @@ function CamImage({ c, p, mode, big }: { c: CameraFile; p: PitchFile; mode: 'mos
   return src ? <img src={src} alt={big ? `${label(c)} ball mosaic` : ''} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null;
 }
 
-function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
-  const ds = useDs(); const st = usePick('bigCam', 'fieldView', 'imgMode', 'lastHitOverlay', 'set');
-  const fv = st.fieldView as FV;
+export type Scope = 'game' | 'pitches';
+/** The camera panel's state for a view: Game keeps its own, the Pitches tab its own. */
+function useField(scope: Scope) {
+  const st = usePick('bigCam', 'fieldView', 'imgMode', 'pitBig', 'pitView', 'pitImg', 'set');
+  return scope === 'game'
+    ? { fv: st.fieldView as FV, img: st.imgMode, big: st.bigCam, set: (ch: { fv?: FV; img?: 'mosaic' | 'hit'; big?: string | null }) => st.set({ ...(ch.fv && { fieldView: ch.fv }), ...(ch.img && { imgMode: ch.img }), ...(ch.big !== undefined && { bigCam: ch.big }) }) }
+    : { fv: st.pitView as FV, img: st.pitImg, big: st.pitBig, set: (ch: { fv?: FV; img?: 'mosaic' | 'hit'; big?: string | null }) => st.set({ ...(ch.fv && ch.fv !== 'combined' && { pitView: ch.fv }), ...(ch.img && { pitImg: ch.img }), ...(ch.big !== undefined && { pitBig: ch.big }) }) };
+}
+
+/** Camera mosaics / hit images for a pitch. On Game it also has the live Combined view; on Pitches it doesn't. */
+export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; reviewing: boolean; scope?: Scope }) {
+  const ds = useDs(); const st = usePick('lastHitOverlay', 'set'); const f = useField(scope);
+  const fv = f.fv;
   const cams = fv === 'combined' ? [] : ds.cameras.filter((c) => c.group === fv);
-  const mode = fv === 'biomechanics' ? 'mosaic' : st.imgMode;
-  const big = st.bigCam ? cams.find((c) => c.id === st.bigCam) : undefined;
-  const step = (d: number) => { const i = cams.findIndex((c) => c.id === st.bigCam); st.set({ bigCam: cams[(i + d + cams.length) % cams.length].id }); };
+  const mode = fv === 'biomechanics' ? 'mosaic' : f.img;
+  const big = f.big ? cams.find((c) => c.id === f.big) : undefined;
+  const step = (d: number) => { const i = cams.findIndex((c) => c.id === f.big); f.set({ big: cams[(i + d + cams.length) % cams.length].id }); };
   const latest = ds.pitches.at(-1)!;
   const badge = (c: CameraFile) => { const h = health(c, ds); return h === 'ok' ? null : <span className="tag-over" style={{ right: 6, top: 6, color: h === 'crit' ? 'var(--crit-ink)' : 'var(--warn-ink)', fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 10 }}>{healthNote(c, ds)}</span>; };
   return (
     <section className="panel" style={{ flex: '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <div className="row wrap" style={{ gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
-        <Seg role="tablist" label="Field view" value={fv} onChange={(v) => st.set({ fieldView: v, bigCam: null })}
-          options={[['combined', 'Combined'], ['pitchToPlate', 'PitchToPlate'], ['fullField', 'FullField'], ['biomechanics', 'Biomechanics']]} />
+        <Seg role="tablist" label="Field view" value={fv} onChange={(v) => f.set({ fv: v, big: null })}
+          options={[...(scope === 'game' ? [['combined', 'Combined']] as [FV, string][] : []), ['pitchToPlate', 'PitchToPlate'], ['fullField', 'FullField'], ['biomechanics', 'Biomechanics']]} />
         <span className="small muted">{fv === 'combined' ? 'Live bird’s-eye view' : `${cams.length} cameras · ${mode === 'hit' ? 'hit images' : 'ball mosaics'}`}</span>
         <span className="grow" />
         {fv === 'combined' && <label className="row small" style={{ gap: 6, color: 'var(--text-3)' }}><input type="checkbox" checked={st.lastHitOverlay} onChange={() => st.set({ lastHitOverlay: !st.lastHitOverlay })} />Last hit overlay</label>}
-        {(fv === 'pitchToPlate' || fv === 'fullField') && <Seg label="Image type" value={st.imgMode} onChange={(v) => st.set({ imgMode: v })} options={[['mosaic', 'Ball mosaic'], ['hit', 'Hit image']]} />}
+        {(fv === 'pitchToPlate' || fv === 'fullField') && <Seg label="Image type" value={f.img} onChange={(v) => f.set({ img: v })} options={[['mosaic', 'Ball mosaic'], ['hit', 'Hit image']]} />}
       </div>
       {fv === 'combined' ? <Combined hit={[...ds.pitches].reverse().find((x) => x.hit)?.hit ?? latest.hit} /> : (
         <div className="col fill" style={{ gap: 10, padding: 12, background: '#0D1012', borderRadius: '0 0 10px 10px' }}>
@@ -212,7 +222,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
             <span className="mono" style={{ fontSize: 13 }}>Pitch {p.num} · {p.time}</span>
             {reviewing && <span className="pill info">REVIEW</span>}
             <span className="grow" />
-            {big && <button type="button" className="btn" onClick={() => st.set({ bigCam: null })}>All {cams.length} cameras</button>}
+            {big && <button type="button" className="btn" onClick={() => f.set({ big: null })}>All {cams.length} cameras</button>}
           </div>
           {big && (
             // jump straight to any camera in the group while one is enlarged; ← → keys step through them
@@ -223,7 +233,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
                 return (
                   <button key={c.id} type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} title={`${label(c)}${h === 'ok' ? '' : ` · ${healthNote(c, ds)}`}`}
                     ref={(el) => { if (on && el && el.parentElement?.contains(document.activeElement)) el.focus(); }}
-                    onClick={() => st.set({ bigCam: c.id })} className="mono" style={{ flex: '0 0 auto', minWidth: 44, padding: '5px 10px', fontWeight: 700 }}>
+                    onClick={() => f.set({ big: c.id })} className="mono" style={{ flex: '0 0 auto', minWidth: 44, padding: '5px 10px', fontWeight: 700 }}>
                     {h !== 'ok' && <HealthDot h={h} size={7} />}{mark(c)}
                   </button>
                 );
@@ -233,9 +243,9 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
           {!big ? (
             <div className="fill scroll" style={{ display: 'grid', alignContent: 'start', gap: 8, gridTemplateColumns: `repeat(${fv === 'biomechanics' ? 4 : fv === 'fullField' ? 4 : 3}, minmax(0, 1fr))` }}>
               {cams.map((c) => (
-                <button key={c.id} type="button" aria-label={`${label(c)}, enlarge`} onClick={() => { if (!wasDrag()) st.set({ bigCam: c.id }); }}
+                <button key={c.id} type="button" aria-label={`${label(c)}, enlarge`} onClick={() => { if (!wasDrag()) f.set({ big: c.id }); }}
                   style={{ position: 'relative', aspectRatio: '2.4 / 1', padding: 0, border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', background: 'var(--deep)' }}>
-                  <ZoomBox as="span" zoomKey={`g:${fv}:${c.id}:${mode}:${p.num}`} controls={false} style={{ position: 'absolute', inset: 0, display: 'block' }}>
+                  <ZoomBox as="span" zoomKey={`${scope}:${fv}:${c.id}:${mode}:${p.num}`} controls={false} style={{ position: 'absolute', inset: 0, display: 'block' }}>
                     <CamImage c={c} p={p} mode={mode} />
                   </ZoomBox>
                   <span className="tag-over" style={{ left: 6, top: 6 }}>{mark(c)}</span>
@@ -247,7 +257,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
             <div className="row stage fill" style={{ gap: 10 }}>
               <button type="button" className="icon-btn" aria-label="Previous camera" onClick={() => step(-1)} style={{ width: 40, height: 40 }}><Chevron dir="left" /></button>
               <div style={{ flex: '1 1 auto', alignSelf: 'stretch', minWidth: 0, containerType: 'size', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ZoomBox zoomKey={`gb:${fv}:${big.id}:${mode}:${p.num}`} style={{ width: 'min(100cqw, calc(100cqh * 2.4))', aspectRatio: '2.4 / 1', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
+                <ZoomBox zoomKey={`${scope}b:${fv}:${big.id}:${mode}:${p.num}`} style={{ width: 'min(100cqw, calc(100cqh * 2.4))', aspectRatio: '2.4 / 1', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
                   <CamImage c={big} p={p} mode={mode} big />
                 </ZoomBox>
               </div>
@@ -262,7 +272,9 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
   );
 }
 
-function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boolean; latestNum: number }) {
+/** Everything about one pitch. `select` moves to another pitch (Game: review mode; Pitches: the list's selection). */
+export function PitchCard({ p, reviewing, latestNum, scope = 'game', select }: { p: PitchFile; reviewing: boolean; latestNum: number; scope?: Scope; select?: (n: number) => void }) {
+  const field = useField(scope);
   const ds = useDs(); const st = usePick('pop', 'set', 'szAll'); const ops = usePpOps();
   const pass = confidencePass(p, ds);
   const sz = strikeZone(p, ds);
@@ -270,15 +282,16 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   const idle = sz.filter((z) => z.state === 'none').length;   // FullField cameras that didn't contribute (normal)
   const contrib = sz.length - idle;
   const tol = ds.thresholds.strikeZoneTolerance;
-  const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, focusAlertId: null, pop: null } as never);
+  const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, crumbView: scope, focusAlertId: null, pop: null } as never);
+  const goPitch = (n: number) => { if (select) select(n); else st.set({ gameSel: n >= latestNum ? null : n }); st.set({ pop: null }); };
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
   const hitT = p.hit && p.hit.trackPct != null ? hitTone(p.hit.trackPct, ds) : null;
   const quick: { k: string; label: string; value: string; tone: Tone | 'none'; text?: string; go?: () => void }[] = [
     { k: 'conf', label: 'Confidence', value: pass === null ? 'No data' : pass ? 'PASS' : 'FAIL', tone: pass === null ? 'none' : pass ? 'ok' : 'crit',
-      text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => st.set({ pop: null, fieldView: 'pitchToPlate', imgMode: 'mosaic', bigCam: null }) },
+      text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => { st.set({ pop: null }); field.set({ fv: 'pitchToPlate', img: 'mosaic', big: null }); } },
     { k: 'acs', label: 'ACS delivery', value: p.acs ? ACS[p.acs].label : 'No data', tone: p.acs ? ACS[p.acs].tone : 'none' },
     { k: 'hit', label: 'Hit tracked', value: !p.hit ? 'No hit' : p.hit.trackPct != null ? `${p.hit.trackPct}%` : 'No data', tone: hitT ?? 'none',
-      text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => st.set({ pop: null, fieldView: 'fullField', imgMode: 'hit', bigCam: null }) },
+      text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => { st.set({ pop: null }); field.set({ fv: 'fullField', img: 'hit', big: null }); } },
   ];
   const TONE = {
     ok: { bg: '#112219', edge: '#23503A', ink: 'var(--ok-ink)' }, warn: { bg: 'var(--warn-bg)', edge: 'var(--warn-edge)', ink: 'var(--warn-ink)' },
@@ -288,10 +301,10 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   return (
     <aside className="panel panel-pad col scroll" style={{ flex: '1 1 380px', maxWidth: 460, minWidth: 0, gap: 10 }}>
       <div className="row">
-        <button type="button" className="icon-btn" style={navBtn} aria-label="Previous pitch" disabled={p.num <= 1} onClick={() => st.set({ gameSel: p.num - 1, pop: null })}><Chevron dir="left" /></button>
+        <button type="button" className="icon-btn" style={navBtn} aria-label="Previous pitch" disabled={p.num <= 1} onClick={() => goPitch(p.num - 1)}><Chevron dir="left" /></button>
         <div className="col grow" style={{ gap: 0 }}><h2 style={{ fontSize: 16, fontWeight: 600 }}>Pitch {p.num}</h2><span className="mono small muted">{p.time}</span></div>
         {reviewing && <span className="pill info">REVIEW</span>}
-        <button type="button" className="icon-btn" style={navBtn} aria-label="Next pitch" disabled={!reviewing} onClick={() => st.set({ gameSel: p.num + 1 >= latestNum ? null : p.num + 1, pop: null })}><Chevron /></button>
+        <button type="button" className="icon-btn" style={navBtn} aria-label="Next pitch" disabled={select ? p.num >= latestNum : !reviewing} onClick={() => goPitch(p.num + 1)}><Chevron /></button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
         {quick.map((q) => {
@@ -372,7 +385,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
 }
 
 /** One verdict per pitch: the worst of its deliverables. Red if any is red, amber if any is amber, else green. */
-function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
+export function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
   if (confidencePass(p, ds) === false) crit.push('confidence fail');
   const sz = szVerdict(p, ds); crit.push(...sz.crit); warn.push(...sz.warn);

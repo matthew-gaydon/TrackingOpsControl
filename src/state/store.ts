@@ -4,7 +4,7 @@ import type { CameraSettings, Dataset, SessionMode } from '../data/types';
 import type { Condition, Route } from '../alerts/engine';
 import { acknowledge, reconcile, type Alert, type Occurrence } from '../alerts/ledger';
 
-export type View = 'game' | 'cameras' | 'pp' | 'cloud';
+export type View = 'game' | 'cameras' | 'pitches' | 'pp' | 'cloud';
 export type FlowStage = 'idle' | 'setup' | 'live' | 'ended';
 export interface Zoom { s: number; x: number; y: number }
 export interface MenuPos { x: number; y: number; task: number | null }
@@ -22,6 +22,7 @@ export interface UiState {
   prevView: View | null;
   focusAlertId: string | null;
   crumbPitch: number | null;          // "Back to Game · Pitch N" after a pitch-card jump
+  crumbView: 'game' | 'pitches';      // which view that pitch card was on
   drawer: boolean;
   drawerTab: 'open' | 'done';
   dev: boolean;
@@ -43,6 +44,12 @@ export interface UiState {
 
   // game
   gameSel: number | null;             // pitch number; null = live (latest)
+  // Pitches tab (its own selection and camera panel, so browsing there doesn't move the Game view)
+  pitchSel: number | null;            // null = latest
+  pitFilter: 'all' | 'flagged' | 'red';
+  pitView: 'pitchToPlate' | 'fullField' | 'biomechanics';
+  pitImg: 'mosaic' | 'hit';
+  pitBig: string | null;
   fieldView: 'combined' | 'pitchToPlate' | 'fullField' | 'biomechanics';
   imgMode: 'mosaic' | 'hit';
   bigCam: string | null;
@@ -110,9 +117,9 @@ export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
 
 export const useUi = create<UiState>((set, get) => ({
   ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
-  view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, drawer: false, drawerTab: 'open', dev: false,
+  view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, crumbView: 'game', drawer: false, drawerTab: 'open', dev: false,
   ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false, flow: { stage: 'idle', at: {} }, flowConfirmEnd: false,
-  gameSel: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
+  gameSel: null, pitchSel: null, pitFilter: 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
   cam: 'P1', camTab: 'mosaic', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
   ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,
   resetOpen: false, bmcaNote: false, lensRestart: null,

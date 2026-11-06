@@ -6,8 +6,8 @@ import { Arrow, Chevron, SevBadge } from './ui';
 import { alertWhen, type Alert } from '../alerts/ledger';
 import type { SessionMode } from '../data/types';
 
-const VIEWS: [View, string][] = [['game', 'Game'], ['cameras', 'Cameras'], ['pp', 'Post-processing'], ['cloud', 'Cloud processing']];
-const VIEW_NAME: Record<View, string> = { game: 'Game', cameras: 'Cameras', pp: 'Post-processing', cloud: 'Cloud processing' };
+const VIEWS: [View, string][] = [['game', 'Game'], ['cameras', 'Cameras'], ['pitches', 'Pitches'], ['pp', 'Post-processing'], ['cloud', 'Cloud processing']];
+const VIEW_NAME: Record<View, string> = { game: 'Game', cameras: 'Cameras', pitches: 'Pitches', pp: 'Post-processing', cloud: 'Cloud processing' };
 
 /** Header clock: the dataset clock in UTC, the same clock every pitch and alert time uses. */
 function Clock() {
@@ -161,12 +161,12 @@ export function FocusBanner() {
 
 /** "Back to Game · Pitch N" after following a link on the pitch card. */
 export function Crumb() {
-  const st = usePick('crumbPitch', 'set', 'view');
-  if (st.crumbPitch === null || st.view === 'game') return null;
+  const st = usePick('crumbPitch', 'crumbView', 'set', 'view');
+  if (st.crumbPitch === null || st.view === st.crumbView) return null;
   return (
     <div className="row wrap small" style={{ flex: '0 0 auto', gap: 10, margin: '12px 12px 0', padding: '8px 12px', borderRadius: 8, background: 'var(--accent-bg)', border: '1px solid var(--accent-edge)', color: '#CFE8FF' }}>
-      <Chevron dir="left" /><span>Opened from the pitch card on Game.</span><span className="grow" />
-      <button type="button" className="btn link" onClick={() => st.set({ view: 'game', gameSel: st.crumbPitch, crumbPitch: null, focusAlertId: null })}>Back to Game · Pitch {st.crumbPitch}</button>
+      <Chevron dir="left" /><span>Opened from the pitch card on {VIEW_NAME[st.crumbView]}.</span><span className="grow" />
+      <button type="button" className="btn link" onClick={() => st.set({ view: st.crumbView, ...(st.crumbView === 'game' ? { gameSel: st.crumbPitch } : { pitchSel: st.crumbPitch }), crumbPitch: null, focusAlertId: null })}>Back to {VIEW_NAME[st.crumbView]} · Pitch {st.crumbPitch}</button>
     </div>
   );
 }

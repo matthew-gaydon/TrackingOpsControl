@@ -26,7 +26,7 @@ src/views/launch/        Sign-in page and session list (public/data/sessions.jso
 src/state/store.ts       One zustand store for UI state, the alert ledger and some operator actions (acks, saves, queues, zoom).
 src/state/hooks.ts       useDs / useAlertSync (runs the engine once, in App) / useAlerts / usePpOps / useCloudOps / useSession.
 src/components/          Shell (header, banner, drawer, toasts), ui primitives, ZoomBox.
-src/views/{game,cameras,pp,cloud}/   One folder per view.
+src/views/{game,cameras,pitches,pp,cloud}/   One folder per view. Pitches reuses Game's FieldPanel and PitchCard with scope="pitches" (its own selection and camera panel state).
 ```
 - **One clock.** `clockMs()` in `store.ts` is the dataset clock, and every time on screen is UTC (`fmtClock`). Components that show a ticking time use `useNow()` (or `<AlertWhen>`). Never use `Date.now()` or local time for display.
 - **Subscribe narrowly.** Components read the store with `usePick('field', …)` or a `useUi((s) => s.x)` selector, never `useUi()` with no selector: the clock ticks every second and zoom drags update the store continuously.
@@ -45,6 +45,7 @@ src/views/{game,cameras,pp,cloud}/   One folder per view.
 - A spin with a result whose fit error is at or over `spinFitErrorReview` shows **Needs review** (amber) and can be accepted with **Mark reviewed** or reprocessed; either removes it from the spin alert. A spin with no result is **Failed**, reprocess only.
 - Strike zone: a FullField camera with no value didn't contribute (normal): grey **–**, never green, never a problem. A PitchToPlate camera with no value is amber (pitch amber on the timeline; a running one also raises the `sz-p2p` alert). A PitchToPlate |Δ| over `strikeZoneCritical` (0.008) is red (pitch red on the timeline). Any camera over `strikeZoneTolerance` (0.005) is amber on the card; on the timeline, 2+ PitchToPlate cameras in that 0.005–0.008 band make the pitch amber and 3+ make it red (`strikeZoneBandAmber` / `strikeZoneBandRed`). Logic: `szVerdict()` in model.ts.
 - Trackpac result wording: **Valid** (green) / **Validation failed** (amber) / **Failed** (red, no result).
+- **Pitches** tab (between Cameras and Post-processing): every pitch in a list (verdict light, confidence, ACS, hit %, strike zone, PP; filters All / Flagged / Red; ↑ ↓ keys), that pitch's ball mosaics and hit images, and the Game pitch card. Jumps from its pitch card come back with "Back to Pitches · Pitch N".
 - **Game Flow** (Game view, top left): Start Setup → Pre-Game Setup → Start Live Tracking → Live Tracking → End Live Tracking (confirm) → Tracking Ended. Starting Live Tracking goes In session; ending it goes Out. Stage state is `flow` in the store; other system actions will hook into `GameFlow.go()`.
 - **Views fit the window.** On a desktop window (at least 1200 × 600) no view scrolls as a page. Fixed panels stay put, and long content (camera list, pitch lists, pitch card, PP detail, control settings) scrolls inside its own panel. Use the layout classes in `styles.css` (`fit-row`, `fill`, `scroll`, `stage`, `sticky-head`) for new panels. Smaller windows fall back to a scrolling page.
 - Every camera image is zoomable (`ZoomBox`: wheel zoom, drag to pan, −/%/+).

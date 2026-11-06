@@ -7,6 +7,7 @@ import { LoginView, SessionsView } from './views/launch/LaunchViews';
 import { AlertDrawer, Crumb, FocusBanner, Header, Toasts } from './components/Shell';
 import { GameView } from './views/game/GameView';
 import { CamerasView } from './views/cameras/CamerasView';
+import { PitchesView } from './views/pitches/PitchesView';
 import { PostProcessingView } from './views/pp/PostProcessingView';
 import { CloudView } from './views/cloud/CloudView';
 
@@ -41,6 +42,7 @@ function Main() {
       <Crumb />
       {view === 'game' && <GameView />}
       {view === 'cameras' && <CamerasView />}
+      {view === 'pitches' && <PitchesView />}
       {view === 'pp' && <PostProcessingView />}
       {view === 'cloud' && <CloudView />}
       <AlertDrawer />

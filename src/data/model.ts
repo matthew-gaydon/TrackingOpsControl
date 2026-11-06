@@ -120,9 +120,15 @@ export type Tone = 'ok' | 'warn' | 'crit';
 export function hitTone(pct: number, ds: Dataset): Tone {
   return pct >= ds.thresholds.hitTrackGoodPct ? 'ok' : pct < ds.thresholds.hitTrackPoorPct ? 'crit' : 'warn';
 }
-export const ACS: Record<AcsStatus, { label: string; tone: Tone }> = {
-  success: { label: 'SUCCESS', tone: 'ok' }, review: { label: 'REVIEW', tone: 'warn' }, fail: { label: 'FAIL', tone: 'crit' },
+export const ACS: Record<AcsStatus, { label: string; tone: Tone | 'none' }> = {
+  success: { label: 'SUCCESS', tone: 'ok' }, noswing: { label: 'NO SWING', tone: 'none' },
+  review: { label: 'NEEDS REVIEW', tone: 'warn' }, fail: { label: 'FAILED', tone: 'crit' },
 };
+/** PASS / FAIL / null (no data): BMCC's binary flag when present, else the score against the threshold. */
+export function confidencePass(p: PitchFile, ds: Dataset): boolean | null {
+  if (p.confidenceOk !== undefined) return p.confidenceOk;
+  return p.confidence === undefined ? null : p.confidence > ds.thresholds.confidencePass;
+}
 
 // ---------------- strike zone ----------------
 /** One camera's strike-zone Δ split into X and Z. `worst` is the axis furthest from zero (signed). */
@@ -138,7 +144,7 @@ export const szTone = (d: number | null, ds: Dataset): Tone => (d === null ? 'cr
 export function strikeZone(p: PitchFile, ds: Dataset) {
   if (!p.strikeZone) return [];
   const zone = p.strikeZone;
-  return ds.cameras.filter(isTracking).map((c) => {
+  return ds.cameras.filter((c) => isTracking(c) && c.id in zone).map((c) => {
     const { x, z, worst } = szParts(zone[c.id]);
     return { cam: c, d: worst, x, z, state: szTone(worst, ds) };
   });

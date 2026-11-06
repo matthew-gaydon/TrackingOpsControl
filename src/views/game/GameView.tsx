@@ -4,7 +4,7 @@ import { useGoInSession } from '../../components/Shell';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { fmtClock } from '../../data/time';
-import { ACS, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { ACS, confidencePass, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import type { Tone } from '../../data/model';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
@@ -264,7 +264,7 @@ function FieldPanel({ p, reviewing }: { p: PitchFile; reviewing: boolean }) {
 
 function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boolean; latestNum: number }) {
   const ds = useDs(); const st = usePick('pop', 'set', 'szAll'); const ops = usePpOps();
-  const pass = p.confidence === undefined ? null : p.confidence > ds.thresholds.confidencePass;
+  const pass = confidencePass(p, ds);
   const sz = strikeZone(p, ds);
   const bad = sz.filter((z) => z.state !== 'ok');
   const tol = ds.thresholds.strikeZoneTolerance;
@@ -291,7 +291,6 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
         {reviewing && <span className="pill info">REVIEW</span>}
         <button type="button" className="icon-btn" style={navBtn} aria-label="Next pitch" disabled={!reviewing} onClick={() => st.set({ gameSel: p.num + 1 >= latestNum ? null : p.num + 1, pop: null })}><Chevron /></button>
       </div>
-      {p.info && <PitchContext i={p.info} p={p} />}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
         {quick.map((q) => {
           const t = TONE[q.tone]; const bad = q.tone === 'warn' || q.tone === 'crit';
@@ -367,37 +366,10 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   );
 }
 
-const CALL: Record<string, string> = {
-  BallCalled: 'Ball', StrikeCalled: 'Called strike', StrikeSwinging: 'Swinging strike', FoulBall: 'Foul', InPlay: 'In play', HitByPitch: 'Hit by pitch',
-};
-/** Who, when and what for a pitch from a pitch export (shown only when the dataset has it). */
-function PitchContext({ i, p }: { i: NonNullable<PitchFile['info']>; p: PitchFile }) {
-  const call = i.call ? CALL[i.call] ?? i.call : undefined;
-  const result = i.result && i.result !== 'Undefined' ? i.result : undefined;
-  const pitch = [i.pitchType, p.pp.release.mph != null && `${p.pp.release.mph.toFixed(1)} mph`, p.pp.spin.rpm != null && `${Math.round(p.pp.spin.rpm)} rpm`].filter(Boolean).join(' · ');
-  const bat = [i.exitSpeed != null && `EV ${i.exitSpeed.toFixed(1)} mph`, i.launchAngle != null && `LA ${Math.round(i.launchAngle)}°`, p.hit?.distanceFt != null && `${Math.round(p.hit.distanceFt)} ft`].filter(Boolean).join(' · ');
-  return (
-    <div className="col" style={{ gap: 4, padding: '8px 10px', borderRadius: 8, background: 'var(--panel-2)', border: '1px solid var(--border)' }}>
-      <div className="row tiny" style={{ gap: 8, color: 'var(--text-3)' }}>
-        {i.inning != null && <span className="mono" style={{ fontWeight: 700, color: 'var(--text-2)' }}>{i.half === 'Bottom' ? 'Bot' : 'Top'} {i.inning}</span>}
-        {i.outs != null && <span className="mono">{i.outs} out</span>}
-        {i.balls != null && i.strikes != null && <span className="mono">{i.balls}-{i.strikes}</span>}
-      </div>
-      <div className="small" style={{ lineHeight: 1.35 }}>
-        <span style={{ fontWeight: 600 }}>{i.pitcher ?? '—'}</span>{i.pitcherTeam && <span className="muted"> ({i.pitcherTeam})</span>}
-        <span className="muted"> to </span>
-        <span style={{ fontWeight: 600 }}>{i.batter ?? '—'}</span>{i.batterTeam && <span className="muted"> ({i.batterTeam})</span>}
-      </div>
-      {pitch && <span className="mono small" style={{ color: 'var(--text-2)' }}>{pitch}</span>}
-      {(call || result || bat) && <span className="small" style={{ color: 'var(--text-2)' }}>{[call, result].filter(Boolean).join(' · ')}{bat && <span className="mono muted">{call || result ? ' · ' : ''}{bat}</span>}</span>}
-    </div>
-  );
-}
-
 /** One verdict per pitch: the worst of its deliverables. Red if any is red, amber if any is amber, else green. */
 function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
-  if (p.confidence !== undefined && p.confidence <= ds.thresholds.confidencePass) crit.push('confidence fail');
+  if (confidencePass(p, ds) === false) crit.push('confidence fail');
   if (p.hit && p.hit.trackPct != null) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
   if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });

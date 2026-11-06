@@ -39,8 +39,17 @@ Reads a TrackMan-style pitch export (one row per pitch, `Date` + `Time` in UTC) 
 | Spin | `SpinRate` (rpm). No fit error, so no spin review. |
 | Trackpac | Valid (the export comes from the processed track) |
 | Hit (balls in play) | Tracked % = `LastTrackedDistance` ÷ `Distance`, capped at 100; distance from `Distance` |
-| Pitch card context | pitcher, batter, teams, inning, outs, count, pitch type, call, play result, exit speed, launch angle |
-| Confidence, ACS, per-camera strike zone, cloud states | Not in the export: left out, shown as **No data** |
+| Pitch ID | `PitchUID` (links ACS packets, and images later) |
+| Track length/quality, spin fit error, cloud states | Not available: left out, shown as **No data** |
+
+Post-tracking context in the export (pitcher, batter, count, pitch type, play result) is **not** used: an operator wouldn't have it while tracking.
+
+Two more files are read when they sit next to the CSV (`<sessionId>_…` first, then the plain name):
+
+| File | Becomes |
+|---|---|
+| `acs_data.json`: ACS bat packets, one JSON object per line, `id` = `PitchUID` | No packet → **FAILED** (red). Packet with no swing data → **NO SWING** (grey). Packet with data → **SUCCESS** (green). There's no quality check yet, so three swings with data are marked **NEEDS REVIEW** (amber) for the demo, picked with a fixed seed. |
+| `sz_diffs_conf.csv`: BMCC strike-zone diffs and confidence | Rows are matched to pitches by time (0–3 s after the export's time). `SZD-X n` / `SZD-Z n` = BMCC tracking camera n; a camera with no value all game isn't part of the strike zone; `-` = no data from that camera on that pitch. `Strike Zone Confidence Score` 1 = **PASS**, 0 = **FAIL** (`confidenceOk`). |
 
 Cameras, redundancy and timing aren't in a pitch export, so they come from the `healthy` sample, and images use the shared sample images until real ones are added.
 
@@ -130,7 +139,7 @@ Health comes from these fields alone: **not running → crit**, **fps below targ
 {
   "num": 32, "time": "05-09-58.206",          // full timestamp, or BMCC "HH-MM-SS.mmm" / "HH:MM:SS" (see Times)
   "confidence": 8.57, "trackLength": 10.0, "trackQuality": 5.91,
-  "acs": "success",                                                    // success | review | fail (older files: "acsDelivered": true/false)
+  "acs": "success",                                                    // success | noswing | review | fail (older files: "acsDelivered": true/false)
   "hit": { "trackPct": 100, "distanceFt": 120.5 },                    // or null; the pitch card shows trackPct only
   "strikeZone": { "P1": { "x": 0.001, "z": -0.003 }, "P6": null, "F2": { "x": 0.007, "z": -0.002 } },  // Δ in X and Z per tracking camera; null = no data (a plain number still loads, as the worse axis)
   "pp": {
@@ -143,7 +152,7 @@ Health comes from these fields alone: **not running → crit**, **fps below targ
 }
 ```
 
-Pitch card colours: confidence **PASS** (green) above `thresholds.confidencePass`, else **FAIL** (red). ACS **SUCCESS** green / **REVIEW** amber / **FAIL** red. Hit tracked % green at `hitTrackGoodPct` (80) or more, red under `hitTrackPoorPct` (50), amber between. The Game pitch timeline shows one light per pitch: its worst deliverable.
+Pitch card colours: confidence **PASS** (green) / **FAIL** (red): BMCC's binary `confidenceOk` when present, else the `confidence` score against `thresholds.confidencePass`. ACS **SUCCESS** green / **NO SWING** grey / **NEEDS REVIEW** amber / **FAILED** red. Hit tracked % green at `hitTrackGoodPct` (80) or more, red under `hitTrackPoorPct` (50), amber between. The Game pitch timeline shows one light per pitch: its worst deliverable.
 
 Cloud states: Trackpac `queued | processing | successful | needs_validation | uploaded | failed`; cloud tasks `queued | processing | success | failed`.
 

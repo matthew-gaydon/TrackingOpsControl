@@ -11,8 +11,19 @@
 //   pitch number and time, release speed, spin rate, pitch type, call / play result, count,
 //   pitcher and batter, and for batted balls exit speed, launch angle, distance and the distance
 //   actually tracked. Hit tracked % = LastTrackedDistance / Distance (capped at 100), balls in play only.
-// What it doesn't give, so the dataset leaves it out and the app shows "No data":
-//   track confidence/length/quality, ACS delivery, per-camera strike zone, spin fit error, cloud states.
+// Post-tracking context in the export (pitcher, batter, count, pitch type, result) isn't used:
+// the operator wouldn't have it while tracking.
+//
+// Also read when present (next to the CSV in data/):
+//   <sessionId>_acs_data.json or acs_data.json   ACS bat packets, one JSON object per line, `id` = PitchUID.
+//     No packet for a pitch -> fail (FAILED). Packet with no swing data -> noswing (NO SWING).
+//     Packet with data -> success (SUCCESS). There's no quality check yet, so for the demo a few
+//     swings with data are marked review (NEEDS REVIEW), picked with a fixed seed.
+//   <sessionId>_sz_diffs_conf.csv or sz_diffs_conf.csv   BMCC strike-zone diffs and confidence.
+//     Rows are matched to pitches by time (the ball reaches the plate 0-3 s after the export's time).
+//     "SZD-X n" / "SZD-Z n" are BMCC tracking camera n; a camera with no value all game isn't part of
+//     the strike zone and is left out; "-" on a pitch = no data from that camera. Confidence 1 = PASS, 0 = FAIL.
+// Still not available, shown as "No data": track length/quality, spin fit error, cloud states.
 // Each row is treated as a valid Trackpac result (the export is produced from the processed track).
 // Cameras, redundancy and timing aren't in a pitch export either: they come from the `healthy`
 // sample (all cameras running), so the camera views have something to show.
@@ -45,6 +56,40 @@ const rows = lines.slice(1).map(parseLine).map((r) => Object.fromEntries(head.ma
 const num = (v) => (v === '' || v === undefined || isNaN(+v) ? undefined : +v);
 const txt = (v) => (v === '' || v === 'Undefined' ? undefined : v);
 const r2 = (v) => (v === undefined ? undefined : Math.round(v * 100) / 100);
+const r3 = (v) => (v === undefined ? undefined : Math.round(v * 1000) / 1000 || 0);   // || 0 drops -0
+const firstOf = (...names) => names.map((n) => join(dirname(file), n)).find((f) => existsSync(f));
+
+// ---- ACS packets (one JSON object per line) ----
+const acsFile = firstOf(`${sessionId}_acs_data.json`, 'acs_data.json');
+const ACS_META = new Set(['packet_type', 'id', 'timestamp', 'publish_timestamp', 'venue_id', 'system']);
+const acsById = new Map();
+if (acsFile) {
+  for (const line of readFileSync(acsFile, 'utf8').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    try { const p = JSON.parse(line); if (p.id) acsById.set(p.id, Object.keys(p).some((k) => !ACS_META.has(k))); } catch { /* skip a bad line */ }
+  }
+}
+
+// ---- strike-zone diffs and confidence ----
+const szFile = firstOf(`${sessionId}_sz_diffs_conf.csv`, 'sz_diffs_conf.csv');
+let szRows = [], szCams = [];
+if (szFile) {
+  const sl = readFileSync(szFile, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim());
+  const sh = parseLine(sl[0]).map((h) => h.trim());
+  szRows = sl.slice(1).map(parseLine).map((r) => Object.fromEntries(sh.map((h, i) => [h, (r[i] ?? '').trim()])))
+    .map((r) => ({ r, t: Date.parse(`${r.Date}T${r['Local Time']}Z`) })).filter((x) => !isNaN(x.t)).sort((a, b) => a.t - b.t);
+  szCams = [...new Set(sh.map((h) => h.match(/^SZD-[XZ] (\d+)$/)?.[1]).filter(Boolean).map(Number))];
+}
+const healthyCams = JSON.parse(readFileSync(join(repo, 'public', 'data', 'healthy', 'cameras.json'), 'utf8'));
+const camByTracking = new Map(healthyCams.filter((c) => c.bmccTrackingNumber).map((c) => [c.bmccTrackingNumber, c.id]));
+const usedSz = new Set();
+/** The strike-zone row for a pitch: the first unused row 0-3 s after the export's time. */
+function szFor(timeMs) {
+  const i = szRows.findIndex((x, k) => !usedSz.has(k) && x.t >= timeMs - 500 && x.t <= timeMs + 3000);
+  if (i < 0) return undefined;
+  usedSz.add(i);
+  return szRows[i].r;
+}
 
 // ---- the session record ----
 const dataDir = join(repo, 'data');
@@ -58,24 +103,44 @@ const pitches = rows.map((r) => {
   const mph = num(r.RelSpeed), rpm = num(r.SpinRate);
   const inPlay = r.PitchCall === 'InPlay';
   const dist = num(r.Distance), tracked = num(r.LastTrackedDistance);
+  const time = `${r.Date}T${r.Time}Z`;
+  const sz = szFor(Date.parse(time));
+  const conf = sz?.['Strike Zone Confidence Score'];
+  const acs = !acsFile ? undefined : !acsById.has(r.PitchUID) ? 'fail' : acsById.get(r.PitchUID) ? 'success' : 'noswing';
   return {
     num: num(r.PitchNo),
-    time: `${r.Date}T${r.Time}Z`,
+    uid: txt(r.PitchUID),
+    time,
+    ...(conf === undefined || isNaN(+conf) ? {} : { confidenceOk: +conf >= 1 }),
+    ...(acs ? { acs } : {}),
+    ...(sz ? { strikeZone: Object.fromEntries(szCams.map((n) => {
+      const x = num(sz[`SZD-X ${n}`]), z = num(sz[`SZD-Z ${n}`]);
+      return [n, x === undefined || z === undefined ? null : { x: r3(x), z: r3(z) }];
+    })) } : {}),
     hit: inPlay ? { trackPct: dist && tracked !== undefined ? Math.min(100, Math.round((tracked / dist) * 100)) : null, distanceFt: r2(dist) ?? null } : null,
     pp: {
       release: mph !== undefined ? { status: 'success', mph: r2(mph) } : { status: 'failed' },
       spin: rpm !== undefined ? { status: 'success', rpm: Math.round(rpm) } : { status: 'failed' },
       trackpac: { status: 'valid' },
     },
-    info: {
-      pitcher: txt(r.Pitcher), pitcherTeam: txt(r.PitcherTeam), batter: txt(r.Batter), batterTeam: txt(r.BatterTeam),
-      inning: num(r.Inning), half: txt(r['Top/Bottom']), outs: num(r.Outs), balls: num(r.Balls), strikes: num(r.Strikes),
-      pitchType: txt(r.TaggedPitchType) ?? txt(r.AutoPitchType), call: txt(r.PitchCall), result: txt(r.PlayResult)?.trim() ?? txt(r.KorBB),
-      exitSpeed: r2(num(r.ExitSpeed)), launchAngle: r2(num(r.Angle)),
-    },
   };
 }).filter((p) => p.num !== undefined).sort((a, b) => a.num - b.num);
 if (!pitches.length) { console.error('no pitches in the CSV'); process.exit(1); }
+
+// strike zone: keep only cameras with a value somewhere in the game, keyed by camera id
+const szLive = szCams.filter((n) => pitches.some((p) => p.strikeZone?.[n]));
+for (const p of pitches) {
+  if (!p.strikeZone) continue;
+  p.strikeZone = Object.fromEntries(szLive.filter((n) => camByTracking.has(n)).map((n) => [camByTracking.get(n), p.strikeZone[n]]));
+}
+
+// ACS: no quality check yet, so mark a few swings for review (fixed seed: same picks every run)
+let seed = [...sessionId].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+const swings = pitches.filter((p) => p.acs === 'success');
+const review = [];
+while (review.length < Math.min(3, swings.length)) { const p = swings[Math.floor(rand() * swings.length)]; if (!review.includes(p)) review.push(p); }
+review.forEach((p) => { p.acs = 'review'; });
 
 // ---- game ----
 const last = Date.parse(pitches.at(-1).time);
@@ -94,7 +159,7 @@ const game = {
   thresholds: hg.thresholds,
   // shared sample images until real mosaics / hit images are added
   defaultImages: Object.fromEntries(Object.entries(hg.defaultImages ?? {}).map(([k, v]) => [k, `/data/healthy/${v}`])),
-  source: { file: basename(file), rows: rows.length, teams: rec?.teams ? `${rec.teams.away?.name} @ ${rec.teams.home?.name}` : `${rows[0].AwayTeam} @ ${rows[0].HomeTeam}` },
+  source: { file: basename(file), acs: acsFile && basename(acsFile), strikeZone: szFile && basename(szFile), rows: rows.length, teams: rec?.teams ? `${rec.teams.away?.name} @ ${rec.teams.home?.name}` : `${rows[0].AwayTeam} @ ${rows[0].HomeTeam}` },
 };
 
 const out = join(dataDir, sessionId);
@@ -105,4 +170,7 @@ write('cameras.json', healthy('cameras.json'));
 write('pitches.json', pitches);
 if (!existsSync(join(out, 'status.json'))) write('status.json', []);
 const hits = pitches.filter((p) => p.hit);
+const count = (f) => pitches.filter(f).length;
 console.log(`wrote ${out}: ${pitches.length} pitches (${hits.length} in play), ${game.source.teams}, GamePK ${game.gamePk}`);
+console.log(acsFile ? `  ACS (${basename(acsFile)}): ${count((p) => p.acs === 'success')} success, ${count((p) => p.acs === 'noswing')} no swing, ${count((p) => p.acs === 'fail')} failed, review: pitches ${review.map((p) => p.num).join(', ')}` : '  ACS: no file, shown as No data');
+console.log(szFile ? `  Strike zone (${basename(szFile)}): ${count((p) => p.strikeZone)} pitches matched; cameras ${szLive.map((n) => camByTracking.get(n)).join(', ')}; confidence ${count((p) => p.confidenceOk === true)} pass, ${count((p) => p.confidenceOk === false)} fail` : '  Strike zone: no file, shown as No data');

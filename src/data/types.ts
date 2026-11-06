@@ -95,17 +95,8 @@ export interface CameraSettings {
 
 export interface SzDelta { x: number; z: number }
 
-export interface PitchInfo {
-  pitcher?: string; pitcherTeam?: string; batter?: string; batterTeam?: string;
-  inning?: number; half?: 'Top' | 'Bottom'; outs?: number; balls?: number; strikes?: number;
-  pitchType?: string;                  // e.g. Fastball, Slider
-  call?: string;                       // e.g. BallCalled, InPlay
-  result?: string;                     // play result, e.g. Single, Strikeout
-  exitSpeed?: number;                  // mph, batted balls only
-  launchAngle?: number;                // degrees
-}
 export type PpResult = 'success' | 'failed';
-export type AcsStatus = 'success' | 'review' | 'fail';
+export type AcsStatus = 'success' | 'noswing' | 'review' | 'fail';
 export type TrackpacResult = 'valid' | 'validation_failed' | 'failed';
 export type TrackpacCloud = 'queued' | 'processing' | 'successful' | 'needs_validation' | 'uploaded' | 'failed' | 'unknown';
 export type CloudResult = 'queued' | 'processing' | 'success' | 'failed' | 'unknown';
@@ -113,11 +104,15 @@ export type CloudResult = 'queued' | 'processing' | 'success' | 'failed' | 'unkn
 export interface PitchFile {
   num: number;                         // 1-based pitch number in the game
   time: string;                        // full timestamp, or clock "HH:MM:SS" / BMCC style "05-09-23.565"
-  /** Hawk-Eye track confidence. Omitted when the source doesn't have it (e.g. a pitch CSV export): shown as "No data". */
+  /** Unique pitch ID (e.g. the export's PitchUID). Links ACS packets and images to the pitch. */
+  uid?: string;
+  /** Hawk-Eye track confidence score, judged against thresholds.confidencePass. Omitted = no data. */
   confidence?: number;
+  /** Binary strike-zone confidence from BMCC (1 = PASS, 0 = FAIL). When set, it decides PASS/FAIL instead of `confidence`. */
+  confidenceOk?: boolean;
   trackLength?: number;
   trackQuality?: number;
-  /** ACS delivery: success (green), review (amber), fail (red). Omitted = no data. */
+  /** ACS delivery: success (packet with data, green), noswing (packet with no swing, grey), review (amber), fail (no packet, red). Omitted = no data. */
   acs?: AcsStatus;
   /** Older datasets: true = success, false = fail. Read only when `acs` is missing. */
   acsDelivered?: boolean;
@@ -126,11 +121,10 @@ export interface PitchFile {
   /**
    * Strike-zone Δ per tracking camera id (P1..P6, F1..F8): { x, z } in the plate's X and Z.
    * null = no data from that camera. Older datasets give a single number (the worse axis).
-   * Omitted entirely = the source has no strike-zone data.
+   * Omitted entirely = the source has no strike-zone data. A camera with no key isn't part of the strike zone.
    */
   strikeZone?: Record<string, SzDelta | number | null>;
-  /** Game context from a pitch export (pitcher, batter, count, pitch type, result). Shown on the pitch card. */
-  info?: PitchInfo;
+
   pp: {
     release: { status: PpResult; mph?: number };
     spin: { status: PpResult; rpm?: number; fitError?: number };

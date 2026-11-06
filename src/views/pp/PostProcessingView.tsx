@@ -128,7 +128,6 @@ export function PostProcessingView() {
           </div>
           <div className="row wrap" style={{ padding: '12px 14px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
             <button type="button" className="btn" disabled={!failedKeys(ds.pitches).length} onClick={() => enqueue(failedKeys([...ds.pitches].reverse()))}>Reprocess failed ({failedKeys(ds.pitches).length})</button>
-            <button type="button" className="btn" disabled title="Not built in the prototype yet">Bulk reprocess with model… · coming soon</button>
             <span className="grow" />
             <button type="button" className="btn danger" disabled={!st.ppQueue.length} onClick={() => st.set({ ppQueue: [] })}>Clear task queue</button>
           </div>

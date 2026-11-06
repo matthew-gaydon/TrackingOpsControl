@@ -63,7 +63,7 @@ function SessionApp({ name }: { name: string }) {
         const s = sid ? [...loadCreated(), ...(await loadSessions().catch(() => []))].find((x) => x.sessionId === sid) : undefined;
         return s ? { ...d, sample: s.sample, game: { ...d.game, sessionId: s.sessionId, gamePk: s.gamePk, venue: s.venue || d.game.venue } } : d;
       })
-      .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', ppSel: d.pitches.at(-1)?.num ?? null, loadedAt: Date.now() }))
+      .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', loadedAt: Date.now() }))
       .catch((e: Error) => useUi.getState().set({ loadError: e.message }));
   }, [name]);
   if (err) return (

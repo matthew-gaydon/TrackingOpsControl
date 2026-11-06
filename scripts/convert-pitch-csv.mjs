@@ -11,7 +11,8 @@
 //   pitch number and time, release speed, spin rate, pitch type, call / play result, count,
 //   pitcher and batter, and for batted balls exit speed, launch angle, distance and the distance
 //   actually tracked. Hit tracked % = LastTrackedDistance / Distance (capped at 100), balls in play only.
-// Play metadata (pitcher, batter, count, pitch type and metrics, result, batted ball) is kept as `play`.
+// Play metadata (situation, pitcher and batter, call and result) is kept as `play`. Pitch and batted-ball
+// measurements in the export aren't: they duplicate the tracking data the other views show.
 // It arrives shortly after each pitch (in production from MLB StatsAPI), so it's shown only on the
 // Pitches tab, never on the live Game view.
 //
@@ -137,14 +138,8 @@ const pitches = rows.map((r) => {
       paOfInning: num(r.PAofInning), pitchOfPa: num(r.PitchofPA),
       pitcher: txt(r.Pitcher), pitcherTeam: txt(r.PitcherTeam), pitcherThrows: txt(r.PitcherThrows),
       batter: txt(r.Batter), batterTeam: txt(r.BatterTeam), batterSide: txt(r.BatterSide),
-      pitchType: txt(r.TaggedPitchType) ?? txt(r.AutoPitchType),
-      relSpeed: r2(mph), spinRate: rpm === undefined ? undefined : Math.round(rpm), tilt: txt(r.Tilt),
-      inducedVertBreak: r2(num(r.InducedVertBreak)), horzBreak: r2(num(r.HorzBreak)), extension: r2(num(r.Extension)),
-      zoneSpeed: r2(num(r.ZoneSpeed)), plateHeight: r2(num(r.PlateLocHeight)), plateSide: r2(num(r.PlateLocSide)),
       call: txt(r.PitchCall), korbb: txt(r.KorBB), result: txt(r.PlayResult?.trim()), hitType: txt(r.HitType),
       outsOnPlay: num(r.OutsOnPlay), runsScored: num(r.RunsScored),
-      exitSpeed: r2(num(r.ExitSpeed)), launchAngle: r2(num(r.Angle)), direction: r2(num(r.Direction)),
-      distance: r2(num(r.Distance)), hangTime: r2(num(r.HangTime)),
     }),
   };
 }).filter((p) => p.num !== undefined).sort((a, b) => a.num - b.num);

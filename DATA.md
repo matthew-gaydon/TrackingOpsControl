@@ -44,7 +44,7 @@ Reads a TrackMan-style pitch export (one row per pitch, `Date` + `Time` in UTC) 
 | Pitch ID | `PitchUID` (links ACS packets, and images later) |
 | Track length/quality, spin fit error, cloud states | Not available: left out, shown as **No data** |
 
-Post-tracking context in the export (pitcher, batter, count, pitch type, play result) is **not** used: an operator wouldn't have it while tracking.
+Play metadata in the export (situation, pitcher and batter, pitch type and metrics, call and play result, batted ball) is kept as `play` and shown **only on the Pitches tab** (the Play panel): it arrives shortly after each pitch (from MLB StatsAPI in production), so it never appears on the live Game view.
 
 Two more files are read when they sit next to the CSV (`<sessionId>_…` first, then the plain name):
 

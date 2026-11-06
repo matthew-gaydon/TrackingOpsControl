@@ -11,8 +11,9 @@
 //   pitch number and time, release speed, spin rate, pitch type, call / play result, count,
 //   pitcher and batter, and for batted balls exit speed, launch angle, distance and the distance
 //   actually tracked. Hit tracked % = LastTrackedDistance / Distance (capped at 100), balls in play only.
-// Post-tracking context in the export (pitcher, batter, count, pitch type, result) isn't used:
-// the operator wouldn't have it while tracking.
+// Play metadata (pitcher, batter, count, pitch type and metrics, result, batted ball) is kept as `play`.
+// It arrives shortly after each pitch (in production from MLB StatsAPI), so it's shown only on the
+// Pitches tab, never on the live Game view.
 //
 // Also read when present (next to the CSV in data/):
 //   <sessionId>_acs_data.json or acs_data.json   ACS bat packets, one JSON object per line, `id` = PitchUID.
@@ -63,6 +64,7 @@ const rows = lines.slice(1).map(parseLine).map((r) => Object.fromEntries(head.ma
 const num = (v) => (v === '' || v === undefined || isNaN(+v) ? undefined : +v);
 const txt = (v) => (v === '' || v === 'Undefined' ? undefined : v);
 const r2 = (v) => (v === undefined ? undefined : Math.round(v * 100) / 100);
+const dropEmpty = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
 const r3 = (v) => (v === undefined ? undefined : Math.round(v * 1000) / 1000 || 0);   // || 0 drops -0
 const firstOf = (...names) => names.map((n) => join(dirname(file), n)).find((f) => existsSync(f));
 
@@ -130,6 +132,20 @@ const pitches = rows.map((r) => {
       spin: rpm !== undefined ? { status: 'success', rpm: Math.round(rpm) } : { status: 'failed' },
       trackpac: { status: 'valid' },
     },
+    play: dropEmpty({
+      inning: num(r.Inning), half: txt(r['Top/Bottom']), outs: num(r.Outs), balls: num(r.Balls), strikes: num(r.Strikes),
+      paOfInning: num(r.PAofInning), pitchOfPa: num(r.PitchofPA),
+      pitcher: txt(r.Pitcher), pitcherTeam: txt(r.PitcherTeam), pitcherThrows: txt(r.PitcherThrows),
+      batter: txt(r.Batter), batterTeam: txt(r.BatterTeam), batterSide: txt(r.BatterSide),
+      pitchType: txt(r.TaggedPitchType) ?? txt(r.AutoPitchType),
+      relSpeed: r2(mph), spinRate: rpm === undefined ? undefined : Math.round(rpm), tilt: txt(r.Tilt),
+      inducedVertBreak: r2(num(r.InducedVertBreak)), horzBreak: r2(num(r.HorzBreak)), extension: r2(num(r.Extension)),
+      zoneSpeed: r2(num(r.ZoneSpeed)), plateHeight: r2(num(r.PlateLocHeight)), plateSide: r2(num(r.PlateLocSide)),
+      call: txt(r.PitchCall), korbb: txt(r.KorBB), result: txt(r.PlayResult?.trim()), hitType: txt(r.HitType),
+      outsOnPlay: num(r.OutsOnPlay), runsScored: num(r.RunsScored),
+      exitSpeed: r2(num(r.ExitSpeed)), launchAngle: r2(num(r.Angle)), direction: r2(num(r.Direction)),
+      distance: r2(num(r.Distance)), hangTime: r2(num(r.HangTime)),
+    }),
   };
 }).filter((p) => p.num !== undefined).sort((a, b) => a.num - b.num);
 if (!pitches.length) { console.error('no pitches in the CSV'); process.exit(1); }

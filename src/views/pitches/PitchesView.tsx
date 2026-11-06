@@ -3,6 +3,7 @@ import { usePick } from '../../state/store';
 import { useDs, usePpOps } from '../../state/hooks';
 import { HealthDot } from '../../components/ui';
 import { FieldPanel, PitchCard, pitchVerdict } from '../game/GameView';
+import { PlayPanel } from './PlayPanel';
 
 const GRID = '12px 1fr auto';
 const TONE_TEXT = { ok: 'var(--text-2)', warn: 'var(--warn-ink)', crit: 'var(--crit-ink)' } as const;
@@ -63,7 +64,11 @@ export function PitchesView() {
         </div>
         <div className="tiny muted" style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', lineHeight: 1.4 }}>Newest first. ↑ ↓ to step. Hover for what’s wrong.</div>
       </main>
-      <FieldPanel p={p} reviewing={false} scope="pitches" />
+      {/* play metadata above the images (Pitches only: it arrives after the pitch) */}
+      <div className="col" style={{ flex: '999 1 600px', minWidth: 0, minHeight: 0, gap: 12 }}>
+        <PlayPanel p={p} />
+        <FieldPanel p={p} reviewing={false} scope="pitches" fill />
+      </div>
       <PitchCard p={p} reviewing={false} latestNum={latest.num} scope="pitches" select={select} />
     </div>
   );

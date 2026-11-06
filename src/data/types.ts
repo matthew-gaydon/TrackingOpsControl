@@ -141,6 +141,20 @@ export interface PitchFile {
   spinStrip?: ImagePath;
   /** Release post-processing result image (release camera). */
   releaseImage?: ImagePath;
+  /**
+   * Play metadata (in production from MLB StatsAPI, shortly after the pitch). Not available while
+   * tracking, so it's shown on the Pitches tab only, never on the live Game view.
+   */
+  play?: PlayInfo;
+}
+
+export interface PlayInfo {
+  inning?: number; half?: string; outs?: number; balls?: number; strikes?: number; paOfInning?: number; pitchOfPa?: number;
+  pitcher?: string; pitcherTeam?: string; pitcherThrows?: string; batter?: string; batterTeam?: string; batterSide?: string;
+  pitchType?: string; relSpeed?: number; spinRate?: number; tilt?: string;
+  inducedVertBreak?: number; horzBreak?: number; extension?: number; zoneSpeed?: number; plateHeight?: number; plateSide?: number;   // in, in, ft, mph, ft, ft
+  call?: string; korbb?: string; result?: string; hitType?: string; outsOnPlay?: number; runsScored?: number;
+  exitSpeed?: number; launchAngle?: number; direction?: number; distance?: number; hangTime?: number;                           // mph, °, °, ft, s
 }
 
 export interface StatusMessage {

@@ -207,7 +207,7 @@ function useField(scope: Scope) {
 }
 
 /** Camera mosaics / hit images for a pitch. On Game it also has the live Combined view; on Pitches it doesn't. */
-export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; reviewing: boolean; scope?: Scope }) {
+export function FieldPanel({ p, reviewing, scope = 'game', fill }: { p: PitchFile; reviewing: boolean; scope?: Scope; fill?: boolean }) {
   const ds = useDs(); const st = usePick('lastHitOverlay', 'set'); const f = useField(scope);
   const fv = f.fv;
   const cams = fv === 'combined' ? [] : ds.cameras.filter((c) => c.group === fv);
@@ -217,7 +217,7 @@ export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; rev
   const latest = ds.pitches.at(-1)!;
   const badge = (c: CameraFile) => { const h = health(c, ds); return h === 'ok' ? null : <span className="tag-over" style={{ right: 6, top: 6, color: h === 'crit' ? 'var(--crit-ink)' : 'var(--warn-ink)', fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 10 }}>{healthNote(c, ds)}</span>; };
   return (
-    <section className="panel" style={{ flex: '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <section className="panel" style={{ flex: fill ? '1 1 0' : '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <div className="row wrap" style={{ gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
         <Seg role="tablist" label="Field view" value={fv} onChange={(v) => f.set({ fv: v, big: null })}
           options={[...(scope === 'game' ? [['combined', 'Combined']] as [FV, string][] : []), ['pitchToPlate', 'PitchToPlate'], ['fullField', 'FullField'], ['biomechanics', 'Biomechanics']]} />

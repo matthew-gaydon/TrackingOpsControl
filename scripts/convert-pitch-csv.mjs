@@ -21,8 +21,8 @@
 //     swings with data are marked review (NEEDS REVIEW), picked with a fixed seed.
 //   <sessionId>_sz_diffs_conf.csv or sz_diffs_conf.csv   BMCC strike-zone diffs and confidence.
 //     Rows are matched to pitches by time (the ball reaches the plate 0-3 s after the export's time).
-//     "SZD-X n" / "SZD-Z n" are BMCC tracking camera n; a camera with no value all game isn't part of
-//     the strike zone and is left out; "-" on a pitch = no data from that camera. Confidence 1 = PASS, 0 = FAIL.
+//     "SZD-X n" / "SZD-Z n" are BMCC tracking camera n; "-" = that camera didn't contribute on that pitch
+//     (normal for FullField cameras that don't see enough of the pitch). Confidence 1 = PASS, 0 = FAIL.
 //     The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo.
 // Still not available, shown as "No data": track length/quality, spin fit error, cloud states.
 // Each row is treated as a valid Trackpac result (the export is produced from the processed track).
@@ -139,8 +139,9 @@ if (szFile) {
   for (const p of pitches) if (p.strikeZone) for (const n of SZ_FILL) if (p.strikeZone[n] === undefined) p.strikeZone[n] = { x: within(0.003), z: within(0.003) };
 }
 
-// strike zone: keep only cameras with a value somewhere in the game, keyed by camera id
-const szLive = szCams.filter((n) => pitches.some((p) => p.strikeZone?.[n]));
+// strike zone, keyed by camera id. Every exported camera is kept: no value = didn't contribute on that
+// pitch (normal for FullField, shown grey "–"; a PitchToPlate camera with no value raises an alert).
+const szLive = szCams;
 for (const p of pitches) {
   if (!p.strikeZone) continue;
   p.strikeZone = Object.fromEntries(szLive.filter((n) => camByTracking.has(n)).map((n) => [camByTracking.get(n), p.strikeZone[n]]));

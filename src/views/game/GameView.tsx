@@ -266,7 +266,9 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
   const ds = useDs(); const st = usePick('pop', 'set', 'szAll'); const ops = usePpOps();
   const pass = confidencePass(p, ds);
   const sz = strikeZone(p, ds);
-  const bad = sz.filter((z) => z.state !== 'ok');
+  const bad = sz.filter((z) => z.state === 'warn' || z.state === 'crit');
+  const idle = sz.filter((z) => z.state === 'none').length;   // FullField cameras that didn't contribute (normal)
+  const contrib = sz.length - idle;
   const tol = ds.thresholds.strikeZoneTolerance;
   const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, focusAlertId: null, pop: null } as never);
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
@@ -312,10 +314,10 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
           <span className="lbl">Strike zone agreement</span>
           <Seg label="Strike zone cameras shown" value={st.szAll ? 'all' : 'problems'} onChange={(v) => st.set({ szAll: v === 'all' })} options={[['problems', 'Problems only'], ['all', `All ${sz.length}`]]} />
         </div>
-        <span style={{ fontSize: 15, fontWeight: 600, color: bad.length ? 'var(--warn-ink)' : 'var(--ok-ink)' }}>{bad.length ? `${bad.length} of ${sz.length} cameras need a look` : `All ${sz.length} agree`}</span>
-        <span className="mono tiny muted">Tolerance ±{tol}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: bad.length ? 'var(--warn-ink)' : 'var(--ok-ink)' }}>{bad.length ? `${bad.length} of ${sz.length} cameras need a look` : `All ${contrib} contributing cameras agree`}</span>
+        <span className="mono tiny muted">Tolerance ±{tol}{idle ? ` · ${idle} FullField not contributing (–)` : ''}</span>
         {!st.szAll ? (bad.length === 0
-          ? <div className="row" style={{ gap: 10, padding: 14, borderRadius: 8, background: '#112219', border: '1px solid #23503A', color: '#BFE8D2' }}><HealthDot h="ok" size={10} />All {sz.length} tracking cameras agree within tolerance</div>
+          ? <div className="row" style={{ gap: 10, padding: 14, borderRadius: 8, background: '#112219', border: '1px solid #23503A', color: '#BFE8D2' }}><HealthDot h="ok" size={10} />All {contrib} contributing cameras agree within tolerance</div>
           : bad.map((z) => (
             <div key={z.cam.id} className="col" style={{ gap: 6 }}>
               <button type="button" onClick={() => pop('sz' + z.cam.id)} aria-label={`${label(z.cam)} strike zone problem, show details`}
@@ -330,8 +332,11 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
           ))) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 5 }}>
             {sz.map((z) => (
-              <div key={z.cam.id} className="col" style={{ gap: 2, alignItems: 'center', padding: '6px 2px', borderRadius: 6, background: z.state === 'ok' ? '#112219' : z.state === 'warn' ? 'var(--warn-bg)' : 'var(--crit-bg)', border: `1px ${z.d === null ? 'dashed' : 'solid'} ${z.state === 'ok' ? '#23503A' : z.state === 'warn' ? 'var(--warn-edge)' : 'var(--crit-edge)'}` }}>
-                <span className="mono small" style={{ fontWeight: 700 }}>{mark(z.cam)}</span><span className="mono tiny">{z.d === null ? 'no data' : z.d.toFixed(3)}</span>
+              <div key={z.cam.id} className="col" title={z.state === 'none' ? `${label(z.cam)} didn't contribute to this pitch's strike zone` : undefined}
+                style={{ gap: 2, alignItems: 'center', padding: '6px 2px', borderRadius: 6, color: z.state === 'none' ? 'var(--faint)' : undefined,
+                  background: z.state === 'ok' ? '#112219' : z.state === 'warn' ? 'var(--warn-bg)' : z.state === 'none' ? 'var(--panel)' : 'var(--crit-bg)',
+                  border: `1px ${z.d === null ? 'dashed' : 'solid'} ${z.state === 'ok' ? '#23503A' : z.state === 'warn' ? 'var(--warn-edge)' : z.state === 'none' ? 'var(--border-2)' : 'var(--crit-edge)'}` }}>
+                <span className="mono small" style={{ fontWeight: 700 }}>{mark(z.cam)}</span><span className="mono tiny">{z.d === null ? (z.state === 'none' ? '–' : 'no data') : z.d.toFixed(3)}</span>
               </div>
             ))}
           </div>

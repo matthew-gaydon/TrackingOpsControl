@@ -139,6 +139,12 @@ export function szParts(v: SzDelta | number | null | undefined): { x: number | n
 }
 /** no data -> crit, outside tolerance -> warn. */
 export const szTone = (d: number | null, ds: Dataset): Tone => (d === null ? 'crit' : Math.abs(d) > ds.thresholds.strikeZoneTolerance ? 'warn' : 'ok');
+/**
+ * One camera's strike-zone state. No value from a FullField camera is normal (it doesn't see enough
+ * of the pitch to contribute): 'none', shown grey "–". No value from a PitchToPlate camera is a problem.
+ */
+export type SzState = Tone | 'none';
+export const szState = (d: number | null, c: CameraFile, ds: Dataset): SzState => (d === null && c.group === 'fullField' ? 'none' : szTone(d, ds));
 
 /** Per tracking camera; empty when the dataset has no strike-zone data for this pitch. */
 export function strikeZone(p: PitchFile, ds: Dataset) {
@@ -146,6 +152,6 @@ export function strikeZone(p: PitchFile, ds: Dataset) {
   const zone = p.strikeZone;
   return ds.cameras.filter((c) => isTracking(c) && c.id in zone).map((c) => {
     const { x, z, worst } = szParts(zone[c.id]);
-    return { cam: c, d: worst, x, z, state: szTone(worst, ds) };
+    return { cam: c, d: worst, x, z, state: szState(worst, c, ds) };
   });
 }

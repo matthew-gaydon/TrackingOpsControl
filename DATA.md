@@ -49,7 +49,7 @@ Two more files are read when they sit next to the CSV (`<sessionId>_…` first, 
 | File | Becomes |
 |---|---|
 | `acs_data.json`: ACS bat packets, one JSON object per line, `id` = `PitchUID` | No packet → **FAILED** (red). Packet with no swing data → **NO SWING** (grey). Packet with data → **SUCCESS** (green). There's no quality check yet, so three swings with data are marked **NEEDS REVIEW** (amber) for the demo, picked with a fixed seed. |
-| `sz_diffs_conf.csv`: BMCC strike-zone diffs and confidence | Rows are matched to pitches by time (0–3 s after the export's time). `SZD-X n` / `SZD-Z n` = BMCC tracking camera n. The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo. A camera with no value all game isn't part of the strike zone; `-` = no data from that camera on that pitch. `Strike Zone Confidence Score` 1 = **PASS**, 0 = **FAIL** (`confidenceOk`). |
+| `sz_diffs_conf.csv`: BMCC strike-zone diffs and confidence | Rows are matched to pitches by time (0–3 s after the export's time). `SZD-X n` / `SZD-Z n` = BMCC tracking camera n. The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo. `-` = that camera didn't contribute on that pitch: normal for FullField cameras (grey **–**), but a running PitchToPlate camera with no value raises the alert **PitchToPlate cameras missing from the strike zone**. `Strike Zone Confidence Score` 1 = **PASS**, 0 = **FAIL** (`confidenceOk`). |
 
 Cameras, redundancy and timing aren't in a pitch export, so they come from the `healthy` sample, and images use the shared sample images until real ones are added.
 

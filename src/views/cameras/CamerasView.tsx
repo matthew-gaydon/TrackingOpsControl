@@ -1,7 +1,7 @@
 import { usePick } from '../../state/store';
 import { useAlerts, useDs } from '../../state/hooks';
 import { img } from '../../data/load';
-import { GROUP, health, healthNote, isTracking, label, szParts, szTone } from '../../data/model';
+import { GROUP, health, healthNote, isTracking, label, szParts, szState } from '../../data/model';
 import { HealthDot, Seg, SevBadge } from '../../components/ui';
 import { ZoomBox } from '../../components/ZoomBox';
 import { ControlPanel, useAnyDirty } from './Control';
@@ -63,7 +63,10 @@ function Monitoring() {
   const focused = al.focus?.cameraId === c.id && !al.focus.acked;
   // multicam and player tracking show up as alerts when they go wrong, so they aren't repeated here
   const sz = latest?.strikeZone && isTracking(c) && c.id in latest.strikeZone ? szParts(latest.strikeZone[c.id]) : null;
-  const szFact = (axis: 'X' | 'Z', v: number | null): [string, string, string] => [`Strike zone ${axis} Δ · pitch ${latest!.num}`, v === null ? 'no data' : (v >= 0 ? '+' : '') + v.toFixed(3), szTone(v, ds) === 'ok' ? '' : szTone(v, ds)];
+  const szFact = (axis: 'X' | 'Z', v: number | null): [string, string, string] => {
+    const t = szState(v, c, ds);
+    return [`Strike zone ${axis} Δ · pitch ${latest!.num}`, v === null ? (t === 'none' ? '– (not contributing)' : 'no data') : (v >= 0 ? '+' : '') + v.toFixed(3), t === 'ok' || t === 'none' ? '' : t];
+  };
   const facts: [string, string, string?][] = [
     ['Connection', c.running ? 'Connected' : 'Not connected', c.running ? '' : 'crit'],
     ['Frame rate', c.running ? `${c.fps}/${c.targetFps ?? ds.thresholds.targetFps}` : '—', !c.running ? 'crit' : c.fps < (c.targetFps ?? ds.thresholds.targetFps) ? 'warn' : ''],

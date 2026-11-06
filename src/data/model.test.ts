@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS, type Dataset, type PitchFile } from './types';
-import { pitchWorst, reviewable, szParts, taskState, taskStatus, taskValue, type PpOps } from './model';
+import { pitchWorst, reviewable, strikeZone, szParts, taskState, taskStatus, taskValue, type PpOps } from './model';
+import type { CameraFile } from './types';
 import { deriveConditions } from '../alerts/engine';
 
 const pitch = (num: number, spin: PitchFile['pp']['spin']): PitchFile => ({
@@ -68,5 +69,31 @@ describe('strike zone', () => {
   it('treats missing data as no data', () => {
     expect(szParts(null).worst).toBeNull();
     expect(szParts(undefined).worst).toBeNull();
+  });
+});
+
+describe('strike zone contributions', () => {
+  const cam = (id: string, group: CameraFile['group'], running = true): CameraFile => ({ id, group, number: 1, running, fps: 600 });
+  const cameras = [cam('P1', 'pitchToPlate'), cam('P2', 'pitchToPlate'), cam('P3', 'pitchToPlate', false), cam('F1', 'fullField'), cam('F2', 'fullField')];
+  const ds = {
+    name: 't', base: '', nowMs: 0, cameras, status: [], thresholds: DEFAULT_THRESHOLDS,
+    game: { gameMode: 'PRACTICE', session: 'in', redundancy: { bdsConnected: true }, timing: { latencyMs: 0, tssOffsetMs: 0 } },
+    pitches: [
+      { ...pitch(1, { status: 'success' }), atMs: 0, strikeZone: { P1: { x: 0, z: 0 }, P2: null, P3: null, F1: null, F2: { x: 0.001, z: 0 } } },
+      { ...pitch(2, { status: 'success' }), atMs: 0, strikeZone: { P1: { x: 0, z: 0 }, P2: { x: 0, z: 0 }, P3: null, F1: null, F2: { x: 0.009, z: 0 } } },
+    ],
+  } as unknown as Dataset;
+  const conds = () => deriveConditions({ ds, session: 'in', elapsedSec: 0, pp: ops(), cloud: { retried: {}, done: {} } });
+
+  it('greys out a FullField camera with no value, but flags a PitchToPlate camera', () => {
+    const z = Object.fromEntries(strikeZone(ds.pitches[0], ds).map((x) => [x.cam.id, x.state]));
+    expect(z).toEqual({ P1: 'ok', P2: 'crit', P3: 'crit', F1: 'none', F2: 'ok' });
+    expect(strikeZone(ds.pitches[1], ds).find((x) => x.cam.id === 'F2')?.state).toBe('warn');
+  });
+
+  it('raises one alert for running PitchToPlate cameras missing from the strike zone', () => {
+    const a = conds().find((c) => c.key === 'sz-p2p');
+    expect(a?.members).toEqual(['P2']);                 // P3 isn't running: it has its own alert
+    expect(a?.summary).toContain('1 pitch (latest 1)');
   });
 });

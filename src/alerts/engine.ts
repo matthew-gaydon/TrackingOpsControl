@@ -15,7 +15,7 @@
  * (same problem → same key). Add rules here as you meet new BMCC/BMCA messages in real data.
  */
 import type { CameraFile, Dataset, Status } from '../data/types';
-import { CLOUD_TASKS, cloudState, label, isTracking, targetFps, tkey, type CloudOps, type PpOps } from '../data/model';
+import { CLOUD_TASKS, cloudState, label, isTracking, szParts, targetFps, tkey, type CloudOps, type PpOps } from '../data/model';
 
 export type Severity = 'crit' | 'issue' | 'warn' | 'dev';
 export interface Route {
@@ -150,6 +150,28 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
       notify: false, members: slow.map((c) => c.id),
       route: { view: 'cameras', cam: slow[0].id, camTab: 'mosaic', camFilter: 'problems', camSub: 'monitor' }, line: slow.map(label).join(', ') + '.' });
   }
+  // strike zone: a PitchToPlate camera with no value on a pitch (FullField cameras often don't contribute; that's normal).
+  // Cameras that aren't running have their own alert, so they're left out here. A camera newly missing raises it again.
+  const szMiss = new Map<string, number[]>();
+  for (const p of ds.pitches) {
+    if (!p.strikeZone) continue;
+    for (const c of ds.cameras) {
+      if (c.group !== 'pitchToPlate' || !c.running || szParts(p.strikeZone[c.id]).worst !== null) continue;
+      szMiss.set(c.id, [...(szMiss.get(c.id) ?? []), p.num]);
+    }
+  }
+  if (szMiss.size) {
+    const cams = ds.cameras.filter((c) => szMiss.has(c.id));
+    const desc = (c: CameraFile) => { const n = szMiss.get(c.id)!; return `${label(c)}: ${n.length} pitch${n.length === 1 ? '' : 'es'} (latest ${n.at(-1)})`; };
+    out.push({ key: 'sz-p2p', sev: 'warn', title: `${cams.length} PitchToPlate camera${cams.length > 1 ? 's' : ''} missing from the strike zone`,
+      where: `Cameras › ${label(cams[0])}`,
+      summary: `${cams.map(desc).join(' · ')}. Every PitchToPlate camera should contribute to the strike zone on every pitch.`,
+      checks: ['Ball visible in the camera’s mosaic', 'Calibration lines sit on the field markings', 'Camera running at full frame rate'],
+      raw: cams.map((c) => `${label(c)} no SZD on pitches ${szMiss.get(c.id)!.join(', ')}`).join(' · '),
+      notify: true, members: cams.map((c) => c.id), cameraId: cams.length === 1 ? cams[0].id : undefined,
+      route: { view: 'cameras', cam: cams[0].id, camTab: 'mosaic', camFilter: 'all', camSub: 'monitor' }, line: cams.map(label).join(', ') + '.' });
+  }
+
   // session
   if (ds.game.gameMode === 'LIVE' && session !== 'in') {
     out.push({ key: 'session', sev: 'warn', title: `Session ${session.toUpperCase()} while game is LIVE`, where: 'Header › Session', summary: 'Cameras are not recording to disk and PP tasks are not processed. Switch the session to In.', checks: [], notify: true, route: { view: 'game', target: 'session' }, fix: { label: 'Go in session', action: 'goInSession' }, line: 'No recordings or PP for pitches right now.' });

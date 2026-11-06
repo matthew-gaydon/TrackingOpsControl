@@ -167,6 +167,8 @@ export interface SessionEntry {
   gameType?: string;                   // e.g. Regular Season, Spring Training
   dataset?: string;
   sample?: boolean;
+  /** Created by the operator on the launch page (prototype: kept in this browser). */
+  created?: boolean;
 }
 export interface SessionsFile { sessions: SessionEntry[] }
 

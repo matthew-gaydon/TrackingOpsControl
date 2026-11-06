@@ -8,7 +8,18 @@
  * When the real backend arrives, signIn/signOut become API calls and sessions.json becomes
  * a request for the operator's sessions.
  */
+import type { SessionEntry } from '../data/types';
+
 const KEY = 'toc.operator';
+const CREATED_KEY = 'toc.createdSessions';
+
+/** Sessions the operator created on the launch page (prototype: kept in this browser only). */
+export function loadCreated(): SessionEntry[] {
+  try { return JSON.parse(localStorage.getItem(CREATED_KEY) ?? '[]'); } catch { return []; }
+}
+export function saveCreated(list: SessionEntry[]) {
+  try { localStorage.setItem(CREATED_KEY, JSON.stringify(list)); } catch { /* storage unavailable: kept for this page only */ }
+}
 
 export function getOperator(): string | null {
   try { return sessionStorage.getItem(KEY); } catch { return null; }

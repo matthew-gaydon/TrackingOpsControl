@@ -119,7 +119,7 @@ export const useUi = create<UiState>((set, get) => ({
   ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
   view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, crumbView: 'game', drawer: false, drawerTab: 'open', dev: false,
   ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false, flow: { stage: 'idle', at: {} }, flowConfirmEnd: false,
-  gameSel: null, pitchSel: null, pitFilter: 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: true, szAll: false, pop: null,
+  gameSel: null, pitchSel: null, pitFilter: 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: false, szAll: false, pop: null,
   cam: 'P1', camTab: 'mosaic', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
   ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,
   resetOpen: false, bmcaNote: false, lensRestart: null,

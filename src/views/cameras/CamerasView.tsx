@@ -1,7 +1,7 @@
 import { usePick } from '../../state/store';
 import { useAlerts, useDs } from '../../state/hooks';
 import { img } from '../../data/load';
-import { GROUP, health, healthNote, isTracking, label, szParts, szState } from '../../data/model';
+import { GROUP, hasHitImages, health, healthNote, isTracking, label, szParts, szState } from '../../data/model';
 import { HealthDot, Seg, SevBadge } from '../../components/ui';
 import { ZoomBox } from '../../components/ZoomBox';
 import { ControlPanel, useAnyDirty } from './Control';
@@ -50,13 +50,14 @@ function Monitoring() {
   const tabs: [typeof st.camTab, string][] = isTracking(c) ? [['mosaic', 'Ball mosaic'], ['hit', 'Hit image'], ['tracking', 'Tracking window']] : [['mosaic', 'Ball mosaic'], ['still', 'Monitored image']];
   const tab = tabs.some(([k]) => k === st.camTab) ? st.camTab : tabs[0][0];
   const latest = ds.pitches.at(-1);
-  const lastHit = [...ds.pitches].reverse().find((p) => p.hit);
+  // hit images: the latest pitch with one from this camera (or, without real images, the latest pitch with a hit)
+  const lastHit = [...ds.pitches].reverse().find((p) => p.images?.[c.id]?.hit) ?? (hasHitImages(ds) ? undefined : [...ds.pitches].reverse().find((p) => p.hit));
   // which pitch the image belongs to (mosaic: the latest pitch; hit: the latest pitch with a hit)
   const shown = tab === 'mosaic' ? latest : tab === 'hit' ? lastHit : undefined;
   const src = tab === 'tracking' ? img(ds, c.images?.tracking ?? ds.game.defaultImages?.tracking)
     : tab === 'still' ? img(ds, c.images?.still ?? ds.game.defaultImages?.still)
-    : tab === 'hit' ? (lastHit ? img(ds, lastHit.images?.[c.id]?.hit ?? ds.game.defaultImages?.hit) : undefined)
-    : img(ds, latest?.images?.[c.id]?.mosaic ?? c.images?.mosaic ?? ds.game.defaultImages?.mosaic);
+    : tab === 'hit' ? (lastHit ? img(ds, lastHit.images?.[c.id]?.hit ?? ds.game.defaultImages?.hit, 2400) : undefined)
+    : img(ds, latest?.images?.[c.id]?.mosaic ?? c.images?.mosaic ?? ds.game.defaultImages?.mosaic, 2400);
   const empty = !c.running ? 'No feed: this camera isn’t running' : tab === 'hit' ? (lastHit ? `No hit image for pitch ${lastHit.num} in this dataset` : 'No hits yet this game') : 'No image in this dataset';
   // its own alerts, plus grouped alerts it belongs to (e.g. cameras below full frame rate)
   const alerts = al.all.filter((a) => a.sev !== 'dev' && !a.replaced && (a.cameraId === c.id || a.members?.includes(c.id)));

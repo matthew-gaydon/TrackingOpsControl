@@ -4,7 +4,7 @@ import { useGoInSession } from '../../components/Shell';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { fmtClock } from '../../data/time';
-import { ACS, confidencePass, szVerdict, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { ACS, confidencePass, hasHitImages, IMG_ASPECT, pitchHasHit, szVerdict, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import type { Tone } from '../../data/model';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
@@ -170,12 +170,22 @@ function Combined({ hit }: { hit?: PitchFile['hit'] }) {
   );
 }
 
+const NoImage = ({ text }: { text: string }) => (
+  <span className="tiny" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 6, color: '#7F8B9C' }}>{text}</span>
+);
+/** A camera's image for a pitch. Local sample images are fetched at the size shown (grid ~640 px, enlarged ~2400 px). */
 function CamImage({ c, p, mode, big }: { c: CameraFile; p: PitchFile; mode: 'mosaic' | 'hit'; big?: boolean }) {
   const ds = useDs();
+  const w = big ? 2400 : 640;
+  const style = { width: '100%', height: '100%', objectFit: 'contain', display: 'block' } as const;
   if (mode === 'hit') {
-    if (!p.hit) return <span className="tiny" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7F8B9C' }}>No hit on this pitch</span>;
-    const src = img(ds, p.images?.[c.id]?.hit ?? ds.game.defaultImages?.hit);
-    if (src) return <img src={src} alt={`${label(c)} hit image`} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />;
+    const own = p.images?.[c.id]?.hit;
+    if (own) return <img src={img(ds, own, w)} alt={`${label(c)} hit image`} draggable={false} style={style} />;
+    // real hit images: a pitch without them had no hit; a camera without one didn't capture it
+    if (hasHitImages(ds)) return <NoImage text={pitchHasHit(p) ? 'No hit image from this camera' : 'No hit on this pitch'} />;
+    if (!p.hit) return <NoImage text="No hit on this pitch" />;
+    const src = img(ds, ds.game.defaultImages?.hit);
+    if (src) return <img src={src} alt={`${label(c)} hit image`} draggable={false} style={style} />;
     return (
       <span className="col" style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 12 }}>
         <svg width="60%" height="55%" viewBox="0 0 120 50" aria-hidden="true"><path d="M8 44 Q50 -6 112 18" fill="none" stroke="#C6A4FF" strokeWidth="2" strokeDasharray="5 4" /><circle cx="8" cy="44" r="3" fill="#C6A4FF" /></svg>
@@ -183,8 +193,8 @@ function CamImage({ c, p, mode, big }: { c: CameraFile; p: PitchFile; mode: 'mos
       </span>
     );
   }
-  const src = img(ds, p.images?.[c.id]?.mosaic ?? c.images?.mosaic ?? ds.game.defaultImages?.mosaic);
-  return src ? <img src={src} alt={big ? `${label(c)} ball mosaic` : ''} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null;
+  const src = img(ds, p.images?.[c.id]?.mosaic ?? c.images?.mosaic ?? ds.game.defaultImages?.mosaic, w);
+  return src ? <img src={src} alt={big ? `${label(c)} ball mosaic` : ''} draggable={false} style={style} /> : <NoImage text="No ball mosaic" />;
 }
 
 export type Scope = 'game' | 'pitches';
@@ -224,6 +234,12 @@ export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; rev
             <span className="grow" />
             {big && <button type="button" className="btn" onClick={() => f.set({ big: null })}>All {cams.length} cameras</button>}
           </div>
+          {mode === 'hit' && hasHitImages(ds) && !pitchHasHit(p) && (
+            <div className="row small" role="status" style={{ gap: 10, padding: '8px 12px', borderRadius: 8, background: 'var(--warn-bg)', border: '1px solid var(--warn-edge)', color: '#FFE0A0' }}>
+              <HealthDot h="warn" size={9} /><span className="grow"><strong>No hit on pitch {p.num}.</strong> Hit images only exist for pitches with contact.</span>
+              <button type="button" className="btn" onClick={() => f.set({ img: 'mosaic' })}>Show ball mosaics</button>
+            </div>
+          )}
           {big && (
             // jump straight to any camera in the group while one is enlarged; ← → keys step through them
             <div role="tablist" aria-label={`${GROUP[big.group].name} cameras`} className="seg hscroll" style={{ alignSelf: 'flex-start', maxWidth: '100%', flex: '0 0 auto' }}
@@ -244,7 +260,7 @@ export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; rev
             <div className="fill scroll" style={{ display: 'grid', alignContent: 'start', gap: 8, gridTemplateColumns: `repeat(${fv === 'biomechanics' ? 4 : fv === 'fullField' ? 4 : 3}, minmax(0, 1fr))` }}>
               {cams.map((c) => (
                 <button key={c.id} type="button" aria-label={`${label(c)}, enlarge`} onClick={() => { if (!wasDrag()) f.set({ big: c.id }); }}
-                  style={{ position: 'relative', aspectRatio: '2.4 / 1', padding: 0, border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', background: 'var(--deep)' }}>
+                  style={{ position: 'relative', aspectRatio: String(IMG_ASPECT[c.group]), padding: 0, border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', background: 'var(--deep)' }}>
                   <ZoomBox as="span" zoomKey={`${scope}:${fv}:${c.id}:${mode}:${p.num}`} controls={false} style={{ position: 'absolute', inset: 0, display: 'block' }}>
                     <CamImage c={c} p={p} mode={mode} />
                   </ZoomBox>
@@ -257,7 +273,7 @@ export function FieldPanel({ p, reviewing, scope = 'game' }: { p: PitchFile; rev
             <div className="row stage fill" style={{ gap: 10 }}>
               <button type="button" className="icon-btn" aria-label="Previous camera" onClick={() => step(-1)} style={{ width: 40, height: 40 }}><Chevron dir="left" /></button>
               <div style={{ flex: '1 1 auto', alignSelf: 'stretch', minWidth: 0, containerType: 'size', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ZoomBox zoomKey={`${scope}b:${fv}:${big.id}:${mode}:${p.num}`} style={{ width: 'min(100cqw, calc(100cqh * 2.4))', aspectRatio: '2.4 / 1', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
+                <ZoomBox zoomKey={`${scope}b:${fv}:${big.id}:${mode}:${p.num}`} style={{ width: `min(100cqw, calc(100cqh * ${IMG_ASPECT[big.group]}))`, aspectRatio: String(IMG_ASPECT[big.group]), borderRadius: 8, border: '1px solid var(--border)', background: 'var(--deep)' }}>
                   <CamImage c={big} p={p} mode={mode} big />
                 </ZoomBox>
               </div>

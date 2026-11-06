@@ -180,6 +180,11 @@ export function PostProcessingView() {
                         <span className="col grow" style={{ gap: 0 }}><span className="small" style={{ color: 'var(--text-3)' }}>{n}</span><span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>{taskValue(p, k, ops)}</span></span>
                         <span className={`pill ${PILL[t]}`}>{taskStatus(p, k, ops)}</span>
                       </div>
+                      {k === 0 && p.releaseImage && (
+                        <ZoomBox zoomKey={`pp:release:${p.num}`} style={{ borderRadius: 6, border: '1px solid var(--border)', aspectRatio: '1700 / 1400' }}>
+                          <img src={img(ds, p.releaseImage, 900)} alt={`Release result for pitch ${p.num}`} draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                        </ZoomBox>
+                      )}
                       {isBad(t) && (
                         <div className="row wrap">
                           {t === 'warn' && reviewable(p, k, ops) && <button type="button" className="btn primary" onClick={() => st.set({ reviewed: { ...st.reviewed, [tkey(p.num, k)]: true } })}>Mark reviewed</button>}
@@ -190,8 +195,8 @@ export function PostProcessingView() {
                   );
                 })}
                 <div className="col" style={{ gap: 6 }}>
-                  <span className="lbl">Spin fit · frames</span>
-                  {img(ds, p.spinStrip ?? ds.game.defaultImages?.spinStrip) && <ZoomBox zoomKey={`pp:spin:${p.num}`} style={{ borderRadius: 6, border: '1px solid var(--border)' }}><img src={img(ds, p.spinStrip ?? ds.game.defaultImages?.spinStrip)} alt={`Spin fitting result strip for pitch ${p.num}`} draggable={false} style={{ width: '100%', display: 'block' }} /></ZoomBox>}
+                  <span className="lbl">Spin mosaic</span>
+                  {img(ds, p.spinStrip ?? ds.game.defaultImages?.spinStrip) ? <ZoomBox zoomKey={`pp:spin:${p.num}`} style={{ borderRadius: 6, border: '1px solid var(--border)' }}><img src={img(ds, p.spinStrip ?? ds.game.defaultImages?.spinStrip, 1400)} alt={`Spin result for pitch ${p.num}`} draggable={false} style={{ width: '100%', display: 'block' }} /></ZoomBox> : <span className="small muted">No spin image for this pitch</span>}
                 </div>
                 <div className="row wrap">
                   <button type="button" className="btn link" onClick={() => st.set({ view: 'game', gameSel: p.num === ds.pitches.at(-1)!.num ? null : p.num, focusAlertId: null })}>View pitch in Game</button>

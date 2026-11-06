@@ -139,6 +139,8 @@ export interface PitchFile {
   /** Per-camera images for this pitch, keyed by camera id. */
   images?: Record<string, Partial<Record<'mosaic' | 'hit', ImagePath>>>;
   spinStrip?: ImagePath;
+  /** Release post-processing result image (release camera). */
+  releaseImage?: ImagePath;
 }
 
 export interface StatusMessage {

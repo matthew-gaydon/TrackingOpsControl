@@ -53,7 +53,16 @@ Two more files are read when they sit next to the CSV (`<sessionId>_…` first, 
 | `acs_data.json`: ACS bat packets, one JSON object per line, `id` = `PitchUID` | No packet → **FAILED** (red). Packet with no swing data → **NO SWING** (grey). Packet with data → **SUCCESS** (green). There's no quality check yet, so three swings with data are marked **NEEDS REVIEW** (amber) for the demo, picked with a fixed seed. |
 | `sz_diffs_conf.csv`: BMCC strike-zone diffs and confidence | Rows are matched to pitches by time (0–3 s after the export's time). `SZD-X n` / `SZD-Z n` = BMCC tracking camera n. The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo. `-` = that camera didn't contribute on that pitch: normal for FullField cameras (grey **–**), but a running PitchToPlate camera with no value raises the alert **PitchToPlate cameras missing from the strike zone**. `Strike Zone Confidence Score` 1 = **PASS**, 0 = **FAIL** (`confidenceOk`). |
 
-Cameras, redundancy and timing aren't in a pitch export, so they come from the `healthy` sample, and images use the shared sample images until real ones are added.
+Cameras, redundancy and timing aren't in a pitch export, so they come from the `healthy` sample (including the Control / Monitoring sample feeds).
+
+**Pitch images** are linked from two folders in `data/`, one subfolder per pitch named by its UTC time to about the second (`<YYYY-MM-DD>/<HH-MM-SS>/`), matched to pitches by time (nearest within 3 s):
+
+| Folder | Files | Shown in |
+|---|---|---|
+| `BallMosaicImages/` | `1.png`–`14.png` (BMCC tracking camera n), `release_camera_2.png`, `spin_mosaic.png` | Ball mosaics (Game, Pitches, Cameras › Monitoring); release and spin results (Post-processing detail) |
+| `HitImages/` | `1.png`–`14.png`, only for pitches with contact (in play and fouls) | Hit images. A pitch without a folder had no hit: the Hit image view says **No hit on pitch N**. |
+
+The images are large PNGs (2–15 MB). The dev server serves smaller WebP copies on request (`?w=640` for grids, `?w=2400` enlarged), made with `sharp` and cached in `data/.thumbs/`. The first view of a pitch takes a moment; after that it's instant.
 
 ## sessions.json (the built-in placeholder list)
 

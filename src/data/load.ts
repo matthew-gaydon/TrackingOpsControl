@@ -96,8 +96,9 @@ function validate(cameras: CameraFile[], pitches: PitchFile[]) {
 }
 
 /** Resolve an image path from the dataset (relative) to a URL. */
-export function img(ds: Dataset, path?: string): string | undefined {
+export function img(ds: Dataset, path?: string, width?: number): string | undefined {
   if (!path) return undefined;
-  if (/^(https?:|data:|\/)/.test(path)) return path;
-  return ds.base + path;
+  const url = /^(https?:|data:|\/)/.test(path) ? path : ds.base + path;
+  // local sample images are large PNGs: ask the dev server for a smaller copy at the width shown
+  return width && url.includes('/local-data/') ? `${url}?w=${Math.round(width)}` : url;
 }

@@ -24,11 +24,17 @@
 //     "SZD-X n" / "SZD-Z n" are BMCC tracking camera n; "-" = that camera didn't contribute on that pitch
 //     (normal for FullField cameras that don't see enough of the pitch). Confidence 1 = PASS, 0 = FAIL.
 //     The export stops at camera 12, so FullField 7 and 8 (13, 14) are filled with random values within ±0.003 for the demo.
+//   BallMosaicImages/<YYYY-MM-DD>/<HH-MM-SS>/   one folder per pitch, named by UTC time (to about the second):
+//     1.png-14.png = ball mosaic from BMCC tracking camera n; release_camera_2.png = the release
+//     post-processing result; spin_mosaic.png = the spin result.
+//   HitImages/<YYYY-MM-DD>/<HH-MM-SS>/           1.png-14.png = hit image per camera; only pitches with contact.
+//     Folders are matched to pitches by time (nearest within 3 s, each folder used once).
+//     Images are linked by path (served at /local-data/...), not copied.
 // Still not available, shown as "No data": track length/quality, spin fit error, cloud states.
 // Each row is treated as a valid Trackpac result (the export is produced from the processed track).
 // Cameras, redundancy and timing aren't in a pitch export either: they come from the `healthy`
 // sample (all cameras running), so the camera views have something to show.
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -155,6 +161,43 @@ const review = [];
 while (review.length < Math.min(3, swings.length)) { const p = swings[Math.floor(rand() * swings.length)]; if (!review.includes(p)) review.push(p); }
 review.forEach((p) => { p.acs = 'review'; });
 
+// ---- images: per-pitch folders named by UTC time ----
+function timeFolders(dir) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).flatMap((day) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !statSync(join(dir, day)).isDirectory()) return [];
+    return readdirSync(join(dir, day)).filter((t) => /^\d{2}-\d{2}-\d{2}$/.test(t))
+      .map((t) => ({ t: Date.parse(`${day}T${t.replace(/-/g, ':')}Z`), rel: `${day}/${t}`, files: new Set(readdirSync(join(dir, day, t))) }));
+  }).sort((a, b) => a.t - b.t);
+}
+/** For each pitch, the nearest unused folder within 3 s of its time. */
+function matchFolders(folders) {
+  const used = new Set(), out = new Map();
+  for (const p of pitches) {
+    const t = Date.parse(p.time);
+    let best = -1, bd = 3001;
+    folders.forEach((f, i) => { const d = Math.abs(f.t - t); if (!used.has(i) && d < bd) { bd = d; best = i; } });
+    if (best >= 0) { used.add(best); out.set(p.num, folders[best]); }
+  }
+  return out;
+}
+const mosaicDir = join(dataDir, 'BallMosaicImages'), hitDir = join(dataDir, 'HitImages');
+const mosaics = matchFolders(timeFolders(mosaicDir)), hitFolders = matchFolders(timeFolders(hitDir));
+const url = (root, rel, f) => `/local-data/${root}/${rel}/${f}`;
+for (const p of pitches) {
+  const m = mosaics.get(p.num), h = hitFolders.get(p.num);
+  const images = {};
+  for (const [n, id] of camByTracking) {
+    const e = {};
+    if (m?.files.has(`${n}.png`)) e.mosaic = url('BallMosaicImages', m.rel, `${n}.png`);
+    if (h?.files.has(`${n}.png`)) e.hit = url('HitImages', h.rel, `${n}.png`);
+    if (Object.keys(e).length) images[id] = e;
+  }
+  if (Object.keys(images).length) p.images = images;
+  if (m?.files.has('release_camera_2.png')) p.releaseImage = url('BallMosaicImages', m.rel, 'release_camera_2.png');
+  if (m?.files.has('spin_mosaic.png')) p.spinStrip = url('BallMosaicImages', m.rel, 'spin_mosaic.png');
+}
+
 // ---- game ----
 const last = Date.parse(pitches.at(-1).time);
 const healthy = (f) => JSON.parse(readFileSync(join(repo, 'public', 'data', 'healthy', f), 'utf8'));
@@ -170,8 +213,8 @@ const game = {
   redundancy: hg.redundancy,                      // not in a pitch export: healthy sample
   timing: hg.timing,                              // not in a pitch export: healthy sample
   thresholds: hg.thresholds,
-  // shared sample images until real mosaics / hit images are added
-  defaultImages: Object.fromEntries(Object.entries(hg.defaultImages ?? {}).map(([k, v]) => [k, `/data/healthy/${v}`])),
+  // sample camera feeds for the Cameras views; pitch images (mosaic, hit, spin) come from the image folders only
+  defaultImages: Object.fromEntries(Object.entries(hg.defaultImages ?? {}).filter(([k]) => ['live', 'tracking', 'still'].includes(k)).map(([k, v]) => [k, `/data/healthy/${v}`])),
   source: { file: basename(file), acs: acsFile && basename(acsFile), strikeZone: szFile && basename(szFile), rows: rows.length, teams: rec?.teams ? `${rec.teams.away?.name} @ ${rec.teams.home?.name}` : `${rows[0].AwayTeam} @ ${rows[0].HomeTeam}` },
 };
 
@@ -186,4 +229,5 @@ const hits = pitches.filter((p) => p.hit);
 const count = (f) => pitches.filter(f).length;
 console.log(`wrote ${out}: ${pitches.length} pitches (${hits.length} in play), ${game.source.teams}, GamePK ${game.gamePk}`);
 console.log(acsFile ? `  ACS (${basename(acsFile)}): ${count((p) => p.acs === 'success')} success, ${count((p) => p.acs === 'noswing')} no swing, ${count((p) => p.acs === 'fail')} failed, review: pitches ${review.map((p) => p.num).join(', ')}` : '  ACS: no file, shown as No data');
+console.log(`  Images: ball mosaics for ${count((p) => p.images && Object.values(p.images).some((e) => e.mosaic))} pitches, hit images for ${count((p) => p.images && Object.values(p.images).some((e) => e.hit))}, release ${count((p) => p.releaseImage)}, spin ${count((p) => p.spinStrip)}`);
 console.log(szFile ? `  Strike zone (${basename(szFile)}): ${count((p) => p.strikeZone)} pitches matched; cameras ${szLive.map((n) => camByTracking.get(n)).join(', ')}; confidence ${count((p) => p.confidenceOk === true)} pass, ${count((p) => p.confidenceOk === false)} fail` : '  Strike zone: no file, shown as No data');

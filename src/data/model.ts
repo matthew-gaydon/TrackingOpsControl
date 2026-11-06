@@ -130,6 +130,13 @@ export function confidencePass(p: PitchFile, ds: Dataset): boolean | null {
   return p.confidence === undefined ? null : p.confidence > ds.thresholds.confidencePass;
 }
 
+// ---------------- pitch images ----------------
+/** Image shape per camera group (the real cameras: PitchToPlate 2048x864, FullField 2660x1600). */
+export const IMG_ASPECT: Record<CameraGroup, number> = { pitchToPlate: 2048 / 864, fullField: 2660 / 1600, biomechanics: 2.4 };
+/** True when the dataset links real hit images, so a pitch without one had no hit (rather than "no images in this dataset"). */
+export const hasHitImages = (ds: Dataset) => ds.pitches.some((p) => p.images && Object.values(p.images).some((e) => e.hit));
+export const pitchHasHit = (p: PitchFile) => !!p.images && Object.values(p.images).some((e) => e.hit);
+
 // ---------------- strike zone ----------------
 /** One camera's strike-zone Δ split into X and Z. `worst` is the axis furthest from zero (signed). */
 export function szParts(v: SzDelta | number | null | undefined): { x: number | null; z: number | null; worst: number | null } {

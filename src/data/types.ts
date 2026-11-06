@@ -41,7 +41,8 @@ export interface GameFile {
 export interface Thresholds {
   targetFps: number;                   // full frame rate (600)
   confidencePass: number;              // pitch confidence pass line (7)
-  strikeZoneTolerance: number;         // |Δ| above this is out of tolerance (0.005)
+  strikeZoneTolerance: number;         // |Δ| above this is out of tolerance: amber (0.005)
+  strikeZoneCritical: number;          // PitchToPlate |Δ| above this is red, on the card and the pitch timeline (0.008)
   spinFitErrorReview: number;          // spin fit error review line (0.25)
   tssOffsetMaxMs: number;              // TSS offset above this raises a timing warning (10)
   latencyMaxMs: number;                // pitch latency above this raises a timing warning (400)
@@ -201,7 +202,7 @@ export interface Dataset {
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
-  targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, spinFitErrorReview: 0.25,
+  targetFps: 600, confidencePass: 7, strikeZoneTolerance: 0.005, strikeZoneCritical: 0.008, spinFitErrorReview: 0.25,
   tssOffsetMaxMs: 10, latencyMaxMs: 400, hitTrackGoodPct: 80, hitTrackPoorPct: 50,
 };
 

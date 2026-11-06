@@ -323,7 +323,7 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
               <button type="button" onClick={() => pop('sz' + z.cam.id)} aria-label={`${label(z.cam)} strike zone problem, show details`}
                 className="row" style={{ width: '100%', gap: 10, padding: 10, borderRadius: 8, textAlign: 'left', background: z.state === 'crit' ? 'var(--crit-bg)' : 'var(--warn-bg)', border: `1px solid ${z.state === 'crit' ? 'var(--crit-edge)' : 'var(--warn-edge)'}` }}>
                 <span className="mono" style={{ fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#0B0E13' }}>{mark(z.cam)}</span>
-                <span className="col grow" style={{ gap: 0 }}><span style={{ fontWeight: 600 }}>{label(z.cam)}</span><span className="small" style={{ color: 'var(--text-2)' }}>{z.d === null ? 'No data for this pitch' : 'Out of tolerance'}</span></span>
+                <span className="col grow" style={{ gap: 0 }}><span style={{ fontWeight: 600 }}>{label(z.cam)}</span><span className="small" style={{ color: 'var(--text-2)' }}>{z.d === null ? 'No strike zone for this pitch' : z.state === 'crit' ? `Over ±${ds.thresholds.strikeZoneCritical}` : 'Out of tolerance'}</span></span>
                 <span className="mono" style={{ color: z.state === 'crit' ? 'var(--crit-ink)' : 'var(--warn-ink)' }}>{z.d === null ? '—' : `Δ ${z.d.toFixed(3)}`}</span><Chevron />
               </button>
               {st.pop === 'sz' + z.cam.id && <GoPopout text={`Open ${label(z.cam)} in Cameras to check its feed and ball mosaic for pitch ${p.num}?`} onCancel={() => st.set({ pop: null })}
@@ -375,6 +375,12 @@ function PitchCard({ p, reviewing, latestNum }: { p: PitchFile; reviewing: boole
 function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: ReturnType<typeof usePpOps>): { h: 'ok' | 'warn' | 'crit'; problems: string[] } {
   const crit: string[] = [], warn: string[] = [];
   if (confidencePass(p, ds) === false) crit.push('confidence fail');
+  // strike zone: a PitchToPlate camera with no value is amber; one over the critical Δ is red
+  for (const z of strikeZone(p, ds)) {
+    if (z.cam.group !== 'pitchToPlate') continue;
+    if (z.d === null) warn.push(`${label(z.cam)} no strike zone`);
+    else if (z.state === 'crit') crit.push(`${label(z.cam)} Δ ${z.d > 0 ? '+' : ''}${z.d.toFixed(3)}`);
+  }
   if (p.hit && p.hit.trackPct != null) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
   if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });

@@ -87,8 +87,14 @@ describe('strike zone contributions', () => {
 
   it('greys out a FullField camera with no value, but flags a PitchToPlate camera', () => {
     const z = Object.fromEntries(strikeZone(ds.pitches[0], ds).map((x) => [x.cam.id, x.state]));
-    expect(z).toEqual({ P1: 'ok', P2: 'crit', P3: 'crit', F1: 'none', F2: 'ok' });
+    expect(z).toEqual({ P1: 'ok', P2: 'warn', P3: 'warn', F1: 'none', F2: 'ok' });
     expect(strikeZone(ds.pitches[1], ds).find((x) => x.cam.id === 'F2')?.state).toBe('warn');
+  });
+
+  it('turns a PitchToPlate camera red over the critical Δ, but not a FullField one', () => {
+    const p = { ...ds.pitches[0], strikeZone: { P1: { x: 0.009, z: 0 }, P2: { x: 0, z: -0.0081 }, P3: { x: 0.007, z: 0 }, F1: { x: 0.02, z: 0 }, F2: null } };
+    const z = Object.fromEntries(strikeZone(p, ds).map((x) => [x.cam.id, x.state]));
+    expect(z).toEqual({ P1: 'crit', P2: 'crit', P3: 'warn', F1: 'warn', F2: 'none' });
   });
 
   it('raises one alert for running PitchToPlate cameras missing from the strike zone', () => {

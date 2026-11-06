@@ -140,11 +140,19 @@ export function szParts(v: SzDelta | number | null | undefined): { x: number | n
 /** no data -> crit, outside tolerance -> warn. */
 export const szTone = (d: number | null, ds: Dataset): Tone => (d === null ? 'crit' : Math.abs(d) > ds.thresholds.strikeZoneTolerance ? 'warn' : 'ok');
 /**
- * One camera's strike-zone state. No value from a FullField camera is normal (it doesn't see enough
- * of the pitch to contribute): 'none', shown grey "–". No value from a PitchToPlate camera is a problem.
+ * One camera's strike-zone state.
+ *  - No value: FullField -> 'none' (it doesn't see enough of the pitch to contribute; grey "–"),
+ *    PitchToPlate -> 'warn' (amber, and the pitch is amber on the timeline).
+ *  - PitchToPlate |Δ| over strikeZoneCritical (0.008) -> 'crit' (red, and the pitch is red on the timeline).
+ *  - |Δ| over strikeZoneTolerance (0.005) -> 'warn'.
  */
 export type SzState = Tone | 'none';
-export const szState = (d: number | null, c: CameraFile, ds: Dataset): SzState => (d === null && c.group === 'fullField' ? 'none' : szTone(d, ds));
+export function szState(d: number | null, c: CameraFile, ds: Dataset): SzState {
+  const p2p = c.group === 'pitchToPlate';
+  if (d === null) return p2p ? 'warn' : 'none';
+  if (p2p && Math.abs(d) > ds.thresholds.strikeZoneCritical) return 'crit';
+  return Math.abs(d) > ds.thresholds.strikeZoneTolerance ? 'warn' : 'ok';
+}
 
 /** Per tracking camera; empty when the dataset has no strike-zone data for this pitch. */
 export function strikeZone(p: PitchFile, ds: Dataset) {

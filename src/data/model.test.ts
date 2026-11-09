@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS, type Dataset, type PitchFile } from './types';
-import { pitchWorst, reviewable, strikeZone, szParts, szVerdict, taskState, taskStatus, taskValue, type PpOps } from './model';
+import { hitState, pitchWorst, reviewable, strikeZone, szParts, szVerdict, taskState, taskStatus, taskValue, type PpOps } from './model';
 import type { CameraFile } from './types';
 import { deriveConditions } from '../alerts/engine';
 
@@ -110,5 +110,19 @@ describe('strike zone contributions', () => {
     const a = conds().find((c) => c.key === 'sz-p2p');
     expect(a?.members).toEqual(['P2']);                 // P3 isn't running: it has its own alert
     expect(a?.summary).toContain('1 pitch (latest 1)');
+  });
+});
+
+describe('hit state', () => {
+  const ds = { thresholds: DEFAULT_THRESHOLDS } as unknown as Dataset;
+  const at = (hit: PitchFile['hit']) => ({ ...pitch(1, { status: 'success' }), hit });
+  it('is nothing without a ball in play', () => { expect(hitState(at(null), ds)).toBeNull(); });
+  it('colours the tracked % (80+ green, 50-80 amber, under 50 red)', () => {
+    expect(hitState(at({ trackPct: 95, distanceFt: 300 }), ds)?.tone).toBe('ok');
+    expect(hitState(at({ trackPct: 62, distanceFt: 300 }), ds)?.tone).toBe('warn');
+    expect(hitState(at({ trackPct: 12, distanceFt: 20 }), ds)?.tone).toBe('crit');
+  });
+  it('is red when a ball in play has no hit distance', () => {
+    expect(hitState(at({ trackPct: null, distanceFt: null }), ds)).toMatchObject({ tone: 'crit', value: 'No distance' });
   });
 });

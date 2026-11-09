@@ -4,7 +4,7 @@ import { useGoInSession } from '../../components/Shell';
 import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { img } from '../../data/load';
 import { fmtClock } from '../../data/time';
-import { ACS, confidencePass, hasHitImages, IMG_ASPECT, pitchHasHit, szVerdict, GROUP, health, healthNote, hitTone, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
+import { ACS, confidencePass, hasHitImages, IMG_ASPECT, pitchHasHit, szVerdict, GROUP, health, healthNote, hitState, isBad, label, mark, rawTaskState, reviewable, strikeZone, taskState, TASKS, type Health } from '../../data/model';
 import type { CameraFile, PitchFile } from '../../data/types';
 import type { Tone } from '../../data/model';
 import { Chevron, GoPopout, HealthDot, Seg } from '../../components/ui';
@@ -301,12 +301,12 @@ export function PitchCard({ p, reviewing, latestNum, scope = 'game', select }: {
   const fromGame = (ch: Parameters<typeof st.set>[0]) => st.set({ ...(ch as object), crumbPitch: p.num, crumbView: scope, focusAlertId: null, pop: null } as never);
   const goPitch = (n: number) => { if (select) select(n); else st.set({ gameSel: n >= latestNum ? null : n }); st.set({ pop: null }); };
   const pop = (k: string) => st.set({ pop: st.pop === k ? null : k });
-  const hitT = p.hit && p.hit.trackPct != null ? hitTone(p.hit.trackPct, ds) : null;
+  const hs = hitState(p, ds); const hitT = hs?.tone ?? null;
   const quick: { k: string; label: string; value: string; tone: Tone | 'none'; text?: string; go?: () => void }[] = [
     { k: 'conf', label: 'Confidence', value: pass === null ? 'No data' : pass ? 'PASS' : 'FAIL', tone: pass === null ? 'none' : pass ? 'ok' : 'crit',
       text: `Pitch ${p.num} failed confidence. Show its PitchToPlate ball mosaics in the field panel?`, go: () => { st.set({ pop: null }); field.set({ fv: 'pitchToPlate', img: 'mosaic', big: null }); } },
     { k: 'acs', label: 'ACS delivery', value: p.acs ? ACS[p.acs].label : 'No data', tone: p.acs ? ACS[p.acs].tone : 'none' },
-    { k: 'hit', label: 'Hit tracked', value: !p.hit ? 'No hit' : p.hit.trackPct != null ? `${p.hit.trackPct}%` : 'No data', tone: hitT ?? 'none',
+    { k: 'hit', label: 'Hit tracked', value: hs ? hs.value : 'No hit', tone: hitT ?? 'none',
       text: `Pitch ${p.num} has a poor hit track. Show its FullField hit images?`, go: () => { st.set({ pop: null }); field.set({ fv: 'fullField', img: 'hit', big: null }); } },
   ];
   const TONE = {
@@ -405,7 +405,7 @@ export function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: Re
   const crit: string[] = [], warn: string[] = [];
   if (confidencePass(p, ds) === false) crit.push('confidence fail');
   const sz = szVerdict(p, ds); crit.push(...sz.crit); warn.push(...sz.warn);
-  if (p.hit && p.hit.trackPct != null) { const h = hitTone(p.hit.trackPct, ds); if (h !== 'ok') (h === 'crit' ? crit : warn).push(`hit ${p.hit.trackPct}% tracked`); }
+  const hit = hitState(p, ds); if (hit?.problem) (hit.tone === 'crit' ? crit : warn).push(hit.problem);
   if (p.acs === 'fail') crit.push('ACS failed'); else if (p.acs === 'review') warn.push('ACS needs review');
   TASKS.forEach((n, k) => { const t = taskState(p, k, ops); if (t === 'crit') crit.push(`${n} failed`); else if (t === 'warn') warn.push(`${n} ${reviewable(p, k, ops) ? 'needs review' : 'failed'}`); });
   return { h: crit.length ? 'crit' : warn.length ? 'warn' : 'ok', problems: [...crit, ...warn] };

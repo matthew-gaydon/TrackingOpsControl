@@ -117,6 +117,17 @@ export function cloudState(p: PitchFile, k: number, pp: PpOps, ops: CloudOps): C
 // ---------------- pitch card ----------------
 export type Tone = 'ok' | 'warn' | 'crit';
 /** Hit tracked %: green at or above hitTrackGoodPct, red below hitTrackPoorPct, amber between. */
+/**
+ * The hit on a pitch, for the pitch card and the timeline. null = no ball in play.
+ * Every ball in play should produce a hit distance (home runs too): without one, the tracked %
+ * can't be measured and that's a red problem ("No distance").
+ */
+export function hitState(p: PitchFile, ds: Dataset): { tone: Tone; value: string; problem?: string } | null {
+  if (!p.hit) return null;
+  if (p.hit.trackPct == null || p.hit.distanceFt === null) return { tone: 'crit', value: 'No distance', problem: 'ball in play with no hit distance' };
+  const tone = hitTone(p.hit.trackPct, ds);
+  return { tone, value: `${p.hit.trackPct}%`, problem: tone === 'ok' ? undefined : `hit ${p.hit.trackPct}% tracked` };
+}
 export function hitTone(pct: number, ds: Dataset): Tone {
   return pct >= ds.thresholds.hitTrackGoodPct ? 'ok' : pct < ds.thresholds.hitTrackPoorPct ? 'crit' : 'warn';
 }

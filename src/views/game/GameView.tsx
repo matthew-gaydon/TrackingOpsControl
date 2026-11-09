@@ -468,6 +468,12 @@ export function GameView() {
   const sel = st.gameSel ?? latest.num;
   const p = ds.pitches.find((x) => x.num === sel) ?? latest;
   const reviewing = st.gameSel !== null && sel !== latest.num;
+  // back to live (button, ▶, or clicking the latest pitch): the default live view, Combined with the hit overlay off
+  const wasReviewing = useRef(reviewing);
+  useEffect(() => {
+    if (wasReviewing.current && !reviewing) st.set({ fieldView: 'combined', bigCam: null, lastHitOverlay: false });
+    wasReviewing.current = reviewing;
+  }, [reviewing]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="view">
       {reviewing && (

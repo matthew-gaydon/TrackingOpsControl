@@ -12,7 +12,9 @@ npm install        # first time only
 npm run dev        # opens http://localhost:5173
 ```
 
-- Switch dataset with the **Data** menu in the header, or with `?data=healthy` in the URL.
+On Windows you can just double-click **`start-dev.bat`** (installs packages the first time, starts the server in its own window and opens the browser) and **`stop-dev.bat`** to shut it down.
+
+- The app opens on sign-in, then the session list. Open a built-in dataset directly with `?data=demo`, `?data=healthy` or `?data=long` in the URL.
 - `npm run build` makes a static build in `dist/`, which can be served from any web server.
 - `npm run typecheck` checks types without building.
 

@@ -6,7 +6,7 @@ Read this before changing anything. The full product brief is `docs/design-brief
 A single-venue operator UI that sits on top of BMCC (Baseball Multi-Camera Combiner). It also brings in BMCA's (Baseball Multi-Camera Analysis) everyday camera controls. **Core principle: the system finds the problem and takes the operator to it.** Every alert declares where it is fixed, and "Take me there" opens that exact place with it highlighted.
 
 ## Commands
-- `npm run dev` runs the Vite dev server on :5173. `npm run build` runs a type-check and production build. `npm run typecheck` checks types only.
+- `npm run dev` runs the Vite dev server on :5173 (on Windows, `start-dev.bat` / `stop-dev.bat` start it in its own window and stop it, by window or by port). `npm run build` runs a type-check and production build. `npm run typecheck` checks types only.
 - `npm test` runs the Vitest unit tests (alert ledger, time parsing). Add tests next to the module (`*.test.ts`), especially for new engine rules.
 - `data/` (git-ignored) holds local sample data: `*sessions*.json` feeds the launch page, `data/<sessionId>/` is that session's dataset. Served at `/local-data/` by the dev server (`vite.config.ts`); add `?w=<px>` to an image for a cached, resized WebP (sharp, cached in `data/.thumbs/`), and use `img(ds, path, width)` in the UI. See DATA.md.
 - `node scripts/convert-pitch-csv.mjs data/<sessionId>_pitch-data.csv` turns a pitch CSV export into `data/<sessionId>/`. Fields the export lacks (confidence, ACS, strike zone, cloud) are left out and shown as "No data"; keep the UI tolerant of that.

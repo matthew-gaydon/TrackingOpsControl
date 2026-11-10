@@ -10,13 +10,15 @@ import { CamerasView } from './views/cameras/CamerasView';
 import { PitchesView } from './views/pitches/PitchesView';
 import { PostProcessingView } from './views/pp/PostProcessingView';
 import { CloudView } from './views/cloud/CloudView';
+import { makeReplay, replayParams, windowAt } from './data/replay';
+import type { Dataset } from './data/types';
 
 /** Mock processing: one reprocess task finishes every 2 s; a repushed cloud task succeeds after 4 s. */
 function useMockProcessing() {
   useEffect(() => {
     const t = setInterval(() => {
       const s = useUi.getState();
-      const ch: Partial<typeof s> = { elapsedSec: Math.floor((Date.now() - s.loadedAt) / 1000) };
+      const ch: Partial<typeof s> = s.replay ? {} : { elapsedSec: Math.floor((Date.now() - s.loadedAt) / 1000) };
       const r = s.cloudRetried; const due = Object.keys(r).filter((k) => Date.now() - r[k] > 4000);
       if (due.length) { const v = { ...r }, d = { ...s.cloudDone }; due.forEach((k) => { delete v[k]; d[k] = true; }); ch.cloudRetried = v; ch.cloudDone = d; }
       s.set(ch);
@@ -26,8 +28,21 @@ function useMockProcessing() {
       if (!s.ppQueue.length) return;
       s.set({ ppQueue: s.ppQueue.slice(1), ppDone: { ...s.ppDone, [s.ppQueue[0]]: true } });
     }, 2000);
-    return () => { clearInterval(t); clearInterval(q); };
+    // replay: advance the clock often enough that a fast replay still reads smoothly
+    const r = setInterval(() => useUi.getState().replayTick(), 250);
+    return () => { clearInterval(t); clearInterval(q); clearInterval(r); };
   }, []);
+}
+
+/** Put a loaded dataset in the store: as it is, or (?replay=1) as a replay that starts before the game. */
+function start(d: Dataset, sessionStart?: string) {
+  const opts = replayParams(window.location.search);
+  const base = { cam: d.cameras[0]?.id ?? '', loadedAt: Date.now() };
+  if (!opts) { useUi.getState().set({ ...base, ds: d }); return; }
+  const replay = makeReplay(d, opts, Date.now(), sessionStart);
+  // a replay starts before the game, out of session, whatever state the recording ended in
+  useUi.getState().set({ ...base, replay, replaySrc: d, replayKey: '', session: 'out', ds: windowAt(d, replay, replay.startMs) });
+  useUi.getState().replayTick();
 }
 
 function Main() {
@@ -61,9 +76,9 @@ function SessionApp({ name }: { name: string }) {
       .then(async (d) => {
         // a session picked on the launch page: show its identity (a stand-in dataset keeps its own cameras and pitches)
         const s = sid ? [...loadCreated(), ...(await loadSessions().catch(() => []))].find((x) => x.sessionId === sid) : undefined;
-        return s ? { ...d, sample: s.sample, game: { ...d.game, sessionId: s.sessionId, gamePk: s.gamePk, venue: s.venue || d.game.venue } } : d;
+        return { start: s?.start, d: s ? { ...d, sample: s.sample, game: { ...d.game, sessionId: s.sessionId, gamePk: s.gamePk, venue: s.venue || d.game.venue } } : d };
       })
-      .then((d) => useUi.getState().set({ ds: d, cam: d.cameras[0]?.id ?? '', loadedAt: Date.now() }))
+      .then(({ d, start: at }) => start(d, at))
       .catch((e: Error) => useUi.getState().set({ loadError: e.message }));
   }, [name]);
   if (err) return (

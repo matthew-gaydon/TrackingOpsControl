@@ -42,9 +42,9 @@ export function useAlertSync() {
 
 /** The dataset clock (UTC ms), re-rendering once a second. Only for components that show a ticking time. */
 export function useNow(): number {
-  const ds = useUi((s) => s.ds), loadedAt = useUi((s) => s.loadedAt);
+  const ds = useUi((s) => s.ds), loadedAt = useUi((s) => s.loadedAt), replay = useUi((s) => s.replay);
   useUi((s) => s.elapsedSec);
-  return clockMs({ ds, loadedAt });
+  return clockMs({ ds, loadedAt, replay });
 }
 
 export interface AlertState {

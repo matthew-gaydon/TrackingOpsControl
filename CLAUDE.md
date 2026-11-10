@@ -18,6 +18,7 @@ A single-venue operator UI that sits on top of BMCC (Baseball Multi-Camera Combi
 src/data/types.ts        Data contract (dataset files). Change it deliberately and update DATA.md.
 src/data/load.ts         Loads public/data/<name>/ (?data=), image path resolution; normalises every time to absolute ms.
 src/data/time.ts         Time parsing: full timestamps or clock times resolved against game.now (midnight-safe).
+src/data/replay.ts       Replay (?replay=1): replay clock, BATTING PRACTICE → WARMUP → LIVE, and windowAt (the dataset as of a moment).
 src/data/model.ts        Pure domain logic: camera labels/health, PP task state, cloud state, strike zone.
 src/alerts/engine.ts     Raw status messages + data → routed Condition[] (what is wrong now). Add rules here for new BMCC/BMCA messages.
 src/alerts/ledger.ts     Conditions → alert occurrences with a lifecycle (raised → cleared → acknowledged).
@@ -28,9 +29,10 @@ src/state/hooks.ts       useDs / useAlertSync (runs the engine once, in App) / u
 src/components/          Shell (header, banner, drawer, toasts), ui primitives, ZoomBox.
 src/views/{game,cameras,pitches,pp,cloud}/   One folder per view. Pitches reuses Game's FieldPanel and PitchCard with scope="pitches" (its own selection and camera panel state).
 ```
-- **One clock.** `clockMs()` in `store.ts` is the dataset clock, and every time on screen is UTC (`fmtClock`). Components that show a ticking time use `useNow()` (or `<AlertWhen>`). Never use `Date.now()` or local time for display.
+- **One clock.** `clockMs()` in `store.ts` is the dataset clock (or, in replay, the replay clock), and every time on screen is UTC (`fmtClock`). Components that show a ticking time use `useNow()` (or `<AlertWhen>`). Never use `Date.now()` or local time for display.
 - **Subscribe narrowly.** Components read the store with `usePick('field', …)` or a `useUi((s) => s.x)` selector, never `useUi()` with no selector: the clock ticks every second and zoom drags update the store continuously.
 - **Data is read-only.** Operator actions (acknowledge, save camera settings, reprocess, repush, session change) live in the store as overlays on the dataset. When the real backend arrives, those store actions become API calls.
+- **Replay** (`?replay=1&lead=10&speed=1`, or Replay on the launch page): the store keeps the full dataset in `replaySrc` and publishes `ds` holding only what has happened by the replay clock, so views and the engine need nothing special. They must cope with **zero pitches** (pre-game): use `ds.pitches.at(-1)` without `!` and show `<NoPitches />`. See "Replay" in DATA.md.
 - Mock behaviour is in `App.tsx` (`useMockProcessing`): the reprocess queue drains one task every 2 s, and a repushed cloud task succeeds after 4 s.
 
 ## Design rules (keep these)
@@ -63,5 +65,5 @@ src/views/{game,cameras,pitches,pp,cloud}/   One folder per view. Pitches reuses
 ## Good next steps
 1. Feed a real dataset (see DATA.md), then add engine rules for any new message types that show up as developer messages.
 2. Calibration check grid: all live images with overlays at once, to spot drift before nudging.
-3. A replay clock: step `game.now` through a recorded game so pitches and messages arrive over time.
+3. Replay: a camera-event timeline in the data, so camera health can change during a replay (today `cameras.json` is a single snapshot).
 4. Replace the Combined view's placeholder player positions with tracking output.

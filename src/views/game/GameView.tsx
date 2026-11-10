@@ -207,14 +207,14 @@ function useField(scope: Scope) {
 }
 
 /** Camera mosaics / hit images for a pitch. On Game it also has the live Combined view; on Pitches it doesn't. */
-export function FieldPanel({ p, reviewing, scope = 'game', fill }: { p: PitchFile; reviewing: boolean; scope?: Scope; fill?: boolean }) {
+export function FieldPanel({ p, reviewing, scope = 'game', fill }: { p?: PitchFile; reviewing: boolean; scope?: Scope; fill?: boolean }) {
   const ds = useDs(); const st = usePick('lastHitOverlay', 'set'); const f = useField(scope);
   const fv = f.fv;
   const cams = fv === 'combined' ? [] : ds.cameras.filter((c) => c.group === fv);
   const mode = fv === 'biomechanics' ? 'mosaic' : f.img;
   const big = f.big ? cams.find((c) => c.id === f.big) : undefined;
   const step = (d: number) => { const i = cams.findIndex((c) => c.id === f.big); f.set({ big: cams[(i + d + cams.length) % cams.length].id }); };
-  const latest = ds.pitches.at(-1)!;
+  const latest = ds.pitches.at(-1);
   const badge = (c: CameraFile) => { const h = health(c, ds); return h === 'ok' ? null : <span className="tag-over" style={{ right: 6, top: 6, color: h === 'crit' ? 'var(--crit-ink)' : 'var(--warn-ink)', fontFamily: 'var(--sans)', fontWeight: 700, fontSize: 10 }}>{healthNote(c, ds)}</span>; };
   return (
     <section className="panel" style={{ flex: fill ? '1 1 0' : '999 1 600px', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -226,7 +226,7 @@ export function FieldPanel({ p, reviewing, scope = 'game', fill }: { p: PitchFil
         {fv === 'combined' && <label className="row small" style={{ gap: 6, color: 'var(--text-3)' }}><input type="checkbox" checked={st.lastHitOverlay} onChange={() => st.set({ lastHitOverlay: !st.lastHitOverlay })} />Last hit overlay</label>}
         {(fv === 'pitchToPlate' || fv === 'fullField') && <Seg label="Image type" value={f.img} onChange={(v) => f.set({ img: v })} options={[['mosaic', 'Ball mosaic'], ['hit', 'Hit image']]} />}
       </div>
-      {fv === 'combined' ? <Combined hit={[...ds.pitches].reverse().find((x) => x.hit)?.hit ?? latest.hit} /> : (
+      {fv === 'combined' ? <Combined hit={[...ds.pitches].reverse().find((x) => x.hit)?.hit ?? latest?.hit} /> : !p ? <NoPitches /> : (
         <div className="col fill" style={{ gap: 10, padding: 12, background: '#0D1012', borderRadius: '0 0 10px 10px' }}>
           <div className="row wrap">
             <span className="mono" style={{ fontSize: 13 }}>Pitch {p.num} · {p.time}</span>
@@ -285,6 +285,17 @@ export function FieldPanel({ p, reviewing, scope = 'game', fill }: { p: PitchFil
         </div>
       )}
     </section>
+  );
+}
+
+/** Before the first pitch (a replay's lead-in, or a dataset with no pitches yet): a calm placeholder. */
+export function NoPitches() {
+  const r = useUi((s) => s.replay); const mode = useUi((s) => s.ds?.game.gameMode);
+  return (
+    <div className="col fill" role="status" style={{ gap: 8, alignItems: 'center', justifyContent: 'center', padding: 24, minHeight: 160, textAlign: 'center' }}>
+      <span className="row" style={{ gap: 8 }}><HealthDot h="ok" size={10} /><span style={{ fontWeight: 600, fontSize: 15 }}>Waiting for the first pitch</span></span>
+      <span className="small muted">{r ? `Game mode ${mode}. The game goes LIVE at ${fmtClock(r.gameStartMs)} UTC.` : 'Pitches appear here as they are tracked.'}</span>
+    </div>
   );
 }
 
@@ -413,7 +424,7 @@ export function pitchVerdict(p: PitchFile, ds: ReturnType<typeof useDs>, ops: Re
 
 function Timeline({ sel }: { sel: number }) {
   const ds = useDs(); const st = usePick('set'); const ops = usePpOps();
-  const latest = ds.pitches.at(-1)!.num;
+  const latest = ds.pitches.at(-1)?.num ?? 0;
   const strip = useRef<HTMLDivElement>(null);
   const C = { ok: { bg: '#13261C', fg: 'var(--ok-ink)', edge: '#23503A' }, warn: { bg: 'var(--warn-bg)', fg: 'var(--warn-ink)', edge: 'var(--warn-edge)' }, crit: { bg: 'var(--crit-bg)', fg: 'var(--crit-ink)', edge: 'var(--crit-edge)' } };
   // keep the selected pitch in view (on load that's the latest, at the right-hand end)
@@ -443,6 +454,7 @@ function Timeline({ sel }: { sel: number }) {
       </span>
       <button type="button" className="icon-btn" aria-label="Scroll timeline to earlier pitches" onClick={() => page(-1)}><Chevron dir="left" /></button>
       <div ref={strip} className="row hscroll" style={{ gap: 3, flex: '1 1 auto', minWidth: 0, padding: '3px 2px 6px' }}>
+        {lights.length === 0 && <span className="small muted" style={{ alignSelf: 'center' }}>No pitches yet.</span>}
         {lights.map(({ p, v }) => {
           const c = C[v.h]; const on = p.num === sel;
           const what = `Pitch ${p.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`;
@@ -464,10 +476,10 @@ function Timeline({ sel }: { sel: number }) {
 
 export function GameView() {
   const ds = useDs(); const st = usePick('gameSel', 'set');
-  const latest = ds.pitches.at(-1)!;
-  const sel = st.gameSel ?? latest.num;
+  const latest = ds.pitches.at(-1);
+  const sel = st.gameSel ?? latest?.num ?? 0;
   const p = ds.pitches.find((x) => x.num === sel) ?? latest;
-  const reviewing = st.gameSel !== null && sel !== latest.num;
+  const reviewing = !!latest && st.gameSel !== null && sel !== latest.num;
   // back to live (button, ▶, or clicking the latest pitch): the default live view, Combined with the hit overlay off
   const wasReviewing = useRef(reviewing);
   useEffect(() => {
@@ -476,7 +488,7 @@ export function GameView() {
   }, [reviewing]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="view">
-      {reviewing && (
+      {reviewing && p && latest && (
         <div className="row wrap" style={{ gap: 12, padding: '10px 14px', borderRadius: 10, background: 'var(--accent-bg)', border: '1px solid var(--accent-edge)' }}>
           <span style={{ fontWeight: 700, color: '#A9D6FF', letterSpacing: '.04em' }}>REVIEWING</span>
           <span className="mono">Pitch {p.num} of {latest.num} · {p.time}</span>
@@ -492,7 +504,7 @@ export function GameView() {
       <div className="fit-row fill">
         <HealthTiles />
         <FieldPanel p={p} reviewing={reviewing} />
-        <PitchCard p={p} reviewing={reviewing} latestNum={latest.num} />
+        {p && latest ? <PitchCard p={p} reviewing={reviewing} latestNum={latest.num} /> : <aside className="panel panel-pad col" style={{ flex: '1 1 380px', maxWidth: 460, minWidth: 0 }}><NoPitches /></aside>}
       </div>
       <Timeline sel={sel} />
     </div>

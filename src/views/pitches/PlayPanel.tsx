@@ -1,4 +1,5 @@
 import type { PitchFile, PlayInfo } from '../../data/types';
+import { useUi } from '../../state/store';
 
 const CALL: Record<string, string> = {
   BallCalled: 'Ball', StrikeCalled: 'Called strike', StrikeSwinging: 'Swinging strike', FoulBall: 'Foul', InPlay: 'In play', HitByPitch: 'Hit by pitch',
@@ -21,8 +22,10 @@ const Stat = ({ k, v, strong }: { k: string; v?: string | number; strong?: boole
  */
 export function PlayPanel({ p }: { p: PitchFile }) {
   const i: PlayInfo | undefined = p.play;
+  // replay: the recording has play data for this pitch, it just hasn't arrived yet
+  const coming = useUi((s) => !i && !!s.replaySrc?.pitches.find((x) => x.num === p.num)?.play);
   if (!i) return (
-    <section className="panel row small muted" style={{ flex: '0 0 auto', padding: '10px 14px' }}>Play · Pitch {p.num}: no play data in this dataset.</section>
+    <section className="panel row small muted" style={{ flex: '0 0 auto', padding: '10px 14px' }}>Play · Pitch {p.num}: {coming ? 'waiting for play data…' : 'no play data in this dataset.'}</section>
   );
   return (
     <section className="panel col" aria-label={`Play for pitch ${p.num}`} style={{ flex: '0 0 auto', gap: 8, padding: '10px 12px' }}>

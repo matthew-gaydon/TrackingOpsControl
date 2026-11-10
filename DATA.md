@@ -122,6 +122,18 @@ A clock time has no date, so the app reads it as **the latest moment with that c
 
 If a converter can produce full timestamps, prefer them: a dataset that spans more than 24 hours only works with full timestamps.
 
+## Replay: play a dataset back as if it were live
+
+Choose **Replay** on the launch page, or add `replay=1` to the URL (`?data=<name>&replay=1`). Options: `lead=<minutes>` (default 10) and `speed=<1|2|5|10|30>` (default 1; the header's speed control keeps it in the URL). Code: `src/data/replay.ts`.
+
+- **The clock** starts `lead` minutes before game start and runs at the chosen speed, stopping a minute after the last pitch or message. The header shows a **REPLAY** bar with Play/Pause, speed, **Next pitch** (jumps to 3 s before it) and **Restart** (reloads: alerts and operator actions start again).
+- **Game start** is `game.start` (optional, full UTC timestamp), else the session's start time from the launch page, else the first pitch. A start after the first pitch, or an hour or more before it (a sample session from another day), is ignored.
+- **Game mode**, for a dataset recorded `LIVE`: **BATTING PRACTICE** from the start of the lead-in, **WARMUP** for the last 2 minutes, **LIVE** at game start. A dataset recorded in another mode keeps that mode.
+- **What the views see** grows with the clock: pitches at their `time`, status messages at `at`, and a message stays live until its `clearedAt`. `appearsAfterSec` doesn't apply (real times drive the replay).
+- **After each pitch**: play data (`pitch.play`) arrives 5 s later. Cloud tasks show *queued* for 3 s, then *processing*, then their recorded result (Trackpac at 8 s, then Bat, Pitcher biomech and Batter biomech 2 s apart). Post-processing results arrive with the pitch.
+- **Not replayed**: `cameras.json` is a single snapshot, so cameras keep their recorded health for the whole replay. Redundancy and timing are fixed too.
+- The replay starts **Out** of session with Game Flow at *Not started*, so the operator walks through the flow. Once the game is LIVE and the session is still Out, the session alert fires.
+
 ## cameras.json
 
 ```jsonc
@@ -189,7 +201,7 @@ Paste status-box lines as they are. **Don't write alerts by hand.** `src/alerts/
 
 The app also raises alerts straight from the data: camera not running, cameras below full frame rate, session not In while LIVE, BDS not connected, timing over threshold, cloud tasks failed, and spin fit error over the review line.
 
-`appearsAfterSec` (demo only) holds a message back for N seconds, to show an alert arriving mid-session.
+`appearsAfterSec` (demo only) holds a message back for N seconds, to show an alert arriving mid-session. Replay ignores it.
 
 ## Alert lifecycle (the ledger)
 

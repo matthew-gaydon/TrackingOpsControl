@@ -41,7 +41,7 @@ export function CloudView() {
   const TP_ORDER: TrackpacCloud[] = ['uploaded', 'successful', 'needs_validation', 'failed', 'processing', 'queued'];
   const CL_ORDER: CloudResult[] = ['success', 'processing', 'queued', 'failed'];
   const bar = (order: string[], defs: Record<string, [string, string, string]>, counts: Record<string, number>) => (
-    <div className="grow" style={{ display: 'flex', height: 10, borderRadius: 3, overflow: 'hidden', background: '#1E242E' }}>{order.map((c) => <span key={c} style={{ width: `${(counts[c] ?? 0) / N * 100}%`, background: defs[c][2] }} />)}</div>
+    <div className="grow" style={{ display: 'flex', height: 10, borderRadius: 3, overflow: 'hidden', background: '#1E242E' }}>{order.map((c) => <span key={c} style={{ width: `${(counts[c] ?? 0) / Math.max(1, N) * 100}%`, background: defs[c][2] }} />)}</div>
   );
 
   const click = (p: PitchFile, e: React.MouseEvent) => {
@@ -91,7 +91,7 @@ export function CloudView() {
         </div>
       </div>
 
-      {ds.pitches.every((p) => !p.cloud) && (
+      {N > 0 && ds.pitches.every((p) => !p.cloud) && (
         <div className="row small" style={{ gap: 10, padding: '10px 14px', borderRadius: 8, background: 'var(--panel-2)', border: '1px dashed var(--border-2)', color: 'var(--text-3)' }}>
           This dataset has no cloud processing data, so every task shows No data. Repush is still available to try the flow.
         </div>

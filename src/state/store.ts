@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import type { CameraSettings, Dataset, SessionMode } from '../data/types';
 import type { Condition, Route } from '../alerts/engine';
 import { acknowledge, reconcile, type Alert, type Occurrence } from '../alerts/ledger';
+import { finished, replayClock, retime, windowAt, windowKey, type Replay } from '../data/replay';
 
 export type View = 'game' | 'cameras' | 'pitches' | 'pp' | 'cloud';
 export type FlowStage = 'idle' | 'setup' | 'live' | 'ended';
@@ -16,6 +17,13 @@ export interface UiState {
   loadedAt: number;
   /** Whole seconds since load; ticks once a second. Use it to re-render, but read time from clockMs / useNow. */
   elapsedSec: number;
+  /**
+   * Replay mode (?replay=1): the clock runs from before the game through the recorded data, and `ds`
+   * holds only what has happened so far. `replaySrc` is the full dataset. null = not a replay.
+   */
+  replay: Replay | null;
+  replaySrc: Dataset | null;
+  replayKey: string;
 
   // shell + alerts
   view: View;
@@ -104,19 +112,23 @@ export interface UiState {
   ackKeys: (match: (key: string) => boolean) => void;
   /** Feed the engine's current conditions into the ledger. */
   syncAlerts: (conds: Condition[]) => void;
+  /** Replay: change speed, pause/resume or jump, keeping the clock continuous. */
+  replaySet: (ch: { speed?: number; paused?: boolean; to?: number }) => void;
+  /** Replay: advance. Republishes `ds` only when what it shows changes; pauses at the end. */
+  replayTick: () => void;
 }
 
 /**
- * THE dataset clock (UTC ms): game.now plus the time since the dataset loaded. Every "now" in the
- * app (header clock, alert durations, ledger timestamps) comes from here, so a replay clock only
- * has to change this function.
+ * THE dataset clock (UTC ms): game.now plus the time since the dataset loaded, or in replay the
+ * replay clock. Every "now" in the app (header clock, alert durations, ledger timestamps) comes from here.
  */
-export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt'>): number {
+export function clockMs(s: Pick<UiState, 'ds' | 'loadedAt' | 'replay'>): number {
+  if (s.replay) return replayClock(s.replay, Date.now());
   return s.ds ? s.ds.nowMs + (Date.now() - s.loadedAt) : Date.now();
 }
 
 export const useUi = create<UiState>((set, get) => ({
-  ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0,
+  ds: null, loadError: null, loadedAt: Date.now(), elapsedSec: 0, replay: null, replaySrc: null, replayKey: '',
   view: 'game', prevView: null, focusAlertId: null, crumbPitch: null, crumbView: 'game', drawer: false, drawerTab: 'open', dev: false,
   ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false, flow: { stage: 'idle', at: {} }, flowConfirmEnd: false,
   gameSel: null, pitchSel: null, pitFilter: 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: false, szAll: false, pop: null,
@@ -161,6 +173,23 @@ export const useUi = create<UiState>((set, get) => ({
       }
     }
     set({ ledger, ledgerReady: true, dismissed });
+  },
+  replaySet: (ch) => {
+    const r = get().replay;
+    if (!r) return;
+    set({ replay: retime(r, Date.now(), ch) });
+    get().replayTick();
+  },
+  replayTick: () => {
+    const s = get();
+    const r = s.replay, src = s.replaySrc;
+    if (!r || !src) return;
+    const t = replayClock(r, Date.now());
+    const ch: Partial<UiState> = { elapsedSec: Math.floor((t - r.startMs) / 1000) };
+    if (finished(r, t) && !r.paused) ch.replay = retime(r, Date.now(), { paused: true, to: r.endMs });
+    const key = windowKey(src, r, t);
+    if (key !== s.replayKey) Object.assign(ch, { ds: windowAt(src, r, t), replayKey: key });
+    set(ch);
   },
 }));
 

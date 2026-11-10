@@ -31,6 +31,8 @@ export interface GameFile {
   now: string;
   /** UTC date ("YYYY-MM-DD") that a clock-only `now` falls on. Ignored when `now` is a full timestamp. */
   date?: string;
+  /** Scheduled game start (full UTC timestamp). Optional: replay uses it as the moment the game goes LIVE (else the session start, else the first pitch). */
+  start?: string;
   redundancy: { role: 'MAIN' | 'BACKUP'; btcConnected: boolean; bdsConnected: boolean; peers: number };
   timing: { latencyMs: number; tssOffsetMs: number };
   thresholds?: Partial<Thresholds>;

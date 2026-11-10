@@ -49,10 +49,18 @@ export function signOut() {
 }
 
 /** Open a session's dataset in the main view. `sessionId` lets the main view show that session's identity. */
-export function openSession(dataset: string, sessionId?: string) {
+export function openSession(dataset: string, sessionId?: string, replay = false) {
   const u = new URL(urlWithData(dataset));
   if (sessionId) u.searchParams.set('session', sessionId);
+  if (replay) u.searchParams.set('replay', '1');
   window.location.href = u.toString();
+}
+
+/** Replay: keep a setting (speed) in the URL so a reload or Restart keeps it. */
+export function setReplayParam(k: 'speed' | 'lead', v: number) {
+  const u = new URL(window.location.href);
+  u.searchParams.set(k, String(v));
+  window.history.replaceState(null, '', u.toString());
 }
 
 /** Back to the session list (stays signed in). */
@@ -63,6 +71,6 @@ export function toSessions() {
 function urlWithData(dataset: string | null): string {
   const u = new URL(window.location.href);
   if (dataset) u.searchParams.set('data', dataset); else u.searchParams.delete('data');
-  u.searchParams.delete('session');
+  ['session', 'replay', 'lead', 'speed'].forEach((k) => u.searchParams.delete(k));
   return u.toString();
 }

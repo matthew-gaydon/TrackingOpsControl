@@ -47,6 +47,7 @@ export function PostProcessingView() {
   const errs = ds.pitches.map((p) => p.pp.spin.fitError ?? 0);
   const review = ds.thresholds.spinFitErrorReview;
   const ymax = Math.max(review * 1.2, ...errs);
+  const N = Math.max(1, ds.pitches.length);
   const spark = errs.map((e, i) => `${(i * 300 / Math.max(1, errs.length - 1)).toFixed(1)},${(56 - (e / ymax) * 50).toFixed(1)}`).join(' ');
   const failedKeys = (ps: PitchFile[]) => ps.flatMap((p) => [0, 1, 2].filter((k) => isBad(taskState(p, k, ops))).map((k) => tkey(p.num, k)));
   const spinAlert = al.byKey.spin && !al.byKey.spin.acked && !al.byKey.spin.cleared ? al.byKey.spin : undefined;
@@ -76,7 +77,7 @@ export function PostProcessingView() {
           {perTask.map((t) => (
             <div key={t.n} className="row" style={{ gap: 10 }}>
               <span className="small" style={{ width: 92, color: 'var(--text-2)' }}>{t.n}</span>
-              <div className="grow" style={{ display: 'flex', height: 10, borderRadius: 3, overflow: 'hidden', background: '#1E242E' }}><span style={{ width: `${t.ok / ds.pitches.length * 100}%`, background: 'var(--ok)' }} /><span style={{ width: `${t.bad / ds.pitches.length * 100}%`, background: 'var(--warn)' }} /></div>
+              <div className="grow" style={{ display: 'flex', height: 10, borderRadius: 3, overflow: 'hidden', background: '#1E242E' }}><span style={{ width: `${t.ok / N * 100}%`, background: 'var(--ok)' }} /><span style={{ width: `${t.bad / N * 100}%`, background: 'var(--warn)' }} /></div>
               <span className="mono small" style={{ width: 130, textAlign: 'right', color: 'var(--text-3)' }}>{t.ok} ok · {t.bad} flagged</span>
             </div>
           ))}

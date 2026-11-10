@@ -97,11 +97,15 @@ export function SessionsView({ operator }: { operator: string }) {
   const open = (s: SessionEntry) => s.dataset && openSession(s.dataset, s.sessionId);
   const go = (m: Mode) => { if (m === 'create') setBack(mode === 'create' ? back : mode); setMode(m); };
 
-  const openBtn = (
+  const openBtn = (<>
+    <button type="button" className="btn" disabled={!picked?.dataset} onClick={() => picked?.dataset && openSession(picked.dataset, picked.sessionId, true)} style={{ minHeight: 38 }}
+      title="Play the session's recorded data back from 10 minutes before the game, as if it were live">
+      Replay
+    </button>
     <button type="button" className="btn primary" disabled={!picked?.dataset} onClick={() => picked && open(picked)} style={{ minHeight: 38 }}>
       {picked ? `Open ${picked.title}` : 'Open session'}<Arrow />
     </button>
-  );
+  </>);
 
   return (
     <div className="app">

@@ -1,8 +1,9 @@
 import { usePick, useUi, type View } from '../state/store';
 import { useAlerts, useDs, useNow, useSession } from '../state/hooks';
-import { fmtClock } from '../data/time';
-import { displayName, getOperator, signOut, toSessions } from '../state/launch';
-import { Arrow, Chevron, SevBadge } from './ui';
+import { fmtClock, fmtDuration } from '../data/time';
+import { finished, nextPitchAt, SPEEDS } from '../data/replay';
+import { displayName, getOperator, setReplayParam, signOut, toSessions } from '../state/launch';
+import { Arrow, Chevron, Seg, SevBadge } from './ui';
 import { alertWhen, type Alert } from '../alerts/ledger';
 import type { SessionMode } from '../data/types';
 
@@ -12,7 +13,34 @@ const VIEW_NAME: Record<View, string> = { game: 'Game', cameras: 'Cameras', pitc
 /** Header clock: the dataset clock in UTC, the same clock every pitch and alert time uses. */
 function Clock() {
   const now = useNow();
-  return <span className="mono" style={{ fontSize: 18, fontWeight: 500 }} title="Dataset clock (UTC)">{fmtClock(now)}<span className="tiny muted" style={{ marginLeft: 6, fontSize: 11 }}>UTC</span></span>;
+  return <span className="mono" style={{ fontSize: 18, fontWeight: 500 }} title={useUi.getState().replay ? 'Replay clock (UTC)' : 'Dataset clock (UTC)'}>{fmtClock(now)}<span className="tiny muted" style={{ marginLeft: 6, fontSize: 11 }}>UTC</span></span>;
+}
+
+/**
+ * Replay controls (?replay=1): a REPLAY badge so it's never mistaken for a live game, where the
+ * replay is (time to game start, pitch N of M, finished), play/pause, speed, next pitch, restart.
+ */
+function ReplayBar() {
+  const r = useUi((s) => s.replay), total = useUi((s) => s.replaySrc?.pitches.length ?? 0), n = useUi((s) => s.ds?.pitches.length ?? 0);
+  const replaySet = useUi((s) => s.replaySet);
+  const now = useNow();
+  if (!r) return null;
+  const done = finished(r, now);
+  const where = done ? 'Replay finished' : now < r.gameStartMs ? `Game starts in ${fmtDuration((r.gameStartMs - now) / 1000) || '0 s'}` : n ? `Pitch ${n} of ${total}` : 'Waiting for first pitch';
+  const next = () => { const src = useUi.getState().replaySrc; const to = src && nextPitchAt(src, now); if (to !== null && to !== undefined) replaySet({ to }); };
+  const setSpeed = (v: string) => { replaySet({ speed: Number(v) }); setReplayParam('speed', Number(v)); };
+  return (
+    <div role="group" aria-label="Replay controls" className="row" style={{ gap: 8, padding: '4px 6px 4px 10px', borderRadius: 8, background: 'var(--accent-bg)', border: '1px solid var(--accent-edge)' }}>
+      <span className="mono" style={{ fontWeight: 700, fontSize: 11, letterSpacing: '.08em', color: '#A9D6FF' }} title="Replaying a recorded session, not a live game">REPLAY</span>
+      <span className="small" style={{ minWidth: 150, color: 'var(--text-2)' }} aria-live="polite">{r.paused && !done ? `Paused · ${where}` : where}</span>
+      <button type="button" className="btn" style={{ minWidth: 76 }} disabled={done} onClick={() => replaySet({ paused: !r.paused })} aria-label={r.paused ? 'Play replay' : 'Pause replay'}>
+        {r.paused ? '▶ Play' : '❚❚ Pause'}
+      </button>
+      <Seg label="Replay speed" value={String(r.speed)} onChange={setSpeed} options={SPEEDS.map((v) => [String(v), `${v}×`])} />
+      <button type="button" className="btn" disabled={done || nextPitchAt(useUi.getState().replaySrc!, now) === null} onClick={next} title="Jump to just before the next pitch">Next pitch</button>
+      <button type="button" className="btn" onClick={() => window.location.reload()} title="Start the replay again from the beginning (clears alerts and actions)">Restart</button>
+    </div>
+  );
 }
 
 /** Ticking "Active · 3m 12s" text. Only this re-renders each second, not the alert list around it. */
@@ -56,6 +84,7 @@ export function Header() {
             <span className="row mono tiny muted" style={{ gap: 6 }}>{g.venue}{ds.sample && <span className="pill neutral" style={{ fontSize: 9, padding: '1px 6px' }} title="This session has no data in the prototype yet, so it shows the demo dataset">SAMPLE DATA</span>}</span>
           </div>
         </div>
+        <ReplayBar />
         <span className="grow" />
         <span className="row small" style={{ gap: 6 }} title={operator ?? undefined}><span className="muted">Logged in as:</span><span style={{ fontWeight: 600 }}>{operator ? displayName(operator) : '—'}</span></span>
         <button type="button" className="btn" title={`Dataset: ${ds.name}`} onClick={toSessions}>Switch session</button>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { usePick } from '../../state/store';
-import { useDs, usePpOps } from '../../state/hooks';
+import { useAlerts, useDs, usePpOps } from '../../state/hooks';
 import { HealthDot } from '../../components/ui';
 import { FieldPanel, NoPitches, PitchCard, pitchVerdict } from '../game/GameView';
 import { PlayPanel } from './PlayPanel';
@@ -14,13 +14,16 @@ const TONE_TEXT = { ok: 'var(--text-2)', warn: 'var(--warn-ink)', crit: 'var(--c
  * all the per-pitch detail). ↑ / ↓ move through the list.
  */
 export function PitchesView() {
-  const ds = useDs(); const st = usePick('pitchSel', 'pitFilter', 'set'); const ops = usePpOps();
+  const ds = useDs(); const st = usePick('pitchSel', 'pitFilter', 'set'); const ops = usePpOps(); const al = useAlerts();
   const latest = ds.pitches.at(-1);
   const sel = st.pitchSel ?? latest?.num ?? 0;
   const p = ds.pitches.find((x) => x.num === sel) ?? latest;
   const rows = useMemo(() => [...ds.pitches].reverse().map((q) => ({ q, v: pitchVerdict(q, ds, ops) })), [ds, ops]);
   const visible = rows.filter(({ v }) => st.pitFilter === 'all' || (st.pitFilter === 'red' ? v.h === 'crit' : v.h !== 'ok'));
   const count = { flagged: rows.filter(({ v }) => v.h !== 'ok').length, red: rows.filter(({ v }) => v.h === 'crit').length };
+  // "Take me there" from a pitch alert: outline the pitches it is about
+  const focus = al.focus && !al.focus.acked && al.focus.route.view === 'pitches' ? al.focus : null;
+  const hl = (n: number) => !!focus && !!focus.route.affected?.includes(n);
   const select = (n: number) => st.set({ pitchSel: n === latest?.num ? null : n, pop: null });
 
   // keep the selected pitch in view
@@ -54,7 +57,7 @@ export function PitchesView() {
             const on = q.num === sel;
             const what = `Pitch ${q.num}: ${v.problems.length ? v.problems.join(', ') : 'all deliverables good'}`;
             return (
-              <button key={q.num} data-row={q.num} type="button" aria-pressed={on} className="list-row" title={what} aria-label={what}
+              <button key={q.num} data-row={q.num} type="button" aria-pressed={on} className={`list-row${hl(q.num) && !on ? ' hl' : ''}`} title={what} aria-label={what}
                 onClick={() => select(q.num)} style={{ gridTemplateColumns: GRID, gap: 10, padding: '7px 10px', minHeight: 34 }}>
                 <HealthDot h={v.h} size={10} />
                 <span className="mono small" style={{ fontWeight: 600, color: TONE_TEXT[v.h] }}>Pitch {q.num}</span>

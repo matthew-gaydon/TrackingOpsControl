@@ -106,10 +106,19 @@ describe('strike zone contributions', () => {
     expect(szVerdict(at(0.006, 0, 0, 0.009), p2p).crit).toEqual(['PitchToPlate 1 Δ +0.009']);  // over critical: red (test cameras all number 1)
   });
 
-  it('raises one alert for running PitchToPlate cameras missing from the strike zone', () => {
-    const a = conds().find((c) => c.key === 'sz-p2p');
-    expect(a?.members).toEqual(['P2']);                 // P3 isn't running: it has its own alert
-    expect(a?.summary).toContain('1 pitch (latest 1)');
+  it('sends an earlier pitch missing a PitchToPlate value to Pitches, not Cameras', () => {
+    const c = conds();
+    expect(c.find((x) => x.key === 'sz-p2p')).toBeUndefined();      // latest pitch (2) is complete
+    const a = c.find((x) => x.key === 'sz-p2p-past');
+    expect(a?.members).toEqual(['1']);                               // P3 isn't running: it has its own alert
+    expect(a?.route).toMatchObject({ view: 'pitches', pitchSel: 1, affected: [1] });
+  });
+
+  it('sends the latest pitch missing a PitchToPlate value to that camera', () => {
+    const live = { ...ds, pitches: [ds.pitches[1], { ...ds.pitches[0], num: 3 }] } as Dataset;
+    const c = deriveConditions({ ds: live, session: 'in', elapsedSec: 0, pp: ops(), cloud: { retried: {}, done: {} } });
+    expect(c.find((x) => x.key === 'sz-p2p')).toMatchObject({ members: ['P2'], route: { view: 'cameras', cam: 'P2' } });
+    expect(c.find((x) => x.key === 'sz-p2p-past')).toBeUndefined();
   });
 });
 

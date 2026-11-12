@@ -19,7 +19,8 @@ import { CLOUD_TASKS, cloudState, label, isTracking, szParts, targetFps, tkey, t
 
 export type Severity = 'crit' | 'issue' | 'warn' | 'dev';
 export interface Route {
-  view: 'game' | 'cameras' | 'pp' | 'cloud';
+  view: 'game' | 'cameras' | 'pitches' | 'pp' | 'cloud';
+  pitchSel?: number; pitFilter?: 'all' | 'flagged' | 'red';
   cam?: string; camTab?: 'mosaic' | 'hit' | 'tracking' | 'still'; camFilter?: 'all' | 'problems'; camSub?: 'monitor' | 'control'; ctrl?: 'image' | 'ball' | 'calib';
   ppFilter?: 'all' | 'flag' | 'affected'; ppSel?: number; affected?: number[];
   cloudFilter?: 'all' | 'failed' | 'open';
@@ -150,27 +151,7 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
       notify: false, members: slow.map((c) => c.id),
       route: { view: 'cameras', cam: slow[0].id, camTab: 'mosaic', camFilter: 'problems', camSub: 'monitor' }, line: slow.map(label).join(', ') + '.' });
   }
-  // strike zone: a PitchToPlate camera with no value on a pitch (FullField cameras often don't contribute; that's normal).
-  // Cameras that aren't running have their own alert, so they're left out here. A camera newly missing raises it again.
-  const szMiss = new Map<string, number[]>();
-  for (const p of ds.pitches) {
-    if (!p.strikeZone) continue;
-    for (const c of ds.cameras) {
-      if (c.group !== 'pitchToPlate' || !c.running || szParts(p.strikeZone[c.id]).worst !== null) continue;
-      szMiss.set(c.id, [...(szMiss.get(c.id) ?? []), p.num]);
-    }
-  }
-  if (szMiss.size) {
-    const cams = ds.cameras.filter((c) => szMiss.has(c.id));
-    const desc = (c: CameraFile) => { const n = szMiss.get(c.id)!; return `${label(c)}: ${n.length} pitch${n.length === 1 ? '' : 'es'} (latest ${n.at(-1)})`; };
-    out.push({ key: 'sz-p2p', sev: 'warn', title: `${cams.length} PitchToPlate camera${cams.length > 1 ? 's' : ''} missing from the strike zone`,
-      where: `Cameras › ${label(cams[0])}`,
-      summary: `${cams.map(desc).join(' · ')}. Every PitchToPlate camera should contribute to the strike zone on every pitch.`,
-      checks: ['Ball visible in the camera’s mosaic', 'Calibration lines sit on the field markings', 'Camera running at full frame rate'],
-      raw: cams.map((c) => `${label(c)} no SZD on pitches ${szMiss.get(c.id)!.join(', ')}`).join(' · '),
-      notify: true, members: cams.map((c) => c.id), cameraId: cams.length === 1 ? cams[0].id : undefined,
-      route: { view: 'cameras', cam: cams[0].id, camTab: 'mosaic', camFilter: 'all', camSub: 'monitor' }, line: cams.map(label).join(', ') + '.' });
-  }
+  out.push(...szConditions(ds));
 
   // session
   if (ds.game.gameMode === 'LIVE' && session !== 'in') {
@@ -194,6 +175,52 @@ export function deriveConditions({ ds, session, elapsedSec, pp, cloud }: EngineI
   if (spinBad.length) {
     const last = spinBad[spinBad.length - 1];
     out.push({ key: 'spin', sev: 'warn', title: `Spin fit error above ${ds.thresholds.spinFitErrorReview}`, where: 'Post-processing › Spin', summary: `Spin fit error crossed the review line on pitch${spinBad.length > 1 ? 'es' : ''} ${spinBad.map((p) => p.num).join(', ')}. The spin model may be drifting.`, checks: ['Compare spin strips on the flagged pitches', 'Mark each reviewed if the fit looks right, or reprocess it'], notify: true, members: spinBad.map((p) => String(p.num)), route: { view: 'pp', ppFilter: 'flag', ppSel: last.num }, line: 'Spin model may be drifting.' });
+  }
+  return out;
+}
+
+/**
+ * Strike zone: a PitchToPlate camera with no value on a pitch (FullField cameras often don't
+ * contribute; that's normal). Cameras that aren't running have their own alert, so they're left out.
+ *
+ * Two alerts, because they are fixed in different places:
+ *  - `sz-p2p`: missing on the LATEST pitch. A live camera problem, fixed in Cameras (that camera's
+ *    monitor shows the latest pitch). A camera newly missing raises it again. When the next pitch
+ *    comes in fine it clears, and the pitch moves to the review alert below.
+ *  - `sz-p2p-past`: missing on an earlier pitch. Nothing to fix live; review the pitch in Pitches,
+ *    which opens on the most recent affected pitch. A newly affected pitch raises it again.
+ */
+function szConditions(ds: Dataset): Condition[] {
+  const latest = ds.pitches.at(-1);
+  if (!latest) return [];
+  const p2p = ds.cameras.filter((c) => c.group === 'pitchToPlate' && c.running);
+  const missingOn = (p: Dataset['pitches'][number]) => p.strikeZone ? p2p.filter((c) => szParts(p.strikeZone![c.id]).worst === null) : [];
+  const out: Condition[] = [];
+  const checks = ['Ball visible in the camera’s mosaic', 'Calibration lines sit on the field markings', 'Camera running at full frame rate'];
+
+  const now = missingOn(latest);
+  if (now.length) {
+    out.push({ key: 'sz-p2p', sev: 'warn', title: `${now.length} PitchToPlate camera${now.length > 1 ? 's' : ''} missing from the strike zone`,
+      where: `Cameras › ${label(now[0])}`,
+      summary: `${now.map(label).join(', ')} gave no strike zone value on the latest pitch (${latest.num}). Every PitchToPlate camera should contribute on every pitch.`,
+      checks, raw: now.map((c) => `${label(c)} no SZD on pitch ${latest.num}`).join(' · '),
+      notify: true, members: now.map((c) => c.id), cameraId: now.length === 1 ? now[0].id : undefined,
+      route: { view: 'cameras', cam: now[0].id, camTab: 'mosaic', camFilter: 'all', camSub: 'monitor' }, line: now.map(label).join(', ') + '.' });
+  }
+
+  const past = ds.pitches.slice(0, -1).map((p) => ({ p, cams: missingOn(p) })).filter((x) => x.cams.length);
+  if (past.length) {
+    const nums = past.map((x) => x.p.num);
+    const cams = p2p.filter((c) => past.some((x) => x.cams.includes(c)));
+    const last = nums.at(-1)!;
+    const list = nums.length > 6 ? `${nums.slice(0, 5).join(', ')} … ${last}` : nums.join(', ');
+    out.push({ key: 'sz-p2p-past', sev: 'warn', title: `${nums.length} earlier pitch${nums.length > 1 ? 'es' : ''} missing PitchToPlate strike zone values`,
+      where: `Pitches › Pitch ${last}`,
+      summary: `Pitch${nums.length > 1 ? 'es' : ''} ${list} ${nums.length > 1 ? 'were' : 'was'} tracked without a strike zone value from ${cams.map(label).join(', ')}. Review the strike zone on ${nums.length > 1 ? 'each' : 'it'}, then acknowledge.`,
+      checks: ['Strike zone on the remaining cameras looks consistent', 'Ball visible in the missing camera’s mosaic'],
+      raw: cams.map((c) => `${label(c)} no SZD on pitches ${past.filter((x) => x.cams.includes(c)).map((x) => x.p.num).join(', ')}`).join(' · '),
+      notify: false, members: nums.map(String),
+      route: { view: 'pitches', pitchSel: last, pitFilter: 'flagged', affected: nums }, line: `Review ${nums.length > 1 ? 'them' : 'it'} in Pitches.` });
   }
   return out;
 }

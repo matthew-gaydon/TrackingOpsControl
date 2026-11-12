@@ -149,7 +149,8 @@ export const useUi = create<UiState>((set, get) => ({
     if (r.cam) Object.assign(ch, { cam: r.cam, camTab: r.camTab ?? 'mosaic', camFilter: r.camFilter ?? 'all', camSub: r.camSub ?? 'monitor', resetOpen: false, pickPt: null });
     if (r.ctrl) ch.ctrlTab = r.ctrl;
     if (r.ppFilter) Object.assign(ch, { ppFilter: r.ppFilter, ppAffected: r.affected ?? [], ppSel: r.ppSel ?? null, ppPicks: {}, ppMenu: null, ppTask: r.ppFilter === 'flag' ? 1 : null });
-    if (r.cloudFilter) Object.assign(ch, { cloudFilter: r.cloudFilter, cloudPicks: {}, clMenu: null });
+    if (r.view === 'pitches') Object.assign(ch, { pitchSel: r.pitchSel ?? null, pitFilter: r.pitFilter ?? 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, pop: null });
+    if (r.cloudFilter)Object.assign(ch, { cloudFilter: r.cloudFilter, cloudPicks: {}, clMenu: null });
     set(ch);
   },
   ack: (id) => set((s) => ({ ledger: acknowledge(s.ledger, id, clockMs(s)), dismissed: { ...s.dismissed, [id]: true } })),

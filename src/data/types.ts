@@ -76,7 +76,7 @@ export interface CameraFile {
   /** Current BMCA control values. Omitted keys fall back to DEFAULT_SETTINGS. */
   settings?: Partial<CameraSettings>;
   /** Latest ball candidate (BMCA "Selected" column) for the Ball tuning check. */
-  lastBall?: { strength: number; perimeter: number; area: number; boxes?: BallBox[] };
+  lastBall?: { strength: number; perimeter: number; area: number };
   /** Antiwobble match counts, e.g. { linesMatched: 11, linesTotal: 14, ... } */
   antiwobble?: { linesMatched: number; linesTotal: number; patchesMatched: number; patchesTotal: number };
 }
@@ -84,10 +84,11 @@ export interface CameraFile {
 export interface CalibrationFile {
   imageSize: [number, number];         // [width, height] of the live image the coordinates refer to
   lines: [number, number, number, number][];
+  /** Optional image of the calibration model (white on transparent, imageSize pixels), drawn tinted in place of or
+   *  as well as `lines`, and moved by nudges. Used when the model comes from BMCA's own drawing. */
+  overlay?: string;
   keyPoints: { id: string; label: string; x: number; y: number }[];
 }
-
-export interface BallBox { x: number; y: number; size: number }
 
 export interface CameraSettings {
   autoExp: boolean; expTarget: number; exposure: number; maxExp: number;

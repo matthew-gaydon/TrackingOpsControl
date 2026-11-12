@@ -9,7 +9,7 @@ A single-venue operator UI that sits on top of BMCC (Baseball Multi-Camera Combi
 - `npm run dev` runs the Vite dev server on :5173 (on Windows, `start-dev.bat` / `stop-dev.bat` start it in its own window and stop it, by window or by port). `npm run build` runs a type-check and production build. `npm run typecheck` checks types only.
 - `npm test` runs the Vitest unit tests (alert ledger, time parsing). Add tests next to the module (`*.test.ts`), especially for new engine rules.
 - `data/` (git-ignored) holds local sample data: `*sessions*.json` feeds the launch page, `data/<sessionId>/` is that session's dataset. Served at `/local-data/` by the dev server (`vite.config.ts`); add `?w=<px>` to an image for a cached, resized WebP (sharp, cached in `data/.thumbs/`), and use `img(ds, path, width)` in the UI. See DATA.md.
-- `node scripts/convert-pitch-csv.mjs data/<sessionId>_pitch-data.csv` turns a pitch CSV export into `data/<sessionId>/`. Fields the export lacks (confidence, ACS, strike zone, cloud) are left out and shown as "No data"; keep the UI tolerant of that.
+- `node scripts/convert-pitch-csv.mjs data/<sessionId>_pitch-data.csv` turns a pitch CSV export into `data/<sessionId>/`. Fields the export lacks (confidence, ACS, strike zone, cloud) are left out and shown as "No data"; keep the UI tolerant of that. Then `node scripts/make-control-images.mjs data/<sessionId> 10` gives PitchToPlate and FullField cameras a Control live image from that pitch's hit images (text painted out; `fu0uhriq` uses pitch 10).
 - `node scripts/make-demo-data.mjs` regenerates the `demo`, `healthy` and `long` (320-pitch) datasets.
 - Verify UI changes in a browser (Playwright is fine). Check the `demo` dataset for problem states and `healthy` for the calm state.
 

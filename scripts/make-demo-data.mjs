@@ -35,13 +35,13 @@ function build(healthy, N = 32) {
     running: H || k !== 6, fps: H || k !== 6 ? 600 : 0,
     tracking: { multicamPresent: H || k !== 6, playerTracking: H || k !== 5 },
     calibration: CAL,
-    lastBall: { strength: 7, perimeter: 62.4, area: 288, boxes: [{ x: 48, y: 280, size: 34 }, { x: 368, y: 186, size: 34 }] },
+    lastBall: { strength: 7, perimeter: 62.4, area: 288 },
     antiwobble: !H && k === 1 ? { linesMatched: 11, linesTotal: 14, patchesMatched: 2, patchesTotal: 8 } : { linesMatched: 14, linesTotal: 14, patchesMatched: 8, patchesTotal: 8 },
   });
   for (let k = 1; k <= 8; k++) cameras.push({
     id: 'F' + k, group: 'fullField', number: k, bmccTrackingNumber: k + 6, host: 'BMCA' + (k + 6),
     running: true, fps: 600, tracking: { multicamPresent: true, playerTracking: true }, calibration: CAL,
-    lastBall: { strength: 7, perimeter: 62.4, area: 288, boxes: [{ x: 48, y: 280, size: 34 }, { x: 368, y: 186, size: 34 }] },
+    lastBall: { strength: 7, perimeter: 62.4, area: 288 },
     antiwobble: { linesMatched: 14, linesTotal: 14, patchesMatched: 8, patchesTotal: 8 },
   });
   BIO.forEach(([name, host, fps], i) => cameras.push({

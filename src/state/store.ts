@@ -75,7 +75,7 @@ export interface UiState {
   ctlLive: Record<string, Partial<CameraSettings>>;
   nudgeOn: Record<string, boolean>;
   nudgeStep: 'fine' | 'normal' | 'coarse';
-  overlays: { cal: boolean; ball: boolean };
+  overlays: { cal: boolean };
   clickPts: boolean;
   pickPt: string | null;
   moveMsg: { cam: string; text: string } | null;
@@ -133,7 +133,7 @@ export const useUi = create<UiState>((set, get) => ({
   ledger: [], ledgerReady: false, dismissed: {}, checked: {}, session: null, idsOpen: false, flow: { stage: 'idle', at: {} }, flowConfirmEnd: false,
   gameSel: null, pitchSel: null, pitFilter: 'all', pitView: 'pitchToPlate', pitImg: 'mosaic', pitBig: null, fieldView: 'combined', imgMode: 'mosaic', bigCam: null, lastHitOverlay: false, szAll: false, pop: null,
   cam: 'P1', camTab: 'mosaic', camFilter: 'all', camSub: 'monitor', ctrlTab: 'image',
-  ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true, ball: true }, clickPts: false, pickPt: null, moveMsg: null,
+  ctlSaved: {}, ctlLive: {}, nudgeOn: {}, nudgeStep: 'normal', overlays: { cal: true }, clickPts: false, pickPt: null, moveMsg: null,
   resetOpen: false, bmcaNote: false, lensRestart: null,
   ppFilter: 'all', ppAffected: [], ppSel: null, ppPicks: {}, ppTask: null, ppMenu: null, reviewed: {}, ppQueue: [], ppDone: {},
   cloudFilter: 'all', cloudPicks: {}, cloudAnchor: null, clMenu: null, cloudRetried: {}, cloudDone: {},

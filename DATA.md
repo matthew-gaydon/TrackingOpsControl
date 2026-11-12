@@ -55,6 +55,14 @@ Two more files are read when they sit next to the CSV (`<sessionId>_…` first, 
 
 Cameras, redundancy and timing aren't in a pitch export, so they come from the `healthy` sample (including the Control / Monitoring sample feeds).
 
+**Control live images.** A pitch export has no live feed, so after converting, give each PitchToPlate and FullField camera a stand-in from one pitch's hit images:
+
+```bash
+node scripts/make-control-images.mjs data/<sessionId> 10
+```
+
+Each hit image carries BMCA's calibration model, drawn in thin magenta. The script lifts the model's lines out (dropping the small dots BMCA scatters over the field, which aren't standard) into `data/<sessionId>/control/<cam>-cal.png` (white on transparent, thickened to about 3 px) and sets it as `calibration.overlay`, with `lines` emptied. The Control view tints it in the calibration colour and moves it when you nudge. It then paints the whole model (dots included) and BMCA's text (title top left, contribution stats bottom left) out of the image and writes `data/<sessionId>/control/<cam>.jpg` (2048 px wide), with `cameras[].images.live` pointing at it. Key points snap to the nearest point on the model and are labelled **Model point 1–4**: they're points on the model, not named field features. Biomechanics cameras stay on the sample image. `fu0uhriq` uses pitch 10. Re-run it after `convert-pitch-csv.mjs`, which rewrites `cameras.json`.
+
 **Pitch images** are linked from two folders in `data/`, one subfolder per pitch named by its UTC time to about the second (`<YYYY-MM-DD>/<HH-MM-SS>/`), matched to pitches by time (nearest within 3 s):
 
 | Folder | Files | Shown in |
@@ -109,7 +117,7 @@ All image paths in the JSON are **relative to the dataset folder**, for example 
 | Hit image (Game grids, Cameras › Monitoring › Hit image) | `pitches[].images[camId].hit` | `defaultImages.hit`, else a placeholder |
 | Post-processing spin strip | `pitches[].spinStrip` | `defaultImages.spinStrip` |
 
-Calibration overlays are drawn **on top** of the live image from `cameras[].calibration` (`imageSize`, `lines`, `keyPoints`, all in the live image's pixel space). Use images **without** BMCA's baked-in overlay if you can, so the overlay toggles and nudging look right.
+Calibration overlays are drawn **on top** of the live image from `cameras[].calibration` (`imageSize`, `lines`, `keyPoints`, all in the live image's pixel space, plus an optional `overlay`: an image of the model, white on transparent, at `imageSize`). Use images **without** BMCA's baked-in overlay if you can, so the overlay toggles and nudging look right.
 
 ## Times
 
@@ -149,7 +157,7 @@ Choose **Replay** on the launch page, or add `replay=1` to the URL (`?data=<name
   "images": { "live": "images/cameras/P1/live.jpg" },
   "calibration": { "imageSize": [1920, 1080], "lines": [[x1, y1, x2, y2]], "keyPoints": [{ "id": "hp", "label": "Home plate", "x": 0, "y": 0 }] },
   "settings": { "expTarget": 80, "aGain": 30, "focus": 14028 },     // current BMCA values; anything omitted uses the defaults
-  "lastBall": { "strength": 7, "perimeter": 62.4, "area": 288, "boxes": [{ "x": 48, "y": 280, "size": 34 }] },
+  "lastBall": { "strength": 7, "perimeter": 62.4, "area": 288 },
   "antiwobble": { "linesMatched": 14, "linesTotal": 14, "patchesMatched": 8, "patchesTotal": 8 }
 }
 ```

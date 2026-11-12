@@ -83,6 +83,11 @@ export function ControlPanel() {
   const clickOn = c.running && tab === 'calib' && nudgeOn && st.clickPts && showCal;
   const pickP = clickOn && st.pickPt ? cal!.keyPoints.find((k) => k.id === st.pickPt) : undefined;
   const live = img(ds, c.images?.live ?? ds.game.defaultImages?.live);
+  const calImg = cal?.overlay ? img(ds, cal.overlay) : undefined;
+  const modelStyle = (url: string, color: string, x: number, y: number, opacity: number): React.CSSProperties => {
+    const m = `url("${url}") center / 100% 100% no-repeat`;
+    return { position: 'absolute', inset: 0, pointerEvents: 'none', background: color, opacity, mask: m, WebkitMask: m, transform: `translate(${(x / W) * 100}%, ${(y / H) * 100}%)` };
+  };
 
   const place = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (wasDrag() || !pickP) return;
@@ -126,7 +131,7 @@ export function ControlPanel() {
         {st.bmcaNote && <div className="small" style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)', background: '#0F1A26', color: '#B5DDFF' }}>In the real app this opens {c.host ?? 'BMCA'} for {label(c)}, for everything not brought into Tracking Ops Control.</div>}
         <div className="row wrap" style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)' }}>
           <span className="lbl">Overlays</span>
-          {([['cal', 'Calibration', 'var(--cal)', !cal], ['ball', 'Ball detections', 'var(--ok)', !isTracking(c) || !lb]] as const).map(([k, l, col, off]) => (
+          {([['cal', 'Calibration', 'var(--cal)', !cal]] as const).map(([k, l, col, off]) => (
             <button key={k} type="button" className="btn" aria-pressed={st.overlays[k] && !off} disabled={off} onClick={() => st.set({ overlays: { ...st.overlays, [k]: !st.overlays[k] } })}
               style={{ minHeight: 30, background: st.overlays[k] && !off ? '#1B2433' : 'transparent' }}>
               <span style={{ width: 10, height: 10, borderRadius: 2, border: `1.5px solid ${col}`, background: st.overlays[k] && !off ? col : 'transparent' }} />{l}
@@ -142,15 +147,12 @@ export function ControlPanel() {
               {(scale) => (
                 <>
                   <img src={live} alt={`Live image from ${label(c)}`} draggable={false} style={{ display: 'block', width: '100%', height: '100%', filter: `brightness(${bright.toFixed(2)}) blur(${blur.toFixed(1)}px)` }} />
-                  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} role="img" aria-label="Calibration and ball detection overlays">
+                  {/* a model image (BMCA's own model, white on transparent) is tinted with a CSS mask; it moves as one piece when nudged */}
+                  {showCal && calImg && (dx !== gx || dy !== gy) && <div aria-hidden="true" style={modelStyle(calImg, '#FF8BEA', gx, gy, 0.55)} />}
+                  {showCal && calImg && <div aria-hidden="true" style={modelStyle(calImg, 'var(--cal)', dx, dy, 1)} />}
+                  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} role="img" aria-label="Calibration overlay">
                     {showCal && (dx !== gx || dy !== gy) && <g transform={`translate(${gx} ${gy})`} stroke="#FF8BEA" strokeOpacity={0.7} strokeWidth={2} strokeDasharray="9 7" fill="none">{cal!.lines.map((l, i) => <line key={i} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} />)}</g>}
                     {showCal && <g transform={`translate(${dx} ${dy})`} stroke="var(--cal)" strokeWidth={2.5} fill="none">{cal!.lines.map((l, i) => <line key={i} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} />)}</g>}
-                    {st.overlays.ball && isTracking(c) && lb?.boxes?.map((b, i) => {
-                      const s = Math.round(b.size * lv.scale); const col = ballPass ? '#3DD68C' : '#FF5F57'; const t = ballPass ? 'ball' : 'rejected';
-                      return <g key={i}><rect x={b.x - s / 2} y={b.y - s / 2} width={s} height={s} fill="none" stroke={col} strokeWidth={2} strokeDasharray="4 3" />
-                        <rect x={b.x - s / 2} y={b.y - s / 2 - 18} width={t.length * 7.4 + 8} height={16} fill="#07090C" fillOpacity={0.8} />
-                        <text x={b.x - s / 2 + 4} y={b.y - s / 2 - 6} fill={col} fontSize={12} fontFamily="IBM Plex Mono, monospace">{t}</text></g>;
-                    })}
                     {pickP && <circle cx={pickP.x + dx} cy={pickP.y + dy} r={9} fill="none" stroke="#fff" strokeWidth={2} />}
                   </svg>
                   {pickP && <button type="button" aria-label={`Click where the ${pickP.label.toLowerCase()} should be`} onClick={place} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, background: 'rgba(90,184,255,.06)', cursor: 'crosshair' }} />}
